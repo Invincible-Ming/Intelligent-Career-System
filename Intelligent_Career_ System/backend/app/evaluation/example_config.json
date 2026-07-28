@@ -1,0 +1,52 @@
+{
+  "experiment_name": "custom_ab_test",
+  "baseline": {
+    "name": "baseline",
+    "search": {
+      "top_k": 5,
+      "search_mode": "hybrid",
+      "chunk_size": 800,
+      "chunk_overlap": 100,
+      "enable_reranker": true,
+      "reranker_top_k": 5
+    },
+    "reflection": {
+      "enable_reflection": false
+    }
+  },
+  "variants": [
+    {
+      "name": "optimized_v1",
+      "search": {
+        "top_k": 8,
+        "search_mode": "hybrid",
+        "chunk_size": 600,
+        "chunk_overlap": 80,
+        "enable_reranker": true,
+        "reranker_top_k": 5
+      },
+      "reflection": {
+        "enable_reflection": false
+      }
+    },
+    {
+      "name": "with_reflection",
+      "search": {
+        "top_k": 5,
+        "search_mode": "hybrid",
+        "chunk_size": 800,
+        "chunk_overlap": 100,
+        "enable_reranker": true,
+        "reranker_top_k": 5
+      },
+      "reflection": {
+        "enable_reflection": true,
+        "max_iterations": 2,
+        "reflection_prompt": "请审查上一次的回答，如果存在事实错误、逻辑矛盾或不够准确的地方，请基于检索到的知识进行修正。"
+      }
+    }
+  ],
+  "test_dataset_path": "app/evaluation/test_dataset_30.json",
+  "max_concurrency": 5,
+  "timeout_seconds": 120
+}

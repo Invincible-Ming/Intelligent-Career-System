@@ -1,0 +1,220 @@
+{
+  "name": "RAG 回归测试数据集",
+  "description": "包含 30 条回归样本，覆盖简历匹配、JD 分析、技能提取等场景",
+  "test_cases": [
+    {
+      "query": "Python 后端开发需要掌握哪些技能？",
+      "ground_truth": "Python 后端开发需要掌握 Python 语言基础、Django/Flask 框架、数据库（MySQL/PostgreSQL）、Redis 缓存、RESTful API 设计、异步编程、Docker 容器化等技能。",
+      "reference_contexts": [
+        "Python 后端开发工程师需要熟练掌握 Python 3.x，熟悉 Django 或 Flask 框架。",
+        "掌握 MySQL、PostgreSQL 等关系型数据库，熟悉 Redis 缓存技术。"
+      ],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "如何评估候选人的项目经验？",
+      "ground_truth": "评估候选人项目经验应关注项目规模、技术栈、个人职责、遇到的挑战以及解决方案，还要考察项目的业务价值和最终成果。",
+      "reference_contexts": [
+        "评估项目经验时，应询问项目背景、团队规模、技术选型理由。",
+        "重点关注候选人在项目中的具体职责和贡献。"
+      ],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "简历中的技能部分应该如何优化？",
+      "ground_truth": "技能部分应分类清晰（编程语言、框架、工具等），突出核心技能，注明熟练程度，避免堆砌关键词，最好结合项目经验说明。",
+      "reference_contexts": [],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "面试中如何考察算法能力？",
+      "ground_truth": "考察算法能力可通过编程题、白板编程、系统设计等方式，重点关注思路清晰度、代码质量、时间复杂度分析以及边界条件处理。",
+      "reference_contexts": [
+        "算法面试通常包括数据结构、排序算法、动态规划等经典题目。"
+      ],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "什么是全栈工程师？",
+      "ground_truth": "全栈工程师是指同时掌握前端和后端开发技能的工程师，能够独立完成从前端界面到后端逻辑、数据库设计的完整开发流程。",
+      "reference_contexts": [],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "如何准备技术面试？",
+      "ground_truth": "准备技术面试需要复习基础知识、刷算法题、总结项目经验、了解目标公司业务、准备常见问题的答案，并进行模拟面试练习。",
+      "reference_contexts": [
+        "技术面试准备包括算法、系统设计、项目经验总结等。"
+      ],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "数据库索引的作用是什么？",
+      "ground_truth": "数据库索引用于加快数据查询速度，通过创建数据结构（如 B+ 树）来快速定位数据位置，避免全表扫描，但会占用额外存储空间并影响写入性能。",
+      "reference_contexts": [],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "敏捷开发的核心理念是什么？",
+      "ground_truth": "敏捷开发强调快速迭代、持续交付、拥抱变化、团队协作和客户反馈，通过短周期的迭代开发来适应需求变化和降低风险。",
+      "reference_contexts": [
+        "敏捷开发采用迭代式开发，每个迭代周期通常为 1-4 周。"
+      ],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "RESTful API 的设计原则有哪些？",
+      "ground_truth": "RESTful API 设计原则包括：使用 HTTP 方法表达操作（GET/POST/PUT/DELETE）、资源用名词而非动词、使用状态码表达结果、无状态设计、支持版本控制等。",
+      "reference_contexts": [],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "什么是微服务架构？",
+      "ground_truth": "微服务架构是将单体应用拆分为多个小型独立服务的架构模式，每个服务负责特定业务功能，独立部署和扩展，通过轻量级通信机制（如 HTTP/REST）协作。",
+      "reference_contexts": [
+        "微服务架构中，每个服务拥有独立的数据库和部署流程。"
+      ],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "Docker 容器与虚拟机的区别？",
+      "ground_truth": "Docker 容器比虚拟机更轻量，启动更快，资源占用更少。容器共享宿主机内核，而虚拟机包含完整的操作系统。容器适合微服务部署，虚拟机适合需要完全隔离的场景。",
+      "reference_contexts": [],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "如何设计高可用系统？",
+      "ground_truth": "高可用系统设计需要考虑：冗余部署、负载均衡、故障转移、健康检查、限流降级、监控告警、数据备份等措施，确保系统在部分组件故障时仍能正常运行。",
+      "reference_contexts": [
+        "高可用系统通常采用主从复制、集群部署等技术。"
+      ],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "什么是 CI/CD？",
+      "ground_truth": "CI/CD 是持续集成（Continuous Integration）和持续交付/部署（Continuous Delivery/Deployment）的缩写，是一种自动化软件开发流程，包括自动构建、测试、部署等环节。",
+      "reference_contexts": [],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "Redis 的常见应用场景有哪些？",
+      "ground_truth": "Redis 常用于缓存、会话存储、排行榜、计数器、消息队列、分布式锁、实时数据分析等场景，其高性能和丰富的数据结构使其成为常用的 NoSQL 数据库。",
+      "reference_contexts": [
+        "Redis 是基于内存的 key-value 存储系统，支持多种数据结构。"
+      ],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "如何进行代码 Code Review？",
+      "ground_truth": "Code Review 应关注代码质量、可读性、性能、安全性、是否符合规范等方面。应提出建设性意见，避免过于苛刻，同时要及时反馈和沟通。",
+      "reference_contexts": [],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "什么是 SQL 注入攻击？",
+      "ground_truth": "SQL 注入是一种常见的 Web 安全漏洞，攻击者通过在输入中插入恶意 SQL 代码来操纵数据库查询，可能导致数据泄露、篡改或删除。防御方法包括使用参数化查询、输入验证等。",
+      "reference_contexts": [
+        "SQL 注入可以通过预编译语句和 ORM 框架来预防。"
+      ],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "什么是跨域问题？",
+      "ground_truth": "跨域问题是指浏览器出于安全考虑，限制了网页中的 JavaScript 向不同源（协议、域名、端口不同）的服务器发起请求。解决方法包括 CORS、JSONP、代理服务器等。",
+      "reference_contexts": [],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "Git 的常用命令有哪些？",
+      "ground_truth": "Git 常用命令包括：git clone（克隆仓库）、git add（添加文件）、git commit（提交更改）、git push（推送到远程）、git pull（拉取更新）、git branch（分支管理）、git merge（合并分支）等。",
+      "reference_contexts": [
+        "Git 是分布式版本控制系统，每个开发者都有完整的代码仓库。"
+      ],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "什么是单元测试？",
+      "ground_truth": "单元测试是针对程序中最小可测试单元（如函数、方法）编写的测试代码，用于验证其功能是否正确。好的单元测试应该独立、快速、可重复，并覆盖各种边界情况。",
+      "reference_contexts": [],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "什么是设计模式？",
+      "ground_truth": "设计模式是软件开发中常见问题的可复用解决方案，包括创建型（如单例、工厂）、结构型（如适配器、装饰器）和行为型（如观察者、策略）模式。",
+      "reference_contexts": [
+        "常见的设计模式有单例模式、工厂模式、观察者模式等。"
+      ],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "如何优化数据库查询性能？",
+      "ground_truth": "优化数据库查询性能的方法包括：创建合适的索引、避免 SELECT *、优化 JOIN 查询、使用查询缓存、分页查询、读写分离、分库分表等。",
+      "reference_contexts": [
+        "数据库性能优化需要结合 EXPLAIN 分析查询执行计划。"
+      ],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "什么是消息队列？",
+      "ground_truth": "消息队列是一种异步通信机制，用于解耦系统组件、削峰填谷、保证消息可靠传递。常见的消息队列有 RabbitMQ、Kafka、RocketMQ 等。",
+      "reference_contexts": [],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "前端性能优化的方法有哪些？",
+      "ground_truth": "前端性能优化包括：压缩资源文件、使用 CDN、懒加载、代码分割、减少 HTTP 请求、使用缓存、图片优化、防抖节流等技术。",
+      "reference_contexts": [
+        "前端性能优化可以提升用户体验和页面加载速度。"
+      ],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "什么是 OAuth 2.0？",
+      "ground_truth": "OAuth 2.0 是一种授权框架，允许第三方应用在用户授权的情况下访问其资源，而无需获取用户密码。常用于社交登录、API 授权等场景。",
+      "reference_contexts": [],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "如何进行压力测试？",
+      "ground_truth": "压力测试通过模拟大量并发请求来评估系统性能和稳定性，关注指标包括 QPS、响应时间、错误率等。常用工具有 JMeter、Locust、ab 等。",
+      "reference_contexts": [
+        "压力测试可以帮助发现系统的性能瓶颈和极限。"
+      ],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "什么是 WebSocket？",
+      "ground_truth": "WebSocket 是一种基于 TCP 的全双工通信协议，允许服务器主动向客户端推送数据，适用于实时通信场景如聊天室、实时通知、在线游戏等。",
+      "reference_contexts": [],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "如何设计 API 版本控制？",
+      "ground_truth": "API 版本控制的常见方法包括：URL 路径版本（/v1/users）、请求头版本（Accept: application/vnd.api+json;version=1）、参数版本（?version=1），应保持向后兼容并提供迁移文档。",
+      "reference_contexts": [],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "什么是分布式事务？",
+      "ground_truth": "分布式事务是指跨越多个服务或数据库的事务操作，需要确保所有操作要么全部成功要么全部失败。常见解决方案有两阶段提交、TCC、SAGA、本地消息表等。",
+      "reference_contexts": [
+        "分布式事务是微服务架构中的重要挑战之一。"
+      ],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "如何保证接口安全？",
+      "ground_truth": "接口安全措施包括：HTTPS 加密传输、身份认证（JWT、OAuth）、签名验证、参数校验、防重放攻击、限流、IP 白名单、敏感数据加密等。",
+      "reference_contexts": [],
+      "document_type": "knowledge"
+    },
+    {
+      "query": "什么是服务降级？",
+      "ground_truth": "服务降级是指在系统压力过大或部分服务故障时，暂时关闭或简化非核心功能，保证核心业务正常运行的一种保护机制。常与熔断、限流配合使用。",
+      "reference_contexts": [
+        "服务降级可以提高系统的整体可用性和稳定性。"
+      ],
+      "document_type": "knowledge"
+    }
+  ]
+}
