@@ -1,0 +1,7 @@
+{
+  "dependencies": ["./app/requirements.txt"],
+  "graphs": {
+    "career_workflow": "./app/workflow.py:make_match_workflow"
+  },
+  "env": ".env"
+}

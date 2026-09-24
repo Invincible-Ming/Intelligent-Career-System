@@ -1,0 +1,31 @@
+name: career-mcp
+services:
+  search-broker:
+    build: ./mcp
+    image: career-mcp:1
+    user: "0:0"
+    command: ["python", "-u", "/app/entrypoint.py", "broker"]
+    read_only: true
+    cap_drop: [ALL]
+    # Used only by startup; setpriv removes every capability before serving.
+    cap_add: [NET_ADMIN, SETUID, SETGID, SETPCAP, CHOWN]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=16m"]
+    volumes:
+      - search-socket:/run/search
+    networks: [search-egress]
+    mem_limit: 256m
+    cpus: 1.0
+    pids_limit: 64
+    healthcheck:
+      test: ["CMD", "setpriv", "--reuid=10001", "--regid=10001", "--clear-groups", "python", "-c", "import os; assert os.path.exists('/run/search/search.sock')"]
+      interval: 5s
+      timeout: 2s
+      retries: 12
+    restart: unless-stopped
+networks:
+  search-egress:
+    name: career-mcp-search-egress
+volumes:
+  search-socket:
+    name: career-mcp-search-socket

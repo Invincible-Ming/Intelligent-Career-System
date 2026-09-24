@@ -1,0 +1,2 @@
+# 与 FastAPI 后端使用同一份依赖，避免 LangGraph Studio 安装旧 MCP/工作流版本。
+-r ../requirements.txt

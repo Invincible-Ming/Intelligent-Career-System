@@ -1,0 +1,29 @@
+[Unit]
+Description=Career System Sandbox Runner (Docker controller)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=exec
+User=@RUNNER_USER@
+Group=@RUNNER_GROUP@
+WorkingDirectory=@PROJECT_ROOT@/backend
+Environment=SANDBOX_RUNNER_GROUP=@RUNNER_GROUP@
+Environment=SANDBOX_RUNNER_SOCKET=/run/career/sandbox.sock
+Environment=SANDBOX_AUDIT_LOG=/var/log/career/sandbox-audit.log
+ExecStart=@PYTHON@ @PROJECT_ROOT@/deploy/sandbox/start.py
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+RuntimeDirectory=career
+RuntimeDirectoryMode=0770
+LogsDirectory=career
+LogsDirectoryMode=0750
+ReadWritePaths=/run/career /var/log/career
+
+[Install]
+WantedBy=multi-user.target

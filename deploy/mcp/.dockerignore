@@ -1,0 +1,8 @@
+*
+!Dockerfile
+!requirements.txt
+!policy.py
+!db_guard.py
+!server.py
+!broker.py
+!entrypoint.py

@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+backend/.local/
+deploy/.local/
+deploy/mcp/secrets/*
+!deploy/mcp/secrets/.gitignore
+__pycache__/
+*.pyc
+.pytest_cache/
+
+.idea/
+.DS_Store
+.workbuddy/
+backend/models/
