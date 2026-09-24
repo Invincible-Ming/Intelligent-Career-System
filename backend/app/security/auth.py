@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal, get_db
-from app.core.limits import heavy_operation, operation_timeout
+from app.core.limits import heavy_operation, operation_timeout, set_operation_actor
 from app.core.models import AuthSession, OperationLease, RateLimitBucket, User
 
 bearer = HTTPBearer(auto_error=False)
@@ -92,12 +92,15 @@ async def release_lease(identifier):
 
 
 async def operation_user(request: Request, user: Annotated[User, Depends(get_current_user)]):
-    await consume_limits([(f"api:{user.id}", 60, settings.API_REQUESTS_PER_MINUTE)])
+    set_operation_actor(is_admin=user.is_admin)
+    if not user.is_admin:
+        await consume_limits([(f"api:{user.id}", 60, settings.API_REQUESTS_PER_MINUTE)])
     lease_id = None
     if heavy_operation(request.url.path, request.method):
-        await consume_limits([(f"generation-minute:{user.id}", 60, settings.GENERATION_REQUESTS_PER_MINUTE),
-                              (f"generation-day:{user.id}", 86400, settings.GENERATION_REQUESTS_PER_DAY),
-                              ("generation-global-day", 86400, settings.GLOBAL_GENERATION_REQUESTS_PER_DAY)])
+        if not user.is_admin:
+            await consume_limits([(f"generation-minute:{user.id}", 60, settings.GENERATION_REQUESTS_PER_MINUTE),
+                                  (f"generation-day:{user.id}", 86400, settings.GENERATION_REQUESTS_PER_DAY),
+                                  ("generation-global-day", 86400, settings.GLOBAL_GENERATION_REQUESTS_PER_DAY)])
         async with AsyncSessionLocal() as session:
             await session.execute(text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
                                   {"key": str(user.id)})

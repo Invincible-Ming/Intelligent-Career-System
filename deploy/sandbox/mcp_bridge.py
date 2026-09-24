@@ -13,7 +13,7 @@ async def main():
     await asyncio.get_running_loop().connect_read_pipe(lambda: protocol, sys.stdin.buffer)
     async with websockets.unix_connect(socket_path, uri="ws://localhost/mcp", max_size=16 * 1024 * 1024) as channel:
         await channel.send(json.dumps({"mode": mode, "owner_id": owner_id or None,
-                                        "run_id": run_id or None}))
+                                       "run_id": run_id or None}))
 
         async def send_input():
             while line := await reader.readline():

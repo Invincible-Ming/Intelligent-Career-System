@@ -14,11 +14,11 @@ from app.core.config import settings
 from app.services.mcp_container_config import docker_connection
 
 logger = logging.getLogger(__name__)
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 ALLOWED_TOOLS = {
     "search": frozenset({"search_web"}),
-    "filesystem": frozenset({"read_text_file", "list_files"}),
-    "postgres": frozenset({"read_statistics"}),
+    # 远程官方服务，工具清单由服务端决定，不做强等校验
+    "baidu_map": None,
 }
 
 
@@ -53,10 +53,6 @@ class MCPService:
             return
         connections = {}
         modes = ["search"]
-        if settings.MCP_FILES_ENABLED:
-            modes.append("filesystem")
-        if settings.MCP_DATABASE_ENABLED:
-            modes.append("postgres")
         for mode in modes:
             try:
                 connections[mode] = runner_connection(mode)
@@ -64,12 +60,17 @@ class MCPService:
                 error = f"MCP {mode} 配置不可用；该服务已禁用"
                 self.startup_errors.append(error)
                 logger.warning(error)
+        if settings.BAIDU_MAP_MCP_URL:
+            connections["baidu_map"] = {
+                "transport": "streamable_http", "url": settings.BAIDU_MAP_MCP_URL,
+            }
         self.client = MultiServerMCPClient(connections)
         for mode in connections:
             try:
                 tools = await asyncio.wait_for(self.client.get_tools(server_name=mode), settings.MCP_STARTUP_TIMEOUT)
                 names = {tool.name for tool in tools}
-                if names != ALLOWED_TOOLS[mode]:
+                allowed = ALLOWED_TOOLS.get(mode)
+                if allowed is not None and names != allowed:
                     raise PermissionError("MCP tool inventory differs from the capability allowlist")
                 self.tools_by_service[mode] = tools
                 self.tools.extend(tools)

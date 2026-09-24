@@ -16,13 +16,13 @@ class RAGASMetrics:
     """RAGAS 评测指标计算器。"""
 
     async def evaluate(
-        self,
-        *,
-        query: str,
-        answer: str,
-        contexts: list[str],
-        ground_truth: str | None = None,
-        reference_contexts: list[str] | None = None,
+            self,
+            *,
+            query: str,
+            answer: str,
+            contexts: list[str],
+            ground_truth: str | None = None,
+            reference_contexts: list[str] | None = None,
     ) -> dict[str, float]:
         """
         计算 RAGAS 核心指标。
@@ -109,9 +109,9 @@ class RAGASMetrics:
         return metrics
 
     async def _compute_context_precision(
-        self,
-        query: str,
-        contexts: list[str],
+            self,
+            query: str,
+            contexts: list[str],
     ) -> float:
         """
         Context Precision: 检索到的上下文中有多少是真正相关的。
@@ -164,9 +164,9 @@ class RAGASMetrics:
             return 0.5
 
     async def _compute_context_recall(
-        self,
-        contexts: list[str],
-        reference_contexts: list[str],
+            self,
+            contexts: list[str],
+            reference_contexts: list[str],
     ) -> float:
         """
         Context Recall: 检索到的上下文覆盖了多少标准答案的上下文。
@@ -208,9 +208,9 @@ class RAGASMetrics:
             return 0.0
 
     async def _compute_faithfulness(
-        self,
-        answer: str,
-        contexts: list[str],
+            self,
+            answer: str,
+            contexts: list[str],
     ) -> float:
         """
         Faithfulness: 答案中的陈述有多少能被检索上下文支持。
@@ -254,10 +254,10 @@ class RAGASMetrics:
             return 0.6
 
     async def _compute_answer_relevancy(
-        self,
-        query: str,
-        answer: str,
-        ground_truth: str,
+            self,
+            query: str,
+            answer: str,
+            ground_truth: str,
     ) -> float:
         """
         Answer Relevancy: 答案与标准答案的相似度。
@@ -301,9 +301,9 @@ class RAGASMetrics:
             return 0.5
 
     async def _compute_answer_relevancy_without_ground_truth(
-        self,
-        query: str,
-        answer: str,
+            self,
+            query: str,
+            answer: str,
     ) -> float:
         """
         Answer Relevancy: 没有标准答案时，判断答案是否回答了问题。
@@ -344,8 +344,8 @@ class RAGASMetrics:
             return 0.5
 
     def _format_contexts(
-        self,
-        contexts: list[str],
+            self,
+            contexts: list[str],
     ) -> str:
         """格式化上下文列表。"""
 
@@ -355,8 +355,8 @@ class RAGASMetrics:
         )
 
     def _safe_metric(
-        self,
-        value: Any,
+            self,
+            value: Any,
     ) -> float:
         """安全地提取指标值。"""
 

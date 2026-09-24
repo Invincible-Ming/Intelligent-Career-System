@@ -41,7 +41,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import check_database, close_database, init_database
 
-
 # 导入底层依赖服务
 from app.services.bailian import bailian_service
 from app.services.analysis_cache import analysis_cache

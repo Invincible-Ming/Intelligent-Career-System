@@ -29,25 +29,35 @@ def provision(admin_dsn, output, container_host=None):
     temporary = output.with_suffix(".pending")
     # Prepare the private file before committing SQL; a failed transaction
     # removes it, and an existing role is never silently reused or modified.
-    with psycopg.connect(admin_dsn.replace("postgresql+asyncpg://", "postgresql://", 1), connect_timeout=5) as connection:
+    with psycopg.connect(admin_dsn.replace("postgresql+asyncpg://", "postgresql://", 1),
+                         connect_timeout=5) as connection:
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", (DATABASE_ROLE,))
             if cursor.fetchone():
                 raise ValueError("专用账号已存在；请审核其权限，不自动复用或修改已有账号")
-            cursor.execute(sql.SQL("CREATE ROLE {} LOGIN PASSWORD {} NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS NOINHERIT CONNECTION LIMIT 4").format(sql.Identifier(DATABASE_ROLE), sql.Literal(password)))
-            cursor.execute(sql.SQL("ALTER ROLE {} SET default_transaction_read_only = on").format(sql.Identifier(DATABASE_ROLE)))
+            cursor.execute(sql.SQL(
+                "CREATE ROLE {} LOGIN PASSWORD {} NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS NOINHERIT CONNECTION LIMIT 4").format(
+                sql.Identifier(DATABASE_ROLE), sql.Literal(password)))
+            cursor.execute(
+                sql.SQL("ALTER ROLE {} SET default_transaction_read_only = on").format(sql.Identifier(DATABASE_ROLE)))
             cursor.execute(sql.SQL("ALTER ROLE {} SET statement_timeout = '3s'").format(sql.Identifier(DATABASE_ROLE)))
-            cursor.execute(sql.SQL("ALTER ROLE {} SET idle_in_transaction_session_timeout = '5s'").format(sql.Identifier(DATABASE_ROLE)))
-            cursor.execute(sql.SQL("ALTER ROLE {} SET search_path = mcp_safe, pg_catalog").format(sql.Identifier(DATABASE_ROLE)))
+            cursor.execute(sql.SQL("ALTER ROLE {} SET idle_in_transaction_session_timeout = '5s'").format(
+                sql.Identifier(DATABASE_ROLE)))
+            cursor.execute(
+                sql.SQL("ALTER ROLE {} SET search_path = mcp_safe, pg_catalog").format(sql.Identifier(DATABASE_ROLE)))
             cursor.execute("CREATE SCHEMA IF NOT EXISTS mcp_safe")
             cursor.execute("REVOKE ALL ON SCHEMA mcp_safe FROM PUBLIC")
-            cursor.execute("CREATE OR REPLACE VIEW mcp_safe.knowledge_inventory WITH (security_barrier=true) AS SELECT status, count(*)::integer AS document_count, COALESCE(sum(chunk_count),0)::bigint AS chunk_count FROM public.documents WHERE document_type = 'knowledge' GROUP BY status")
-            cursor.execute("CREATE OR REPLACE VIEW mcp_safe.evaluation_summary WITH (security_barrier=true) AS SELECT count(*)::integer AS experiment_count, COALESCE(sum(test_count),0)::bigint AS test_count, COALESCE(sum(success_count),0)::bigint AS success_count, COALESCE(sum(failure_count),0)::bigint AS failure_count FROM public.evaluation_records")
-            cursor.execute(sql.SQL("GRANT CONNECT ON DATABASE {} TO {}").format(sql.Identifier(admin.get("dbname", connection.info.dbname)), sql.Identifier(DATABASE_ROLE)))
+            cursor.execute(
+                "CREATE OR REPLACE VIEW mcp_safe.knowledge_inventory WITH (security_barrier=true) AS SELECT status, count(*)::integer AS document_count, COALESCE(sum(chunk_count),0)::bigint AS chunk_count FROM public.documents WHERE document_type = 'knowledge' GROUP BY status")
+            cursor.execute(
+                "CREATE OR REPLACE VIEW mcp_safe.evaluation_summary WITH (security_barrier=true) AS SELECT count(*)::integer AS experiment_count, COALESCE(sum(test_count),0)::bigint AS test_count, COALESCE(sum(success_count),0)::bigint AS success_count, COALESCE(sum(failure_count),0)::bigint AS failure_count FROM public.evaluation_records")
+            cursor.execute(sql.SQL("GRANT CONNECT ON DATABASE {} TO {}").format(
+                sql.Identifier(admin.get("dbname", connection.info.dbname)), sql.Identifier(DATABASE_ROLE)))
             cursor.execute(sql.SQL("GRANT USAGE ON SCHEMA mcp_safe TO {}").format(sql.Identifier(DATABASE_ROLE)))
             for view in VIEWS:
                 cursor.execute(sql.SQL("REVOKE ALL ON mcp_safe.{} FROM PUBLIC").format(sql.Identifier(view)))
-                cursor.execute(sql.SQL("GRANT SELECT ON mcp_safe.{} TO {}").format(sql.Identifier(view), sql.Identifier(DATABASE_ROLE)))
+                cursor.execute(sql.SQL("GRANT SELECT ON mcp_safe.{} TO {}").format(sql.Identifier(view),
+                                                                                   sql.Identifier(DATABASE_ROLE)))
             # SET ROLE verifies inherited PUBLIC grants while preserving the
             # administrative connection for an atomic rollback on failure.
             cursor.execute(sql.SQL("SET LOCAL ROLE {}").format(sql.Identifier(DATABASE_ROLE)))
@@ -62,8 +72,8 @@ def provision(admin_dsn, output, container_host=None):
             for view in VIEWS:
                 cursor.execute(sql.SQL("SELECT * FROM mcp_safe.{} LIMIT 1").format(sql.Identifier(view)))
             reader_dsn = make_conninfo(host=host, port=admin.get("port", "5432"),
-                                      dbname=connection.info.dbname, user=DATABASE_ROLE, password=password,
-                                      sslmode=admin.get("sslmode", "prefer"))
+                                       dbname=connection.info.dbname, user=DATABASE_ROLE, password=password,
+                                       sslmode=admin.get("sslmode", "prefer"))
             try:
                 fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
                 with os.fdopen(fd, "w") as stream:
@@ -90,7 +100,9 @@ def main():
         provision(dsn, args.output, args.container_host)
     except (psycopg.Error, ValueError, PermissionError, OSError):
         # Exception strings can contain passwords/DSNs. Do not print them.
-        print("初始化失败，未扩大现有用户权限。请确认数据库已启动、业务表已创建、管理员具有 CREATEROLE，且 PUBLIC 未授予业务表读取/用户 schema CREATE 权限。已有账号/凭据不会被覆盖。", file=sys.stderr)
+        print(
+            "初始化失败，未扩大现有用户权限。请确认数据库已启动、业务表已创建、管理员具有 CREATEROLE，且 PUBLIC 未授予业务表读取/用户 schema CREATE 权限。已有账号/凭据不会被覆盖。",
+            file=sys.stderr)
         return 1
     print("MCP 专用只读账号与聚合视图已创建，凭据已保存在权限为 0600 的文件中。")
     return 0

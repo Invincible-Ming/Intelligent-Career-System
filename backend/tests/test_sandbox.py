@@ -50,7 +50,8 @@ class SandboxTests(unittest.IsolatedAsyncioTestCase):
                 for _ in range(80):
                     try:
                         transport = httpx.AsyncHTTPTransport(uds=str(path))
-                        async with httpx.AsyncClient(transport=transport, base_url="http://sandbox", timeout=1) as client:
+                        async with httpx.AsyncClient(transport=transport, base_url="http://sandbox",
+                                                     timeout=1) as client:
                             if (await client.get("/health")).status_code == 200:
                                 break
                     except (OSError, httpx.HTTPError):
@@ -84,6 +85,7 @@ class SandboxTests(unittest.IsolatedAsyncioTestCase):
                 entered[index].set()
                 await release.wait()
                 return f"Synthetic OCR result for user {index} with Python skills"
+
             return await parse_document(owner_id=owners[index], run_id=uuid.uuid4(), data=source,
                                         extension=".pdf", ocr=ocr, max_chars=200000)
 

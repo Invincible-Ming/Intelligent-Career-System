@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RAG 评测报告 - quick_test</title>
     <style>
-        
+
         * {
             margin: 0;
             padding: 0;
@@ -286,1290 +286,1361 @@
             color: #666;
             margin-top: 5px;
         }
-        
+
     </style>
 </head>
 <body>
-    <div class="container">
-        
-        <div class="header">
-            <h1>📊 RAG 评测报告</h1>
-            <div class="meta">
-                <strong>实验名称：</strong>quick_test |
-                <strong>实验 ID：</strong>0b3ac017 |
-                <strong>生成时间：</strong>2026-07-28T12:39:30.625593
+<div class="container">
+
+    <div class="header">
+        <h1>📊 RAG 评测报告</h1>
+        <div class="meta">
+            <strong>实验名称：</strong>quick_test |
+            <strong>实验 ID：</strong>0b3ac017 |
+            <strong>生成时间：</strong>2026-07-28T12:39:30.625593
+        </div>
+    </div>
+
+
+    <div class="section">
+        <h2 class="section-title">📈 总体摘要</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">测试配置数</div>
+                <div class="stat-value">1</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">测试样本数</div>
+                <div class="stat-value">30</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">成功测试</div>
+                <div class="stat-value" style="color: #27ae60;">30</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">失败测试</div>
+                <div class="stat-value" style="color: #e74c3c;">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">成功率</div>
+                <div class="stat-value" style="color: #667eea;">100.0%</div>
             </div>
         </div>
-        
-        
-        <div class="section">
-            <h2 class="section-title">📈 总体摘要</h2>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">测试配置数</div>
-                    <div class="stat-value">1</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">测试样本数</div>
-                    <div class="stat-value">30</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">成功测试</div>
-                    <div class="stat-value" style="color: #27ae60;">30</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">失败测试</div>
-                    <div class="stat-value" style="color: #e74c3c;">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">成功率</div>
-                    <div class="stat-value" style="color: #667eea;">100.0%</div>
-                </div>
-            </div>
-        </div>
-        
-        
-        <div class="section">
-            <h2 class="section-title">📊 指标对比</h2>
-            <div class="comparison-chart">
-                
+    </div>
+
+
+    <div class="section">
+        <h2 class="section-title">📊 指标对比</h2>
+        <div class="comparison-chart">
+
             <div class="chart-bar">
                 <div class="chart-label">检索精度 (Context Precision)</div>
                 <div class="chart-bars">
-                    
-                <div class="chart-bar-item">
-                    <div class="chart-bar-fill" style="width: 30.0%;">
-                        0.300
+
+                    <div class="chart-bar-item">
+                        <div class="chart-bar-fill" style="width: 30.0%;">
+                            0.300
+                        </div>
+                        <div class="chart-config-name">baseline</div>
                     </div>
-                    <div class="chart-config-name">baseline</div>
-                </div>
-                
+
                 </div>
             </div>
-            
+
             <div class="chart-bar">
                 <div class="chart-label">检索召回 (Context Recall)</div>
                 <div class="chart-bars">
-                    
-                <div class="chart-bar-item">
-                    <div class="chart-bar-fill" style="width: 6.666666666666667%;">
-                        0.067
+
+                    <div class="chart-bar-item">
+                        <div class="chart-bar-fill" style="width: 6.666666666666667%;">
+                            0.067
+                        </div>
+                        <div class="chart-config-name">baseline</div>
                     </div>
-                    <div class="chart-config-name">baseline</div>
-                </div>
-                
+
                 </div>
             </div>
-            
+
             <div class="chart-bar">
                 <div class="chart-label">忠实度 (Faithfulness)</div>
                 <div class="chart-bars">
-                    
-                <div class="chart-bar-item">
-                    <div class="chart-bar-fill" style="width: 67.16666666666669%;">
-                        0.672
+
+                    <div class="chart-bar-item">
+                        <div class="chart-bar-fill" style="width: 67.16666666666669%;">
+                            0.672
+                        </div>
+                        <div class="chart-config-name">baseline</div>
                     </div>
-                    <div class="chart-config-name">baseline</div>
-                </div>
-                
+
                 </div>
             </div>
-            
+
             <div class="chart-bar">
                 <div class="chart-label">答案相关性 (Answer Relevancy)</div>
                 <div class="chart-bars">
-                    
-                <div class="chart-bar-item">
-                    <div class="chart-bar-fill" style="width: 30.333333333333336%;">
-                        0.303
+
+                    <div class="chart-bar-item">
+                        <div class="chart-bar-fill" style="width: 30.333333333333336%;">
+                            0.303
+                        </div>
+                        <div class="chart-config-name">baseline</div>
                     </div>
-                    <div class="chart-config-name">baseline</div>
-                </div>
-                
+
                 </div>
             </div>
-            
+
             <div class="chart-bar">
                 <div class="chart-label">综合得分 (Overall Score)</div>
                 <div class="chart-bars">
-                    
-                <div class="chart-bar-item">
-                    <div class="chart-bar-fill" style="width: 67.61111111111117%;">
-                        0.676
+
+                    <div class="chart-bar-item">
+                        <div class="chart-bar-fill" style="width: 67.61111111111117%;">
+                            0.676
+                        </div>
+                        <div class="chart-config-name">baseline</div>
                     </div>
-                    <div class="chart-config-name">baseline</div>
-                </div>
-                
+
                 </div>
             </div>
-            
-            </div>
+
         </div>
-        
-        
-        <div class="section">
-            <h2 class="section-title">📝 详细结果</h2>
-            <div class="config-tabs">
-                
+    </div>
+
+
+    <div class="section">
+        <h2 class="section-title">📝 详细结果</h2>
+        <div class="config-tabs">
+
             <button class="tab active" data-tab="config-0">
                 baseline
                 <span class="badge badge-success">30</span>
                 <span class="badge badge-danger">0</span>
             </button>
-            
-            </div>
-            
-            <div id="config-0" class="tab-content active">
-                <div style="margin-bottom: 20px;">
-                    <strong>配置详情：</strong>
-                    Search Mode: hybrid, 
-                    Top-K: 5, 
-                    Chunk Size: 800, 
-                    Reflection: 禁用
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">Python 后端开发需要掌握哪些技能？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">1.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        基于提供的上下文，没有关于“Python 后端开发需要掌握哪些技能”的相关信息。
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">如何评估候选人的项目经验？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">1.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        基于提供的上下文，没有包含关于“如何评估候选人的项目经验”的相关信息。上下文主要涉及对话摘要处理、代码测试（pytest）、任务拆解逻辑以及大模型API调用的元数据等内容。
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">简历中的技能部分应该如何优化？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">1.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        根据提供的上下文，没有包含关于“简历中的技能部分应该如何优化”的相关信息。
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">面试中如何考察算法能力？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">1.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        根据提供的上下文，没有包含关于“面试中如何考察算法能力”的相关信息。
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">什么是全栈工程师？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">1.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        基于提供的上下文，没有关于“全栈工程师”的相关信息。
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">如何准备技术面试？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">1.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        提供的上下文中没有关于“如何准备技术面试”的相关信息。
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">数据库索引的作用是什么？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.950</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.050</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        基于提供的上下文，没有直接说明传统“数据库索引的作用”的相关信息。
 
-（注：上下文 [5] 中仅提到了特定存储 API 中的 `index` 参数用于“控制语义检索索引”，即控制是否为数据建立语义索引以支持语义检索，但这并非对通用数据库索引作用的解释。）
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">敏捷开发的核心理念是什么？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">1.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        基于提供的上下文，没有关于“敏捷开发的核心理念”的相关信息。
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">RESTful API 的设计原则有哪些？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">1.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        基于提供的上下文，没有包含关于“RESTful API 的设计原则”的相关信息。
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">什么是微服务架构？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">1.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        基于提供的上下文，没有包含关于“微服务架构”的相关信息。上下文主要介绍的是 LangChain 框架中的中间件（Middleware）以及消息（Message）与提示词模板的相关知识。
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">Docker 容器与虚拟机的区别？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please make sure your account is in good standing. For details, see: https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param': None, 'code': 'Arrearage'}, 'id': 'chatcmpl-138d67a6-b8d1-90c5-97e7-f4b331e4fa5a', 'request_id': '138d67a6-b8d1-90c5-97e7-f4b331e4fa5a'}
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">如何设计高可用系统？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.600</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please make sure your account is in good standing. For details, see: https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param': None, 'code': 'Arrearage'}, 'id': 'chatcmpl-6c800e39-35c1-9aca-ba6e-33a9ea880523', 'request_id': '6c800e39-35c1-9aca-ba6e-33a9ea880523'}
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">什么是 CI/CD？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.600</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        基于提供的上下文，没有关于“什么是 CI/CD”的相关信息。
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">Redis 的常见应用场景有哪些？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">1.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.600</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.050</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        上下文中没有提供关于 Redis 常见应用场景的相关信息。文中仅提及 Redis 是“开源内存数据结构存储，现已原生支持向量相似性搜索功能”。
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">如何进行代码 Code Review？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please make sure your account is in good standing. For details, see: https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param': None, 'code': 'Arrearage'}, 'id': 'chatcmpl-e895a8a9-5a4a-9054-b5bd-855116a88aa5', 'request_id': 'e895a8a9-5a4a-9054-b5bd-855116a88aa5'}
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">什么是 SQL 注入攻击？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">1.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please make sure your account is in good standing. For details, see: https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param': None, 'code': 'Arrearage'}, 'id': 'chatcmpl-aa83e67f-7787-9005-a15b-2059891f890b', 'request_id': 'aa83e67f-7787-9005-a15b-2059891f890b'}
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">什么是跨域问题？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.600</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please make sure your account is in good standing. For details, see: https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param': None, 'code': 'Arrearage'}, 'id': 'chatcmpl-4c828146-2193-9c37-8608-1bc2b4d9863e', 'request_id': '4c828146-2193-9c37-8608-1bc2b4d9863e'}
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">Git 的常用命令有哪些？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.600</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please make sure your account is in good standing. For details, see: https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param': None, 'code': 'Arrearage'}, 'id': 'chatcmpl-8a33bb32-4307-9290-99e1-9c496668bf55', 'request_id': '8a33bb32-4307-9290-99e1-9c496668bf55'}
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">什么是单元测试？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.600</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        根据提供的上下文，没有关于“什么是单元测试”的定义或相关信息。上下文仅提及了使用 pytest 进行测试的具体代码和执行过程，但未对“单元测试”这一概念进行解释。
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">什么是设计模式？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.600</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please make sure your account is in good standing. For details, see: https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param': None, 'code': 'Arrearage'}, 'id': 'chatcmpl-1ccc28f4-25cf-9e63-ac01-f239c1d261bd', 'request_id': '1ccc28f4-25cf-9e63-ac01-f239c1d261bd'}
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">如何优化数据库查询性能？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.600</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please make sure your account is in good standing. For details, see: https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param': None, 'code': 'Arrearage'}, 'id': 'chatcmpl-a6ac39e1-d881-956b-bfae-42b11c7b4ec1', 'request_id': 'a6ac39e1-d881-956b-bfae-42b11c7b4ec1'}
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">什么是消息队列？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.600</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please make sure your account is in good standing. For details, see: https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param': None, 'code': 'Arrearage'}, 'id': 'chatcmpl-5453491a-8921-982d-a35a-5d8e1087a9f3', 'request_id': '5453491a-8921-982d-a35a-5d8e1087a9f3'}
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">前端性能优化的方法有哪些？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.600</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please make sure your account is in good standing. For details, see: https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param': None, 'code': 'Arrearage'}, 'id': 'chatcmpl-008070f4-3b43-93f3-82d7-a832e05e9110', 'request_id': '008070f4-3b43-93f3-82d7-a832e05e9110'}
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">什么是 OAuth 2.0？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.600</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please make sure your account is in good standing. For details, see: https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param': None, 'code': 'Arrearage'}, 'id': 'chatcmpl-a296c8aa-d73c-9fc8-b049-344d4d5317f7', 'request_id': 'a296c8aa-d73c-9fc8-b049-344d4d5317f7'}
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">如何进行压力测试？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.600</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please make sure your account is in good standing. For details, see: https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param': None, 'code': 'Arrearage'}, 'id': 'chatcmpl-fc1cb989-e8b9-9680-8fab-d88bc3ec47db', 'request_id': 'fc1cb989-e8b9-9680-8fab-d88bc3ec47db'}
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">什么是 WebSocket？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.600</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please make sure your account is in good standing. For details, see: https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param': None, 'code': 'Arrearage'}, 'id': 'chatcmpl-8a32d8c4-ae29-953a-b746-2cd4fd384ef7', 'request_id': '8a32d8c4-ae29-953a-b746-2cd4fd384ef7'}
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">如何设计 API 版本控制？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.600</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please make sure your account is in good standing. For details, see: https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param': None, 'code': 'Arrearage'}, 'id': 'chatcmpl-f6020a22-72ff-9e57-83a3-6a7afffc8caa', 'request_id': 'f6020a22-72ff-9e57-83a3-6a7afffc8caa'}
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">什么是分布式事务？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.600</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please make sure your account is in good standing. For details, see: https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param': None, 'code': 'Arrearage'}, 'id': 'chatcmpl-1bdd528f-9e2d-9487-89d2-7cc12e89f5ad', 'request_id': '1bdd528f-9e2d-9487-89d2-7cc12e89f5ad'}
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">如何保证接口安全？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.600</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please make sure your account is in good standing. For details, see: https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param': None, 'code': 'Arrearage'}, 'id': 'chatcmpl-ea3f26a5-2461-9446-a1f1-bb6a7167a631', 'request_id': 'ea3f26a5-2461-9446-a1f1-bb6a7167a631'}
-                    </div>
-                    
-                    
-                </div>
-                
-                <div class="test-result">
-                    <div class="test-result-header">
-                        <div class="test-query">什么是服务降级？</div>
-                        <span class="badge badge-success">成功</span>
-                    </div>
-                    <div class="test-metrics">
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索精度</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">检索召回</div>
-                            <div class="test-metric-value">0.000</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">忠实度</div>
-                            <div class="test-metric-value">0.600</div>
-                        </div>
-                        
-                        <div class="test-metric">
-                            <div class="test-metric-label">答案相关性</div>
-                            <div class="test-metric-value">0.500</div>
-                        </div>
-                        
-                    </div>
-                    
-                    <div class="answer-box">
-                        <div class="answer-label">生成答案：</div>
-                        生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please make sure your account is in good standing. For details, see: https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param': None, 'code': 'Arrearage'}, 'id': 'chatcmpl-d93406c9-9b1b-96a1-8eed-a3a645f509be', 'request_id': 'd93406c9-9b1b-96a1-8eed-a3a645f509be'}
-                    </div>
-                    
-                    
-                </div>
-                
-            </div>
-            
         </div>
-        
+
+        <div id="config-0" class="tab-content active">
+            <div style="margin-bottom: 20px;">
+                <strong>配置详情：</strong>
+                Search Mode: hybrid,
+                Top-K: 5,
+                Chunk Size: 800,
+                Reflection: 禁用
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">Python 后端开发需要掌握哪些技能？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">1.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    基于提供的上下文，没有关于“Python 后端开发需要掌握哪些技能”的相关信息。
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">如何评估候选人的项目经验？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">1.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    基于提供的上下文，没有包含关于“如何评估候选人的项目经验”的相关信息。上下文主要涉及对话摘要处理、代码测试（pytest）、任务拆解逻辑以及大模型API调用的元数据等内容。
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">简历中的技能部分应该如何优化？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">1.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    根据提供的上下文，没有包含关于“简历中的技能部分应该如何优化”的相关信息。
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">面试中如何考察算法能力？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">1.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    根据提供的上下文，没有包含关于“面试中如何考察算法能力”的相关信息。
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">什么是全栈工程师？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">1.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    基于提供的上下文，没有关于“全栈工程师”的相关信息。
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">如何准备技术面试？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">1.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    提供的上下文中没有关于“如何准备技术面试”的相关信息。
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">数据库索引的作用是什么？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.950</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.050</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    基于提供的上下文，没有直接说明传统“数据库索引的作用”的相关信息。
+
+                    （注：上下文 [5] 中仅提到了特定存储 API 中的 `index`
+                    参数用于“控制语义检索索引”，即控制是否为数据建立语义索引以支持语义检索，但这并非对通用数据库索引作用的解释。）
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">敏捷开发的核心理念是什么？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">1.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    基于提供的上下文，没有关于“敏捷开发的核心理念”的相关信息。
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">RESTful API 的设计原则有哪些？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">1.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    基于提供的上下文，没有包含关于“RESTful API 的设计原则”的相关信息。
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">什么是微服务架构？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">1.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    基于提供的上下文，没有包含关于“微服务架构”的相关信息。上下文主要介绍的是 LangChain
+                    框架中的中间件（Middleware）以及消息（Message）与提示词模板的相关知识。
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">Docker 容器与虚拟机的区别？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please
+                    make sure your account is in good standing. For details, see:
+                    https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param':
+                    None, 'code': 'Arrearage'}, 'id': 'chatcmpl-138d67a6-b8d1-90c5-97e7-f4b331e4fa5a', 'request_id':
+                    '138d67a6-b8d1-90c5-97e7-f4b331e4fa5a'}
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">如何设计高可用系统？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.600</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please
+                    make sure your account is in good standing. For details, see:
+                    https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param':
+                    None, 'code': 'Arrearage'}, 'id': 'chatcmpl-6c800e39-35c1-9aca-ba6e-33a9ea880523', 'request_id':
+                    '6c800e39-35c1-9aca-ba6e-33a9ea880523'}
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">什么是 CI/CD？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.600</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    基于提供的上下文，没有关于“什么是 CI/CD”的相关信息。
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">Redis 的常见应用场景有哪些？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">1.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.600</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.050</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    上下文中没有提供关于 Redis 常见应用场景的相关信息。文中仅提及 Redis 是“开源内存数据结构存储，现已原生支持向量相似性搜索功能”。
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">如何进行代码 Code Review？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please
+                    make sure your account is in good standing. For details, see:
+                    https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param':
+                    None, 'code': 'Arrearage'}, 'id': 'chatcmpl-e895a8a9-5a4a-9054-b5bd-855116a88aa5', 'request_id':
+                    'e895a8a9-5a4a-9054-b5bd-855116a88aa5'}
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">什么是 SQL 注入攻击？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">1.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please
+                    make sure your account is in good standing. For details, see:
+                    https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param':
+                    None, 'code': 'Arrearage'}, 'id': 'chatcmpl-aa83e67f-7787-9005-a15b-2059891f890b', 'request_id':
+                    'aa83e67f-7787-9005-a15b-2059891f890b'}
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">什么是跨域问题？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.600</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please
+                    make sure your account is in good standing. For details, see:
+                    https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param':
+                    None, 'code': 'Arrearage'}, 'id': 'chatcmpl-4c828146-2193-9c37-8608-1bc2b4d9863e', 'request_id':
+                    '4c828146-2193-9c37-8608-1bc2b4d9863e'}
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">Git 的常用命令有哪些？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.600</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please
+                    make sure your account is in good standing. For details, see:
+                    https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param':
+                    None, 'code': 'Arrearage'}, 'id': 'chatcmpl-8a33bb32-4307-9290-99e1-9c496668bf55', 'request_id':
+                    '8a33bb32-4307-9290-99e1-9c496668bf55'}
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">什么是单元测试？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.600</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    根据提供的上下文，没有关于“什么是单元测试”的定义或相关信息。上下文仅提及了使用 pytest
+                    进行测试的具体代码和执行过程，但未对“单元测试”这一概念进行解释。
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">什么是设计模式？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.600</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please
+                    make sure your account is in good standing. For details, see:
+                    https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param':
+                    None, 'code': 'Arrearage'}, 'id': 'chatcmpl-1ccc28f4-25cf-9e63-ac01-f239c1d261bd', 'request_id':
+                    '1ccc28f4-25cf-9e63-ac01-f239c1d261bd'}
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">如何优化数据库查询性能？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.600</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please
+                    make sure your account is in good standing. For details, see:
+                    https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param':
+                    None, 'code': 'Arrearage'}, 'id': 'chatcmpl-a6ac39e1-d881-956b-bfae-42b11c7b4ec1', 'request_id':
+                    'a6ac39e1-d881-956b-bfae-42b11c7b4ec1'}
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">什么是消息队列？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.600</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please
+                    make sure your account is in good standing. For details, see:
+                    https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param':
+                    None, 'code': 'Arrearage'}, 'id': 'chatcmpl-5453491a-8921-982d-a35a-5d8e1087a9f3', 'request_id':
+                    '5453491a-8921-982d-a35a-5d8e1087a9f3'}
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">前端性能优化的方法有哪些？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.600</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please
+                    make sure your account is in good standing. For details, see:
+                    https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param':
+                    None, 'code': 'Arrearage'}, 'id': 'chatcmpl-008070f4-3b43-93f3-82d7-a832e05e9110', 'request_id':
+                    '008070f4-3b43-93f3-82d7-a832e05e9110'}
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">什么是 OAuth 2.0？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.600</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please
+                    make sure your account is in good standing. For details, see:
+                    https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param':
+                    None, 'code': 'Arrearage'}, 'id': 'chatcmpl-a296c8aa-d73c-9fc8-b049-344d4d5317f7', 'request_id':
+                    'a296c8aa-d73c-9fc8-b049-344d4d5317f7'}
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">如何进行压力测试？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.600</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please
+                    make sure your account is in good standing. For details, see:
+                    https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param':
+                    None, 'code': 'Arrearage'}, 'id': 'chatcmpl-fc1cb989-e8b9-9680-8fab-d88bc3ec47db', 'request_id':
+                    'fc1cb989-e8b9-9680-8fab-d88bc3ec47db'}
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">什么是 WebSocket？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.600</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please
+                    make sure your account is in good standing. For details, see:
+                    https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param':
+                    None, 'code': 'Arrearage'}, 'id': 'chatcmpl-8a32d8c4-ae29-953a-b746-2cd4fd384ef7', 'request_id':
+                    '8a32d8c4-ae29-953a-b746-2cd4fd384ef7'}
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">如何设计 API 版本控制？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.600</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please
+                    make sure your account is in good standing. For details, see:
+                    https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param':
+                    None, 'code': 'Arrearage'}, 'id': 'chatcmpl-f6020a22-72ff-9e57-83a3-6a7afffc8caa', 'request_id':
+                    'f6020a22-72ff-9e57-83a3-6a7afffc8caa'}
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">什么是分布式事务？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.600</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please
+                    make sure your account is in good standing. For details, see:
+                    https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param':
+                    None, 'code': 'Arrearage'}, 'id': 'chatcmpl-1bdd528f-9e2d-9487-89d2-7cc12e89f5ad', 'request_id':
+                    '1bdd528f-9e2d-9487-89d2-7cc12e89f5ad'}
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">如何保证接口安全？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.600</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please
+                    make sure your account is in good standing. For details, see:
+                    https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param':
+                    None, 'code': 'Arrearage'}, 'id': 'chatcmpl-ea3f26a5-2461-9446-a1f1-bb6a7167a631', 'request_id':
+                    'ea3f26a5-2461-9446-a1f1-bb6a7167a631'}
+                </div>
+
+
+            </div>
+
+            <div class="test-result">
+                <div class="test-result-header">
+                    <div class="test-query">什么是服务降级？</div>
+                    <span class="badge badge-success">成功</span>
+                </div>
+                <div class="test-metrics">
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索精度</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">检索召回</div>
+                        <div class="test-metric-value">0.000</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">忠实度</div>
+                        <div class="test-metric-value">0.600</div>
+                    </div>
+
+                    <div class="test-metric">
+                        <div class="test-metric-label">答案相关性</div>
+                        <div class="test-metric-value">0.500</div>
+                    </div>
+
+                </div>
+
+                <div class="answer-box">
+                    <div class="answer-label">生成答案：</div>
+                    生成答案时出错：百炼聊天模型调用失败：Error code: 400 - {'error': {'message': 'Access denied, please
+                    make sure your account is in good standing. For details, see:
+                    https://help.aliyun.com/zh/model-studio/error-code#overdue-payment', 'type': 'Arrearage', 'param':
+                    None, 'code': 'Arrearage'}, 'id': 'chatcmpl-d93406c9-9b1b-96a1-8eed-a3a645f509be', 'request_id':
+                    'd93406c9-9b1b-96a1-8eed-a3a645f509be'}
+                </div>
+
+
+            </div>
+
+        </div>
+
     </div>
-    <script>
-        
-        // Tab 切换
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                const targetId = tab.dataset.tab;
-                
-                // 更新 tab 激活状态
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                
-                // 更新内容显示
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.remove('active');
-                });
-                document.getElementById(targetId).classList.add('active');
+
+</div>
+<script>
+
+    // Tab 切换
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetId = tab.dataset.tab;
+
+            // 更新 tab 激活状态
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            // 更新内容显示
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
             });
+            document.getElementById(targetId).classList.add('active');
         });
-        
-        // 初始化第一个 tab
-        const firstTab = document.querySelector('.tab');
-        if (firstTab) {
-            firstTab.click();
-        }
-        
-    </script>
+    });
+
+    // 初始化第一个 tab
+    const firstTab = document.querySelector('.tab');
+    if (firstTab) {
+        firstTab.click();
+    }
+
+</script>
 </body>
 </html>

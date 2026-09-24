@@ -192,12 +192,14 @@ async def resume_agent(state: CareerState, config: RunnableConfig) -> dict[str, 
     resume_text = state["resume_text"][:30000]
 
     await emit_progress(config, "resume_agent", "正在分析简历中的技能与经历…")
+
     async def compute():
         return await bailian_service.structured_chat(
             system_prompt=RESUME_SYSTEM_PROMPT,
             user_prompt=f"请分析下面的简历：\n\n{resume_text}", response_model=ResumeAnalysis,
             **settings.match_model_options,
         )
+
     result, hit = await analysis_cache.get_or_compute(
         owner_id=config.get("configurable", {}).get("owner_id"), kind="resume",
         text=state["resume_text"], system_prompt=RESUME_SYSTEM_PROMPT,
@@ -212,12 +214,14 @@ async def jd_agent(state: CareerState, config: RunnableConfig) -> dict[str, Any]
     jd_text = state["jd_text"][:30000]
 
     await emit_progress(config, "jd_agent", "正在分析岗位要求…")
+
     async def compute():
         return await bailian_service.structured_chat(
             system_prompt=JD_SYSTEM_PROMPT,
             user_prompt=f"请分析下面的岗位描述：\n\n{jd_text}", response_model=JobAnalysis,
             **settings.match_model_options,
         )
+
     result, hit = await analysis_cache.get_or_compute(
         owner_id=config.get("configurable", {}).get("owner_id"), kind="jd",
         text=state["jd_text"], system_prompt=JD_SYSTEM_PROMPT,
@@ -672,20 +676,26 @@ async def make_match_workflow():
 
 
 # 🌟 新增模块：为对外暴露的 Chat API 专门封装的 MCP Agent
-def get_chat_mcp_agent():
+def get_chat_agent_tools():
+    """对话 Agent 的工具清单：受限联网搜索 + 百度地图只读查询。"""
+    return mcp_service.get_tools("search") + mcp_service.get_tools("baidu_map")
+
+
+def get_chat_mcp_agent(*, temperature: float | None = None):
     """
-    提供给通用对话接口使用（如 app/chat_api.py）。
-    仅具备公开搜索能力，不开放数据库或文件工具。
+    提供给通用对话接口使用（如 app/api/chat_api.py）。
+    具备公开搜索与地图查询能力（均为只读公开数据），不开放数据库或文件工具。
+    对话历史由 conversations 表提供并随请求传入，Agent 本身不做状态持久化。
     """
-    tools = mcp_service.get_tools("search")
     mcp_llm = ChatOpenAI(
         api_key=settings.DASHSCOPE_API_KEY,
         base_url=settings.BAILIAN_BASE_URL,
         model=settings.BAILIAN_CHAT_MODEL,
+        temperature=temperature if temperature is not None else 0.7,
         timeout=settings.MODEL_TIMEOUT, max_retries=0, max_tokens=settings.CHAT_MAX_OUTPUT_TOKENS,
         callbacks=[ModelBudgetCallback()],
     )
-    return create_react_agent(mcp_llm, tools, checkpointer=checkpointer)
+    return create_react_agent(mcp_llm, get_chat_agent_tools())
 
 
 # =====================================================================
@@ -852,7 +862,8 @@ async def run_match_stream(
                         yield _format_sse(
                             "node_update",
                             {"node": "resume_agent", "status": "completed",
-                             "message": "简历分析完成" + ("（复用已有结果）" if node_output.get("resume_cache_hit") else ""),
+                             "message": "简历分析完成" + (
+                                 "（复用已有结果）" if node_output.get("resume_cache_hit") else ""),
                              "cache_hit": node_output.get("resume_cache_hit", False),
                              "data": node_output.get("resume_analysis")},
                         )
@@ -860,7 +871,8 @@ async def run_match_stream(
                         yield _format_sse(
                             "node_update",
                             {"node": "jd_agent", "status": "completed",
-                             "message": "岗位要求分析完成" + ("（复用已有结果）" if node_output.get("jd_cache_hit") else ""),
+                             "message": "岗位要求分析完成" + (
+                                 "（复用已有结果）" if node_output.get("jd_cache_hit") else ""),
                              "cache_hit": node_output.get("jd_cache_hit", False),
                              "data": node_output.get("job_analysis")},
                         )

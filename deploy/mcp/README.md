@@ -11,7 +11,8 @@
 docker compose -f deploy/docker-compose.mcp.yml up -d --build --wait
 ```
 
-先按照 [Runner 启动说明](../sandbox/README.md) 构建并启动沙箱 Runner。后端通过权限受限的本机 Unix socket 请求 Runner 启动 MCP 容器；每次工具连接结束，容器即删除。
+先按照 [Runner 启动说明](../sandbox/README.md) 构建并启动沙箱 Runner。后端通过权限受限的本机 Unix socket 请求 Runner 启动
+MCP 容器；每次工具连接结束，容器即删除。
 搜索服务常驻，使用 Unix socket 通信，无宿主机端口。离线或镜像未构建时禁用对应工具，
 绝不回退到本机 `npx`、宽权限 Puppeteer 或业务数据库账号。
 
@@ -69,7 +70,8 @@ python deploy/mcp/provision_db.py
 - 不注入百炼、MinIO、管理员数据库等无关凭据；不挂载项目根目录或 Docker socket；
   无 privileged/host networking；限制 CPU、内存、进程数，tmpfs 为 noexec/nosuid。
 
-Docker CLI 由可信 Runner 发起，参数来自固定应用配置；模型和用户无法选择镜像、挂载或 Docker 参数。生产环境的后端账号不得直接访问 Docker socket。
+Docker CLI 由可信 Runner 发起，参数来自固定应用配置；模型和用户无法选择镜像、挂载或 Docker 参数。生产环境的后端账号不得直接访问
+Docker socket。
 `app/requirements.txt` 统一引用 `backend/requirements.txt`；LangGraph/MCP 依赖已对齐到此次验证的 API 系列。
 这些是工具执行隔离，不能替代业务接口登录/数据归属校验，也不能保证模型不受提示词注入影响。
 
@@ -77,7 +79,8 @@ Docker CLI 由可信 Runner 发起，参数来自固定应用配置；模型和�
 
 搜索使用固定 Bing HTML 搜索页，无需额外 API 密钥。页面结构变化、验证码、IP 变更或网络不通
 会导致搜索不可用并退回基础匹配；不会扩大权限或伪造搜索结果。IP 更新后重启搜索服务刷新白名单。
-若全局代理把 `www.bing.com` 解析成 `198.18.0.0/15` 等虚拟映射地址，搜索代理会按非公网地址拒绝启动；应在梯子中为该域名配置真实 DNS/直连路由，而不是放宽内网访问规则。
+若全局代理把 `www.bing.com` 解析成 `198.18.0.0/15` 等虚拟映射地址，搜索代理会按非公网地址拒绝启动；应在梯子中为该域名配置真实
+DNS/直连路由，而不是放宽内网访问规则。
 
 后端支持：`MCP_ENABLED`、`MCP_FILES_ENABLED`、`MCP_DATABASE_ENABLED`、
 `MCP_STARTUP_TIMEOUT`、`MCP_RESEARCH_TIMEOUT`、`MCP_RESEARCH_MAX_STEPS`。

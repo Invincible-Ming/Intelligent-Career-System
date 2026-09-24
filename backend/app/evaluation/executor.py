@@ -18,11 +18,11 @@ class RAGExecutor:
     """RAG 查询执行器。"""
 
     async def execute(
-        self,
-        *,
-        query: str,
-        config: EvaluationConfig,
-        document_type: str | None = None,
+            self,
+            *,
+            query: str,
+            config: EvaluationConfig,
+            document_type: str | None = None,
     ) -> dict[str, Any]:
         """
         执行 RAG 查询。
@@ -76,11 +76,11 @@ class RAGExecutor:
         }
 
     async def _retrieve(
-        self,
-        *,
-        query: str,
-        config: EvaluationConfig,
-        document_type: str | None,
+            self,
+            *,
+            query: str,
+            config: EvaluationConfig,
+            document_type: str | None,
     ) -> list[str]:
         """根据配置执行检索。"""
 
@@ -119,11 +119,11 @@ class RAGExecutor:
             return []
 
     async def _dense_search(
-        self,
-        *,
-        query: str,
-        document_type: str | None,
-        top_k: int,
+            self,
+            *,
+            query: str,
+            document_type: str | None,
+            top_k: int,
     ) -> list[dict[str, Any]]:
         """Dense 向量检索。"""
 
@@ -136,10 +136,10 @@ class RAGExecutor:
         )
 
     async def _generate_answer(
-        self,
-        *,
-        query: str,
-        contexts: list[str],
+            self,
+            *,
+            query: str,
+            contexts: list[str],
     ) -> str:
         """基于检索上下文生成答案。"""
 
@@ -171,12 +171,12 @@ class RAGExecutor:
             return f"生成答案时出错：{exc}"
 
     async def _reflect(
-        self,
-        *,
-        query: str,
-        answer: str,
-        contexts: list[str],
-        config: EvaluationConfig,
+            self,
+            *,
+            query: str,
+            answer: str,
+            contexts: list[str],
+            config: EvaluationConfig,
     ) -> tuple[str, int]:
         """
         反思机制：让模型审查并改进自己的答案。
@@ -224,8 +224,8 @@ class RAGExecutor:
         return current_answer, iteration + 1
 
     def _format_contexts(
-        self,
-        contexts: list[str],
+            self,
+            contexts: list[str],
     ) -> str:
         """格式化上下文。"""
 
@@ -235,10 +235,10 @@ class RAGExecutor:
         )
 
     def _is_similar(
-        self,
-        text1: str,
-        text2: str,
-        threshold: float = 0.9,
+            self,
+            text1: str,
+            text2: str,
+            threshold: float = 0.9,
     ) -> bool:
         """简单的文本相似度判断。"""
 

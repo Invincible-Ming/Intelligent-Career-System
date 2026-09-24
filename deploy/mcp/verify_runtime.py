@@ -88,15 +88,19 @@ async def verify():
                     assert not allowed.isError
                 denied = await session.call_tool("read_statistics", {"view": "documents", "limit": 1})
                 assert denied.isError
-                denied = await session.call_tool("read_statistics", {"view": "knowledge_inventory; DROP TABLE documents", "limit": 1})
+                denied = await session.call_tool("read_statistics",
+                                                 {"view": "knowledge_inventory; DROP TABLE documents", "limit": 1})
                 assert denied.isError
             if mode == "search":
-                denied = await session.call_tool("search_web", {"query": "a"*301})
+                denied = await session.call_tool("search_web", {"query": "a" * 301})
                 assert denied.isError
-    networks = json.loads(docker("inspect", "career-mcp-search-broker-1", "--format", "{{json .NetworkSettings.Networks}}"))
+    networks = json.loads(
+        docker("inspect", "career-mcp-search-broker-1", "--format", "{{json .NetworkSettings.Networks}}"))
     gateways = [item["Gateway"] for item in networks.values() if item.get("Gateway")]
-    print("broker", docker("exec", "--user", "10001:10001", "career-mcp-search-broker-1", "python", "-c", PROBE, json.dumps(gateways)))
-    result = await service.get_tools("search")[0].ainvoke({"query": "Python backend developer requirements", "count": 2})
+    print("broker", docker("exec", "--user", "10001:10001", "career-mcp-search-broker-1", "python", "-c", PROBE,
+                           json.dumps(gateways)))
+    result = await service.get_tools("search")[0].ainvoke(
+        {"query": "Python backend developer requirements", "count": 2})
     text = " ".join(block.get("text", "") for block in result) if isinstance(result, list) else str(result)
     evidence = json.loads(text)
     assert evidence.get("results") and evidence.get("untrusted_content") is True

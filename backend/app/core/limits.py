@@ -44,11 +44,19 @@ class InvocationBudget:
         if time.monotonic() >= self.deadline:
             raise BudgetExceeded("本次操作已达到总耗时上限")
         if self.calls >= self.max_calls:
-            raise BudgetExceeded("本次操作已达到模型调用次数上限")
+            raise BudgetExceeded(
+                f"本次操作已达到模型调用次数上限（{self.max_calls} 次），请稍后重试或拆分任务"
+            )
         self.calls += 1
 
 
 invocation_budget: ContextVar[InvocationBudget | None] = ContextVar("invocation_budget", default=None)
+# 当前请求的操作者是否管理员（由认证依赖注入）；管理员不限模型调用次数。
+operation_actor_is_admin: ContextVar[bool] = ContextVar("operation_actor_is_admin", default=False)
+
+
+def set_operation_actor(*, is_admin: bool) -> None:
+    operation_actor_is_admin.set(is_admin)
 
 
 def model_request_timeout():
@@ -60,6 +68,9 @@ def model_request_timeout():
 
 
 def charge_model_call():
+    # 管理员操作不限模型调用次数（总耗时上限仍然生效）。
+    if operation_actor_is_admin.get():
+        return
     budget = invocation_budget.get()
     if budget is not None:
         budget.charge()
@@ -125,11 +136,13 @@ def operation_timeout(path):
 
 def heavy_operation(path, method):
     return method == "POST" and path.startswith(tuple(settings.API_PREFIX + suffix for suffix in
-        ("/chat/completions", "/documents/upload", "/search", "/match", "/interview", "/learning-plan", "/evaluation/experiments")))
+                                                      ("/chat/completions", "/documents/upload", "/search", "/match",
+                                                       "/interview", "/learning-plan", "/evaluation/experiments")))
 
 
 class SecurityLimitsMiddleware:
     """ASGI-level deadline wraps the entire response, including SSE bodies."""
+
     def __init__(self, app):
         self.app = app
 
@@ -190,6 +203,7 @@ class SecurityLimitsMiddleware:
                         leaves = [find_limit(child) for child in error.exceptions]
                         return next((leaf for leaf in leaves if leaf is not None), None)
                     return None
+
                 exc = find_limit(failure)
                 if exc is None:
                     raise
@@ -198,10 +212,12 @@ class SecurityLimitsMiddleware:
                     return
                 if not started:
                     from starlette.responses import JSONResponse
-                    await JSONResponse({"detail": message}, status_code=504 if isinstance(exc, TimeoutError) else 429)(scope, receive, send)
+                    await JSONResponse({"detail": message}, status_code=504 if isinstance(exc, TimeoutError) else 429)(
+                        scope, receive, send)
                 else:
                     if path == settings.API_PREFIX + "/chat/completions":
-                        body = "data: " + json.dumps({"error": {"message": message, "type": "operation_limit"}}, ensure_ascii=False) + "\n\ndata: [DONE]\n\n"
+                        body = "data: " + json.dumps({"error": {"message": message, "type": "operation_limit"}},
+                                                     ensure_ascii=False) + "\n\ndata: [DONE]\n\n"
                     else:
                         body = "event: error\ndata: " + json.dumps({"message": message}, ensure_ascii=False) + "\n\n"
                     await send({"type": "http.response.body", "body": body.encode(), "more_body": False})

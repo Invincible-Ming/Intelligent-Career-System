@@ -51,9 +51,9 @@ class ExperimentStatus(BaseModel):
     response_model=ExperimentStatus,
 )
 async def start_experiment(
-    user: AdminUser,
-    request: StartExperimentRequest,
-    background_tasks: BackgroundTasks,
+        user: AdminUser,
+        request: StartExperimentRequest,
+        background_tasks: BackgroundTasks,
 ) -> ExperimentStatus:
     """启动评测实验（异步后台运行）。"""
 
@@ -95,8 +95,8 @@ async def start_experiment(
     response_model=ExperimentStatus,
 )
 async def get_experiment_status(
-    user: AdminUser,
-    experiment_id: str,
+        user: AdminUser,
+        experiment_id: str,
 ) -> ExperimentStatus:
     """查询评测实验状态。"""
 
@@ -168,9 +168,9 @@ async def get_report(user: AdminUser, path: str) -> dict[str, str]:
 
 
 async def run_experiment_background(
-    *,
-    experiment_id: str,
-    experiment_config: ExperimentConfig,
+        *,
+        experiment_id: str,
+        experiment_config: ExperimentConfig,
 ) -> None:
     """后台运行评测实验。"""
 

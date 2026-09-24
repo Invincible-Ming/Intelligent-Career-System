@@ -94,7 +94,7 @@ class RerankerService:
 
     @staticmethod
     def _load_model(
-        device: str,
+            device: str,
     ) -> CrossEncoder:
         """同步加载模型。"""
 
@@ -105,11 +105,11 @@ class RerankerService:
         )
 
     async def rerank(
-        self,
-        *,
-        query: str,
-        results: list[dict[str, Any]],
-        top_k: int,
+            self,
+            *,
+            query: str,
+            results: list[dict[str, Any]],
+            top_k: int,
     ) -> list[dict[str, Any]]:
         """对 RRF 结果进行 BGE 重排。"""
 
@@ -147,10 +147,10 @@ class RerankerService:
             )
 
     def _rerank_sync(
-        self,
-        query: str,
-        results: list[dict[str, Any]],
-        top_k: int,
+            self,
+            query: str,
+            results: list[dict[str, Any]],
+            top_k: int,
     ) -> list[dict[str, Any]]:
         """同步执行 CrossEncoder 预测。"""
 
@@ -179,9 +179,9 @@ class RerankerService:
         reranked: list[dict[str, Any]] = []
 
         for result, score in zip(
-            results,
-            aggregated,
-            strict=True,
+                results,
+                aggregated,
+                strict=True,
         ):
             item = dict(result)
 

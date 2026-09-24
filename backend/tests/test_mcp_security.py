@@ -25,7 +25,9 @@ class NetworkPolicyTests(unittest.TestCase):
         parser = SearchResults()
         parser.feed('<li class="b_algo"><h2><a href="https://example.com">Python 岗位</a></h2><p>技能要求</p></li>'
                     '<li class="b_algo"><h2><a href="http://127.0.0.1">恶意链接</a></h2><p>内容</p></li>')
-        self.assertEqual(parser.results, [{"title": "Python 岗位", "snippet": "技能要求", "url": "https://example.com"}])
+        self.assertEqual(parser.results,
+                         [{"title": "Python 岗位", "snippet": "技能要求", "url": "https://example.com"}])
+
     def test_nonpublic_addresses_denied(self):
         for address in ("127.0.0.1", "10.1.2.3", "172.16.0.1", "192.168.1.1", "169.254.169.254",
                         "0.0.0.0", "100.64.0.1", "192.0.2.1", "224.0.0.1", "::1", "::ffff:127.0.0.1"):
@@ -34,13 +36,14 @@ class NetworkPolicyTests(unittest.TestCase):
 
     def test_query_bounded(self):
         self.assertEqual(validate_query(" Python 招聘 ", 5), "Python 招聘")
-        for query, count in (("", 1), ("a"*301, 1), ("a\n", 1), ("a\x00b", 1), ("a", 6), ("a", True)):
+        for query, count in (("", 1), ("a" * 301, 1), ("a\n", 1), ("a\x00b", 1), ("a", 6), ("a", True)):
             with self.assertRaises(ValueError):
                 validate_query(query, count)
 
     def test_citation_urls_do_not_accept_local_targets(self):
         for url in ("file:///etc/passwd", "javascript:alert(1)", "http://localhost", "http://host.docker.internal",
-                    "http://127.0.0.1", "http://169.254.169.254", "http://user:password@example.com", "http://example.com:5432"):
+                    "http://127.0.0.1", "http://169.254.169.254", "http://user:password@example.com",
+                    "http://example.com:5432"):
             self.assertIsNone(result_url(url), url)
         self.assertEqual(result_url("https://example.com/jobs"), "https://example.com/jobs")
 
@@ -123,7 +126,9 @@ class CapabilityTests(unittest.TestCase):
     def test_unexpected_tool_inventory_fails_closed(self):
         client = SimpleNamespace(get_tools=AsyncMock(return_value=[SimpleNamespace(name="execute_shell")]))
         service = MCPService()
-        with patch("app.services.mcp_tools.MultiServerMCPClient", return_value=client), patch("app.services.mcp_tools.settings.MCP_FILES_ENABLED", False), patch("app.services.mcp_tools.settings.MCP_DATABASE_ENABLED", False):
+        with patch("app.services.mcp_tools.MultiServerMCPClient", return_value=client), patch(
+                "app.services.mcp_tools.settings.MCP_FILES_ENABLED", False), patch(
+                "app.services.mcp_tools.settings.MCP_DATABASE_ENABLED", False):
             asyncio.run(service.initialize())
         self.assertEqual(service.get_tools(), [])
         self.assertTrue(service.startup_errors)
@@ -141,7 +146,8 @@ class CapabilityTests(unittest.TestCase):
 
 class DatabasePolicyTests(unittest.TestCase):
     def test_privileged_identity_and_inherited_access_denied(self):
-        role = dict(rolname="career_mcp_reader", rolsuper=False, rolcreaterole=False, rolcreatedb=False, rolreplication=False, rolbypassrls=False)
+        role = dict(rolname="career_mcp_reader", rolsuper=False, rolcreaterole=False, rolcreatedb=False,
+                    rolreplication=False, rolbypassrls=False)
         access = dict(extra_access=False, membership=False, schema_create=False, database_create=False)
         check_identity(role, access, "on")
         for key in access:

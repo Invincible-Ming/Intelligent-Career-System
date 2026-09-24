@@ -1,10 +1,12 @@
 """Bound query/document pairs by the actual CrossEncoder tokenizer budget."""
+
+
 def make_rerank_pairs(tokenizer, query, contents, max_length):
     special = tokenizer.num_special_tokens_to_add(pair=True)
     if max_length < special + 8:
         raise ValueError("Reranker token budget is too small")
     query_ids = tokenizer.encode(query, add_special_tokens=False)
-    query_ids = query_ids[: min(96, (max_length-special)//3)]
+    query_ids = query_ids[: min(96, (max_length - special) // 3)]
     query_text = tokenizer.decode(query_ids, skip_special_tokens=True)
     budget = max_length - len(query_ids) - special - 4
     pairs, owners = [], []
@@ -22,5 +24,5 @@ def make_rerank_pairs(tokenizer, query, contents, max_length):
             owners.append(owner)
             if end >= len(ids):
                 break
-            start = max(start + 1, end - min(32, budget//4))
+            start = max(start + 1, end - min(32, budget // 4))
     return pairs, owners

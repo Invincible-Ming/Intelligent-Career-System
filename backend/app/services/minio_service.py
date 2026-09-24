@@ -52,12 +52,12 @@ class MinioService:
                     raise
 
     async def upload(
-        self,
-        *,
-        document_id: str,
-        filename: str,
-        data: bytes,
-        content_type: str = "application/octet-stream",
+            self,
+            *,
+            document_id: str,
+            filename: str,
+            data: bytes,
+            content_type: str = "application/octet-stream",
     ) -> str:
         """
         上传文件并返回 MinIO Object Key。
@@ -87,8 +87,8 @@ class MinioService:
         return object_key
 
     async def download(
-        self,
-        object_key: str,
+            self,
+            object_key: str,
     ) -> bytes:
         """下载文件并返回字节数据。"""
 
@@ -98,8 +98,8 @@ class MinioService:
         )
 
     def _download_sync(
-        self,
-        object_key: str,
+            self,
+            object_key: str,
     ) -> bytes:
         """同步下载文件，并正确释放 HTTP 连接。"""
 
@@ -115,8 +115,8 @@ class MinioService:
             response.release_conn()
 
     async def delete(
-        self,
-        object_key: str,
+            self,
+            object_key: str,
     ) -> None:
         """删除指定文件。"""
 
@@ -127,8 +127,8 @@ class MinioService:
         )
 
     async def exists(
-        self,
-        object_key: str,
+            self,
+            object_key: str,
     ) -> bool:
         """判断文件是否存在。"""
 

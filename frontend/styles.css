@@ -7,121 +7,354 @@
     --ui-line: color-mix(in srgb, var(--text-color) 10%, transparent);
     --ui-hover: color-mix(in srgb, var(--text-color) 6%, var(--background-color));
 }
+
 @media (prefers-color-scheme: dark) {
-    :root { --text-color: #ececec; --background-color: #212121; --secondary-background-color: #171717; }
+    :root {
+        --text-color: #ececec;
+        --background-color: #212121;
+        --secondary-background-color: #171717;
+    }
 }
+
 [data-testid="stAppDeployButton"], .stAppDeployButton,
 [data-testid="stToolbarActions"],
-[data-testid="stMainMenu"] { display: none !important; }
-[data-testid="stToolbar"] { pointer-events: none !important; }
+[data-testid="stMainMenu"] {
+    display: none !important;
+}
+
+[data-testid="stToolbar"] {
+    pointer-events: none !important;
+}
+
 header[data-testid="stHeader"] {
     background: transparent !important;
     height: 0 !important;
     pointer-events: none;
 }
+
 [data-testid="stExpandSidebarButton"] {
-    position: fixed; top: .8rem; left: .8rem; z-index: 1002;
-    pointer-events: auto; background: var(--background-color); border-radius: 8px;
+    position: fixed;
+    top: .8rem;
+    left: .8rem;
+    z-index: 1002;
+    pointer-events: auto;
+    background: var(--background-color);
+    border-radius: 8px;
 }
+
 [data-testid="stMainBlockContainer"] {
-    max-width: 1180px; padding: 1rem 2.5rem 3rem;
+    max-width: 1180px;
+    padding: 1rem 2.5rem 3rem;
 }
-[data-testid="stMainBlockContainer"] h2 { font-size: 1.5rem; font-weight: 600; }
-[data-testid="stMainBlockContainer"] h3 { font-size: 1.15rem; font-weight: 600; }
+
+[data-testid="stMainBlockContainer"] h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+[data-testid="stMainBlockContainer"] h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
 [data-testid="stButton"] button {
-    border-radius: 10px; min-height: 2.5rem;
+    border-radius: 10px;
+    min-height: 2.5rem;
     transition: background .15s ease, box-shadow .15s ease;
 }
+
 [data-testid="stButton"] button:focus-visible {
-    outline: 2px solid var(--text-color); outline-offset: 3px;
+    outline: 2px solid var(--text-color);
+    outline-offset: 3px;
 }
-.st-key-top_navigation { margin: 0 auto 1.5rem; max-width: 760px; padding: .25rem; }
-.st-key-top_navigation [data-testid="stHorizontalBlock"] { gap: .35rem; }
+
+.st-key-top_navigation {
+    margin: 0 auto 1.5rem;
+    max-width: 760px;
+    padding: .25rem;
+}
+
+.st-key-top_navigation [data-testid="stHorizontalBlock"] {
+    gap: .35rem;
+}
+
 .st-key-top_navigation button {
-    background: transparent; border: 1px solid transparent; color: var(--ui-muted);
-    white-space: nowrap; font-weight: 500;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--ui-muted);
+    white-space: nowrap;
+    font-weight: 500;
 }
-.st-key-top_navigation button:hover { background: var(--ui-hover); color: var(--text-color); }
+
+.st-key-top_navigation button:hover {
+    background: var(--ui-hover);
+    color: var(--text-color);
+}
+
 .st-key-top_navigation button[kind="primary"] {
-    color: var(--text-color); background: var(--background-color); border-color: var(--ui-line);
+    color: var(--text-color);
+    background: var(--background-color);
+    border-color: var(--ui-line);
     box-shadow: 0 2px 6px #00000012, 0 6px 18px #00000006;
 }
-[data-testid="stSidebar"] { background: color-mix(in srgb, var(--text-color) 3%, var(--background-color)); border-right: 1px solid var(--ui-line); }
-[data-testid="stSidebar"][aria-expanded="true"] { width: 260px !important; min-width: 260px !important; }
-[data-testid="stSidebarUserContent"] { padding: .5rem .85rem 1rem !important; }
-[data-testid="stSidebarCollapseButton"] { opacity: 1 !important; visibility: visible !important; }
-.st-key-sidebar_shell { min-height: calc(100dvh - 90px); gap: .5rem; }
-.st-key-sidebar_shell > [data-testid="stLayoutWrapper"]:last-child { margin-top: auto; }
-.sidebar-brand { font-size: 1.2rem; font-weight: 650; padding: .25rem .6rem 1.2rem; }
-.sidebar-brand span { display: block; font-size: .65rem; letter-spacing: .16em; color: var(--ui-muted); margin-top: .2rem; font-weight: 500; }
-.sidebar-label { color: var(--ui-muted); font-size: .78rem; padding: 1.5rem .65rem .3rem; }
-[data-testid="stSidebar"] [data-testid="stVerticalBlock"] { gap: .35rem; }
-[data-testid="stSidebar"] button { justify-content: flex-start; text-align: left; color: var(--text-color); font-weight: 400; border-color: transparent; }
-[data-testid="stSidebar"] button > div { justify-content: flex-start; width: 100%; }
-[data-testid="stSidebar"] button:hover { background: var(--ui-hover); color: var(--text-color); border-color: transparent; }
-.st-key-new_chat button { background: var(--ui-hover); }
-.st-key-conversation_list { gap: .15rem; }
-.st-key-conversation_list button { min-height: 2.35rem; padding: .35rem .7rem; }
-.st-key-conversation_list button p { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .9rem; }
-.st-key-conversation_list button[kind="primary"] { background: var(--ui-hover); border-color: transparent; color: var(--text-color); }
+
+[data-testid="stSidebar"] {
+    background: color-mix(in srgb, var(--text-color) 3%, var(--background-color));
+    border-right: 1px solid var(--ui-line);
+}
+
+[data-testid="stSidebar"][aria-expanded="true"] {
+    width: 260px !important;
+    min-width: 260px !important;
+}
+
+[data-testid="stSidebarUserContent"] {
+    padding: .5rem .85rem 1rem !important;
+}
+
+[data-testid="stSidebarCollapseButton"] {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.st-key-sidebar_shell {
+    min-height: calc(100dvh - 90px);
+    gap: .5rem;
+}
+
+.st-key-sidebar_shell > [data-testid="stLayoutWrapper"]:last-child {
+    margin-top: auto;
+}
+
+.sidebar-brand {
+    font-size: 1.2rem;
+    font-weight: 650;
+    padding: .25rem .6rem 1.2rem;
+}
+
+.sidebar-brand span {
+    display: block;
+    font-size: .65rem;
+    letter-spacing: .16em;
+    color: var(--ui-muted);
+    margin-top: .2rem;
+    font-weight: 500;
+}
+
+.sidebar-label {
+    color: var(--ui-muted);
+    font-size: .78rem;
+    padding: 1.5rem .65rem .3rem;
+}
+
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+    gap: .35rem;
+}
+
+[data-testid="stSidebar"] button {
+    justify-content: flex-start;
+    text-align: left;
+    color: var(--text-color);
+    font-weight: 400;
+    border-color: transparent;
+}
+
+[data-testid="stSidebar"] button > div {
+    justify-content: flex-start;
+    width: 100%;
+}
+
+[data-testid="stSidebar"] button:hover {
+    background: var(--ui-hover);
+    color: var(--text-color);
+    border-color: transparent;
+}
+
+.st-key-new_chat button {
+    background: var(--ui-hover);
+}
+
+.st-key-conversation_list {
+    gap: .15rem;
+}
+
+.st-key-conversation_list button {
+    min-height: 2.35rem;
+    padding: .35rem .7rem;
+}
+
+.st-key-conversation_list button p {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: .9rem;
+}
+
+.st-key-conversation_list button[kind="primary"] {
+    background: var(--ui-hover);
+    border-color: transparent;
+    color: var(--text-color);
+}
+
 /* 对话行：标题 + 右侧悬停才显示的"…"菜单（ChatGPT 风格） */
-.st-key-conversation_list [data-testid="stHorizontalBlock"] { flex-wrap: nowrap !important; align-items: center; gap: .15rem !important; }
-.st-key-conversation_list [data-testid="stColumn"] { min-width: 0; }
-.st-key-conversation_list [data-testid="stColumn"] [data-testid="stVerticalBlock"] { gap: 0 !important; }
-.st-key-conversation_list [data-testid="stColumn"]:first-child { flex: 1 1 auto !important; width: auto !important; }
-.st-key-conversation_list [data-testid="stColumn"]:last-child { flex: 0 0 30px !important; width: 30px !important; min-width: 30px !important; }
+.st-key-conversation_list [data-testid="stHorizontalBlock"] {
+    flex-wrap: nowrap !important;
+    align-items: center;
+    gap: .15rem !important;
+}
+
+.st-key-conversation_list [data-testid="stColumn"] {
+    min-width: 0;
+}
+
+.st-key-conversation_list [data-testid="stColumn"] [data-testid="stVerticalBlock"] {
+    gap: 0 !important;
+}
+
+.st-key-conversation_list [data-testid="stColumn"]:first-child {
+    flex: 1 1 auto !important;
+    width: auto !important;
+}
+
+.st-key-conversation_list [data-testid="stColumn"]:last-child {
+    flex: 0 0 30px !important;
+    width: 30px !important;
+    min-width: 30px !important;
+}
+
 .st-key-conversation_list [data-testid="stPopover"] button {
-    opacity: 0; pointer-events: none;
-    width: 30px; min-width: 30px; min-height: 1.9rem; padding: 0;
-    justify-content: center; border-radius: 8px;
+    opacity: 0;
+    pointer-events: none;
+    width: 30px;
+    min-width: 30px;
+    min-height: 1.9rem;
+    padding: 0;
+    justify-content: center;
+    border-radius: 8px;
     color: var(--ui-muted);
     transition: opacity .12s ease;
 }
+
 .st-key-conversation_list [data-testid="stHorizontalBlock"]:hover [data-testid="stPopover"] button,
 .st-key-conversation_list [data-testid="stPopover"] button[aria-expanded="true"],
 .st-key-conversation_list [data-testid="stHorizontalBlock"]:has(button[kind="primary"]) [data-testid="stPopover"] button {
-    opacity: 1; pointer-events: auto;
+    opacity: 1;
+    pointer-events: auto;
 }
-.st-key-conversation_list [data-testid="stPopover"] button:hover { background: var(--ui-hover); color: var(--text-color); }
+
+.st-key-conversation_list [data-testid="stPopover"] button:hover {
+    background: var(--ui-hover);
+    color: var(--text-color);
+}
+
 /* 隐藏 popover 自带的展开箭头，只保留"…" */
-.st-key-conversation_list [data-testid="stPopover"] button div[aria-hidden="true"] { display: none; }
-.st-key-conversation_list [data-testid="stPopover"] button > div { justify-content: center; width: 100%; }
+.st-key-conversation_list [data-testid="stPopover"] button div[aria-hidden="true"] {
+    display: none;
+}
+
+.st-key-conversation_list [data-testid="stPopover"] button > div {
+    justify-content: center;
+    width: 100%;
+}
+
 .st-key-conversation_list [data-testid="stPopover"] button:focus-visible,
 .st-key-conversation_list [data-testid="stPopover"] button:focus {
-    outline: 2px solid var(--ui-muted); outline-offset: 1px; box-shadow: none;
+    outline: 2px solid var(--ui-muted);
+    outline-offset: 1px;
+    box-shadow: none;
 }
+
 /* "…"下拉菜单内容（菜单渲染在侧边栏之外，需单独设置样式） */
-[data-testid="stPopoverBody"] { min-width: 150px; padding: .35rem !important; }
-[data-testid="stPopoverBody"] button {
-    justify-content: flex-start; text-align: left; font-weight: 400;
-    background: transparent; border-color: transparent;
+[data-testid="stPopoverBody"] {
+    min-width: 150px;
+    padding: .35rem !important;
 }
-[data-testid="stPopoverBody"] button:hover { background: var(--ui-hover); border-color: transparent; }
-.st-key-sidebar_account { padding: .8rem .2rem 0; border-top: 1px solid var(--ui-line); }
+
+[data-testid="stPopoverBody"] button {
+    justify-content: flex-start;
+    text-align: left;
+    font-weight: 400;
+    background: transparent;
+    border-color: transparent;
+}
+
+[data-testid="stPopoverBody"] button:hover {
+    background: var(--ui-hover);
+    border-color: transparent;
+}
+
+.st-key-sidebar_account {
+    padding: .8rem .2rem 0;
+    border-top: 1px solid var(--ui-line);
+}
+
 /* 底部用户区域：整行可点，点击弹出账户菜单（ChatGPT 风格） */
 .st-key-sidebar_account [data-testid="stPopover"] button {
-    width: 100%; justify-content: flex-start;
-    background: transparent; border-color: transparent;
-    font-weight: 500; padding: .45rem .6rem; min-height: 2.35rem;
+    width: 100%;
+    justify-content: flex-start;
+    background: transparent;
+    border-color: transparent;
+    font-weight: 500;
+    padding: .45rem .6rem;
+    min-height: 2.35rem;
 }
-.st-key-sidebar_account [data-testid="stPopover"] button:hover { background: var(--ui-hover); border-color: transparent; }
+
+.st-key-sidebar_account [data-testid="stPopover"] button:hover {
+    background: var(--ui-hover);
+    border-color: transparent;
+}
+
 .st-key-sidebar_account [data-testid="stPopover"] button [data-testid="stIconMaterial"] {
-    display: grid; place-items: center;
-    width: 26px; height: 26px; margin-right: .55rem;
-    border-radius: 50%; background: var(--ui-hover); font-size: .85rem;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    margin-right: .55rem;
+    border-radius: 50%;
+    background: var(--ui-hover);
+    font-size: .85rem;
 }
-.st-key-sidebar_account [data-testid="stPopover"] button div[aria-hidden="true"] { display: none; }
-.chat-welcome { max-width: 780px; margin: clamp(3rem, 15vh, 9rem) auto 2rem; text-align: center; }
-.chat-welcome h1 { font-size: 2rem; font-weight: 600; letter-spacing: -.04em; padding-bottom: .5rem; }
-.chat-welcome p { color: var(--ui-muted); font-size: 1rem; }
-.st-key-chat_history { max-width: 780px; margin: 0 auto; }
+
+.st-key-sidebar_account [data-testid="stPopover"] button div[aria-hidden="true"] {
+    display: none;
+}
+
+.chat-welcome {
+    max-width: 780px;
+    margin: clamp(3rem, 15vh, 9rem) auto 2rem;
+    text-align: center;
+}
+
+.chat-welcome h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    letter-spacing: -.04em;
+    padding-bottom: .5rem;
+}
+
+.chat-welcome p {
+    color: var(--ui-muted);
+    font-size: 1rem;
+}
+
+.st-key-chat_history {
+    max-width: 780px;
+    margin: 0 auto;
+}
+
 /* ChatGPT 风格对话布局：无头像，用户消息右侧气泡，AI 回复左侧通栏 */
 [data-testid="stChatMessage"] {
-    background: transparent; padding: .4rem .5rem; border-radius: 18px;
+    background: transparent;
+    padding: .4rem .5rem;
+    border-radius: 18px;
 }
+
 [data-testid="stChatMessage"] [data-testid="stChatMessageAvatarCustom"],
 [data-testid="stChatMessage"] [data-testid="stChatMessageAvatarUser"],
-[data-testid="stChatMessage"] [data-testid="stChatMessageAvatarAssistant"] { display: none; }
+[data-testid="stChatMessage"] [data-testid="stChatMessageAvatarAssistant"] {
+    display: none;
+}
+
 /* 用户消息：右对齐（!important 压过 Streamlit 自带布局） */
 /* 用户消息：右对齐（不依赖父级布局，fit-content + auto 外边距在 flex/grid/block 下都贴右） */
 [data-testid="stChatMessage"] [data-testid="stChatMessageContent"][aria-label*="user"] {
@@ -135,9 +368,24 @@ header[data-testid="stHeader"] {
     border-radius: 18px;
     padding: .6rem 1rem;
 }
-[data-testid="stBottomBlockContainer"] { max-width: 860px; padding: .75rem 2.5rem 1.25rem; margin: 0 auto; }
-[data-testid="stChatInput"] { border-radius: 22px; border: 1px solid var(--ui-line); background: var(--background-color); box-shadow: 0 3px 16px #0000000a; }
-[data-testid="stChatInput"]:focus-within { border-color: var(--ui-muted); }
+
+[data-testid="stBottomBlockContainer"] {
+    max-width: 860px;
+    padding: .75rem 2.5rem 1.25rem;
+    margin: 0 auto;
+}
+
+[data-testid="stChatInput"] {
+    border-radius: 22px;
+    border: 1px solid var(--ui-line);
+    background: var(--background-color);
+    box-shadow: 0 3px 16px #0000000a;
+}
+
+[data-testid="stChatInput"]:focus-within {
+    border-color: var(--ui-muted);
+}
+
 /* 关键：Streamlit 输入框内部还有一层自带边框/底色的容器，必须清掉，否则出现双框 */
 [data-testid="stChatInput"] > div,
 [data-testid="stChatInput"] > div > div,
@@ -146,10 +394,16 @@ header[data-testid="stHeader"] {
     border: none !important;
     box-shadow: none !important;
 }
-[data-testid="stChatInput"] textarea { padding: .55rem .95rem; }
+
+[data-testid="stChatInput"] textarea {
+    padding: .55rem .95rem;
+}
+
 [data-testid="stChatInputSubmitButton"] {
-    width: 34px !important; height: 34px !important;
-    min-width: 34px !important; min-height: 34px !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
     margin: 0 10px 0 4px !important;
     border-radius: 50% !important;
     border: none !important;
@@ -159,18 +413,48 @@ header[data-testid="stHeader"] {
     align-self: center;
     transition: background .15s ease, opacity .15s ease;
 }
-[data-testid="stChatInputSubmitButton"]:disabled { opacity: .55; }
+
+[data-testid="stChatInputSubmitButton"]:disabled {
+    opacity: .55;
+}
+
 [data-testid="stChatInputSubmitButton"]:not(:disabled) {
     background: var(--text-color) !important;
     color: var(--background-color) !important;
 }
-[data-testid="stChatInputSubmitButton"]:hover:not(:disabled) { opacity: .85; }
+
+[data-testid="stChatInputSubmitButton"]:hover:not(:disabled) {
+    opacity: .85;
+}
+
 @media (max-width: 768px) {
-    [data-testid="stMainBlockContainer"] { padding: 3.4rem 1rem 2rem; }
-    .st-key-top_navigation { margin-bottom: 1rem; overflow-x: auto; }
-    .st-key-top_navigation [data-testid="stHorizontalBlock"] { flex-wrap: nowrap; }
-    .st-key-top_navigation [data-testid="stColumn"] { min-width: 86px; flex: 1 0 86px; }
-    .st-key-top_navigation button p { font-size: .85rem; }
-    [data-testid="stBottomBlockContainer"] { padding: .5rem 1rem 1rem; }
-    .chat-welcome h1 { font-size: 1.65rem; }
+    [data-testid="stMainBlockContainer"] {
+        padding: 3.4rem 1rem 2rem;
+    }
+
+    .st-key-top_navigation {
+        margin-bottom: 1rem;
+        overflow-x: auto;
+    }
+
+    .st-key-top_navigation [data-testid="stHorizontalBlock"] {
+        flex-wrap: nowrap;
+    }
+
+    .st-key-top_navigation [data-testid="stColumn"] {
+        min-width: 86px;
+        flex: 1 0 86px;
+    }
+
+    .st-key-top_navigation button p {
+        font-size: .85rem;
+    }
+
+    [data-testid="stBottomBlockContainer"] {
+        padding: .5rem 1rem 1rem;
+    }
+
+    .chat-welcome h1 {
+        font-size: 1.65rem;
+    }
 }

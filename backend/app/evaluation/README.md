@@ -10,7 +10,7 @@
 ✅ **并发控制**：可配置并发限制（默认 5）  
 ✅ **超时保护**：单个查询超时控制  
 ✅ **HTML 可视化报告**：自动生成美观的评测报告  
-✅ **30 条回归样本**：预置测试数据集  
+✅ **30 条回归样本**：预置测试数据集
 
 ## 🏗️ 架构设计
 
@@ -109,13 +109,13 @@ curl "http://localhost:8000/api/evaluation/experiments/{experiment_id}"
 
 ### RAGAS 核心指标
 
-| 指标 | 说明 | 范围 |
-|------|------|------|
-| **Context Precision** | 检索到的上下文中有多少是真正相关的 | 0-1 |
-| **Context Recall** | 检索到的上下文覆盖了多少标准答案的上下文 | 0-1 |
-| **Faithfulness** | 答案中的陈述有多少能被检索上下文支持 | 0-1 |
-| **Answer Relevancy** | 答案与标准答案的相似度 | 0-1 |
-| **Overall Score** | 四个指标的平均值 | 0-1 |
+| 指标                  | 说明                                     | 范围 |
+|-----------------------|------------------------------------------|------|
+| **Context Precision** | 检索到的上下文中有多少是真正相关的       | 0-1  |
+| **Context Recall**    | 检索到的上下文覆盖了多少标准答案的上下文 | 0-1  |
+| **Faithfulness**      | 答案中的陈述有多少能被检索上下文支持     | 0-1  |
+| **Answer Relevancy**  | 答案与标准答案的相似度                   | 0-1  |
+| **Overall Score**     | 四个指标的平均值                         | 0-1  |
 
 ## 🧪 测试配置示例
 
@@ -267,33 +267,33 @@ variants = [
 
 ### SearchConfig 参数
 
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `top_k` | int | 5 | 检索返回的文档数量 |
-| `search_mode` | str | "hybrid" | 检索模式：dense/bm25/hybrid |
-| `chunk_size` | int | 800 | 文档切块大小 |
-| `chunk_overlap` | int | 100 | 切块重叠大小 |
-| `enable_reranker` | bool | True | 是否启用 BGE 重排 |
-| `reranker_top_k` | int | 5 | 重排后返回的数量 |
+| 参数              | 类型 | 默认值   | 说明                        |
+|-------------------|------|----------|-----------------------------|
+| `top_k`           | int  | 5        | 检索返回的文档数量          |
+| `search_mode`     | str  | "hybrid" | 检索模式：dense/bm25/hybrid |
+| `chunk_size`      | int  | 800      | 文档切块大小                |
+| `chunk_overlap`   | int  | 100      | 切块重叠大小                |
+| `enable_reranker` | bool | True     | 是否启用 BGE 重排           |
+| `reranker_top_k`  | int  | 5        | 重排后返回的数量            |
 
 ### ReflectionConfig 参数
 
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `enable_reflection` | bool | False | 是否启用反思机制 |
-| `max_iterations` | int | 2 | 最大反思次数 |
-| `reflection_prompt` | str | ... | 反思提示词 |
+| 参数                | 类型 | 默认值 | 说明             |
+|---------------------|------|--------|------------------|
+| `enable_reflection` | bool | False  | 是否启用反思机制 |
+| `max_iterations`    | int  | 2      | 最大反思次数     |
+| `reflection_prompt` | str  | ...    | 反思提示词       |
 
 ### ExperimentConfig 参数
 
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `experiment_name` | str | - | 实验名称 |
-| `baseline` | EvaluationConfig | - | 基准配置 |
-| `variants` | list | [] | 变体配置列表 |
-| `test_dataset_path` | str | - | 测试数据集路径 |
-| `max_concurrency` | int | 5 | 最大并发数 |
-| `timeout_seconds` | int | 120 | 单查询超时时间 |
+| 参数                | 类型             | 默认值 | 说明           |
+|---------------------|------------------|--------|----------------|
+| `experiment_name`   | str              | -      | 实验名称       |
+| `baseline`          | EvaluationConfig | -      | 基准配置       |
+| `variants`          | list             | []     | 变体配置列表   |
+| `test_dataset_path` | str              | -      | 测试数据集路径 |
+| `max_concurrency`   | int              | 5      | 最大并发数     |
+| `timeout_seconds`   | int              | 120    | 单查询超时时间 |
 
 ## 🔒 稳定性保障
 
@@ -390,6 +390,7 @@ python -m app.evaluation.run_evaluation
 ### 问题 1：评测超时
 
 **解决方法**：
+
 - 增加 `timeout_seconds`
 - 降低 `max_concurrency`
 - 检查 Milvus/百炼服务连接
@@ -397,6 +398,7 @@ python -m app.evaluation.run_evaluation
 ### 问题 2：RAGAS 指标为 0
 
 **解决方法**：
+
 - 确保测试数据集有 `ground_truth` 和 `reference_contexts`
 - 检查 LLM 调用是否成功
 - 查看日志中的错误信息
@@ -404,6 +406,7 @@ python -m app.evaluation.run_evaluation
 ### 问题 3：HTML 报告无法生成
 
 **解决方法**：
+
 - 确保 `evaluation_reports` 目录可写
 - 检查磁盘空间
 - 查看异常堆栈

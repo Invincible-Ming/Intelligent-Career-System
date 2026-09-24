@@ -33,8 +33,8 @@ class ConfigResult:
     """单个配置的评测结果。"""
 
     def __init__(
-        self,
-        config: EvaluationConfig,
+            self,
+            config: EvaluationConfig,
     ):
         self.config = config
         self.results: list[EvaluationResult] = []
@@ -91,8 +91,8 @@ class EvaluationRunner:
     """评测运行器。"""
 
     def __init__(
-        self,
-        experiment_config: ExperimentConfig,
+            self,
+            experiment_config: ExperimentConfig,
     ):
         self.experiment_config = experiment_config
         self.test_dataset: TestDataset | None = None
@@ -155,8 +155,8 @@ class EvaluationRunner:
         return report_data
 
     async def _evaluate_config(
-        self,
-        config: EvaluationConfig,
+            self,
+            config: EvaluationConfig,
     ) -> ConfigResult:
         """评测单个配置。"""
 
@@ -205,11 +205,11 @@ class EvaluationRunner:
         return config_result
 
     async def _evaluate_test_case(
-        self,
-        *,
-        test_case: TestCase,
-        config: EvaluationConfig,
-        semaphore: asyncio.Semaphore,
+            self,
+            *,
+            test_case: TestCase,
+            config: EvaluationConfig,
+            semaphore: asyncio.Semaphore,
     ) -> EvaluationResult:
         """评测单个测试用例。"""
 
@@ -274,8 +274,8 @@ class EvaluationRunner:
                 )
 
     def _load_dataset(
-        self,
-        path: str,
+            self,
+            path: str,
     ) -> TestDataset:
         """加载测试数据集。"""
 
@@ -321,8 +321,8 @@ class EvaluationRunner:
         }
 
     async def generate_html_report(
-        self,
-        output_path: str | None = None,
+            self,
+            output_path: str | None = None,
     ) -> str:
         """生成 HTML 报告。"""
 

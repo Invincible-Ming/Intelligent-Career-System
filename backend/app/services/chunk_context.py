@@ -11,7 +11,8 @@ async def enrich_results(results):
     if not ids:
         return results
     async with AsyncSessionLocal() as session:
-        records = (await session.execute(select(DocumentParse).where(DocumentParse.document_id.in_(ids)))).scalars().all()
+        records = (
+            await session.execute(select(DocumentParse).where(DocumentParse.document_id.in_(ids)))).scalars().all()
     metadata = {(str(record.document_id), chunk["content_hash"]): chunk
                 for record in records for chunk in record.chunks}
     for result in results:

@@ -2,7 +2,8 @@ import asyncio
 import io
 import unittest
 
-from app.services.document_pipeline import Block, build_chunks, parse_blocks, parse_non_pdf, page_needs_ocr, split_sentences
+from app.services.document_pipeline import Block, build_chunks, parse_blocks, parse_non_pdf, page_needs_ocr, \
+    split_sentences
 from app.services.token_windows import make_rerank_pairs
 
 
@@ -14,8 +15,8 @@ class PipelineTests(unittest.TestCase):
         self.assertIn("项目名称：乙", chunks[1]["section_title"])
 
     def test_long_record_repeats_question(self):
-        chunks = build_chunks([Block("标准问题：怎么申请？\n答案：" + "请先提交材料。"*80,
-                                         kind="record", sheet="FAQ", row=2)], 100, 10)
+        chunks = build_chunks([Block("标准问题：怎么申请？\n答案：" + "请先提交材料。" * 80,
+                                     kind="record", sheet="FAQ", row=2)], 100, 10)
         self.assertGreater(len(chunks), 1)
         for chunk in chunks:
             self.assertTrue(chunk["content"].startswith("标准问题：怎么申请？"))
@@ -23,7 +24,7 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(chunk["row"], 2)
 
     def test_sentence_boundary_and_tail(self):
-        text = "甲"*30 + "。" + "乙"*30 + "。" + "尾部证据。"
+        text = "甲" * 30 + "。" + "乙" * 30 + "。" + "尾部证据。"
         chunks = split_sentences(text, 40, 0)
         self.assertEqual("".join(chunks), text)
         self.assertTrue(chunks[0].endswith("。"))
@@ -35,7 +36,7 @@ class PipelineTests(unittest.TestCase):
                 build_chunks([Block("abc")], size, overlap)
 
     def test_page_ranges_follow_child_evidence(self):
-        chunks = build_chunks([Block("甲"*70+"。", page=1), Block("乙"*70+"。", page=2)], 80, 0)
+        chunks = build_chunks([Block("甲" * 70 + "。", page=1), Block("乙" * 70 + "。", page=2)], 80, 0)
         self.assertEqual(chunks[0]["page_start"], 1)
         self.assertEqual(chunks[-1]["page_start"], 2)
 
@@ -85,7 +86,7 @@ class PipelineTests(unittest.TestCase):
     def test_mixed_pdf_ocr_only_image_page(self):
         import fitz
         pdf = fitz.open()
-        pdf.new_page().insert_text((50, 50), "Readable page "*10)
+        pdf.new_page().insert_text((50, 50), "Readable page " * 10)
         page = pdf.new_page()
         pix = fitz.Pixmap(fitz.csRGB, fitz.IRect(0, 0, 10, 10), False)
         pix.clear_with(255)
@@ -93,9 +94,11 @@ class PipelineTests(unittest.TestCase):
         data = pdf.tobytes()
         pdf.close()
         calls = []
+
         async def ocr(image):
             calls.append(image)
             return "扫描简历中的工作经历"
+
         blocks = asyncio.run(parse_blocks(data, ".pdf", ocr))
         self.assertEqual(len(calls), 1)
         self.assertEqual(blocks[-1].page, 2)
@@ -110,20 +113,25 @@ class PipelineTests(unittest.TestCase):
         page.insert_image(page.rect, stream=pix.tobytes("png"))
         data = pdf.tobytes()
         pdf.close()
+
         async def ocr(image):
             raise RuntimeError("OCR failed")
+
         with self.assertRaises(RuntimeError):
             asyncio.run(parse_blocks(data, ".pdf", ocr))
 
     def test_token_windows_include_tail_and_fit(self):
         class Tokenizer:
             def num_special_tokens_to_add(self, pair=True): return 3
+
             def encode(self, text, second=None, add_special_tokens=False):
-                return list(map(ord, text + (second or ""))) + ([0]*3 if add_special_tokens else [])
+                return list(map(ord, text + (second or ""))) + ([0] * 3 if add_special_tokens else [])
+
             def decode(self, ids, **kwargs): return "".join(map(chr, ids))
+
         tokenizer = Tokenizer()
-        pairs, owners = make_rerank_pairs(tokenizer, "问题"*100,
-                                          ["甲"*400 + "尾部证据", "短文"], 64)
+        pairs, owners = make_rerank_pairs(tokenizer, "问题" * 100,
+                                          ["甲" * 400 + "尾部证据", "短文"], 64)
         self.assertTrue(any("尾部证据" in pair[1] for pair in pairs))
         self.assertEqual(owners[-1], 1)
         for q, text in pairs:

@@ -4,31 +4,34 @@
 
 ### 1. 核心评测框架（20+ 模块）
 
-| 模块 | 文件 | 功能 |
-|------|------|------|
-| 配置管理 | `config.py` | 评测配置、搜索配置、反思配置、实验配置 |
-| 数据集 | `dataset.py` | 测试用例、测试数据集模型 |
-| RAGAS 指标 | `metrics.py` | Context Precision/Recall、Faithfulness、Answer Relevancy |
-| RAG 执行器 | `executor.py` | Dense/BM25/Hybrid 检索、答案生成、反思机制 |
-| 并发运行器 | `runner.py` | 并发控制、超时保护、进度追踪 |
-| HTML 报告 | `report.py` | 可视化报告生成、图表、Tab 切换 |
-| REST API | `api.py` | 后台任务、状态查询、异步评测 |
-| 命令行工具 | `cli.py` | quick/full/custom 三种模式 |
-| 健康检查 | `health_check.py` | 服务检测、数据集验证、流程测试 |
-| 安装验证 | `verify_installation.py` | 文件完整性、模块导入、依赖检查 |
+| 模块       | 文件                     | 功能                                                     |
+|------------|--------------------------|----------------------------------------------------------|
+| 配置管理   | `config.py`              | 评测配置、搜索配置、反思配置、实验配置                   |
+| 数据集     | `dataset.py`             | 测试用例、测试数据集模型                                 |
+| RAGAS 指标 | `metrics.py`             | Context Precision/Recall、Faithfulness、Answer Relevancy |
+| RAG 执行器 | `executor.py`            | Dense/BM25/Hybrid 检索、答案生成、反思机制               |
+| 并发运行器 | `runner.py`              | 并发控制、超时保护、进度追踪                             |
+| HTML 报告  | `report.py`              | 可视化报告生成、图表、Tab 切换                           |
+| REST API   | `api.py`                 | 后台任务、状态查询、异步评测                             |
+| 命令行工具 | `cli.py`                 | quick/full/custom 三种模式                               |
+| 健康检查   | `health_check.py`        | 服务检测、数据集验证、流程测试                           |
+| 安装验证   | `verify_installation.py` | 文件完整性、模块导入、依赖检查                           |
 
 ### 2. 测试数据与配置
 
 ✅ **30 条回归样本** (`test_dataset_30.json`)
+
 - 覆盖 Python、数据库、架构、DevOps 等技术领域
 - 包含标准答案和参考上下文
 - 适用于知识问答、技术面试场景
 
 ✅ **示例配置** (`example_config.json`)
+
 - Baseline + 2 个变体配置
 - 支持 Top-K、检索模式、Reflection 对比
 
 ✅ **快速启动脚本**
+
 - `start_evaluation.sh` (Linux/Mac)
 - `start_evaluation.bat` (Windows)
 
@@ -36,24 +39,24 @@
 
 支持对比的参数维度：
 
-| 参数类型 | 可选值 |
-|---------|--------|
-| **Top-K** | 3, 5, 8, 10, 15, 20 |
-| **检索模式** | dense, bm25, hybrid |
-| **Chunk Size** | 200-2000 (建议: 400, 600, 800, 1200) |
-| **Chunk Overlap** | 0-500 |
-| **Reranker** | enable/disable |
-| **Reflection** | enable/disable, max_iterations: 1-5 |
+| 参数类型          | 可选值                               |
+|-------------------|--------------------------------------|
+| **Top-K**         | 3, 5, 8, 10, 15, 20                  |
+| **检索模式**      | dense, bm25, hybrid                  |
+| **Chunk Size**    | 200-2000 (建议: 400, 600, 800, 1200) |
+| **Chunk Overlap** | 0-500                                |
+| **Reranker**      | enable/disable                       |
+| **Reflection**    | enable/disable, max_iterations: 1-5  |
 
 ### 4. RAGAS 评测指标
 
-| 指标 | 计算方法 | 范围 |
-|------|----------|------|
-| **Context Precision** | LLM 判断检索上下文相关性 | 0-1 |
-| **Context Recall** | 关键词重叠 + 覆盖率 | 0-1 |
-| **Faithfulness** | LLM 判断答案忠实度 | 0-1 |
-| **Answer Relevancy** | LLM 判断答案相似度 | 0-1 |
-| **Overall Score** | 四项指标平均值 | 0-1 |
+| 指标                  | 计算方法                 | 范围 |
+|-----------------------|--------------------------|------|
+| **Context Precision** | LLM 判断检索上下文相关性 | 0-1  |
+| **Context Recall**    | 关键词重叠 + 覆盖率      | 0-1  |
+| **Faithfulness**      | LLM 判断答案忠实度       | 0-1  |
+| **Answer Relevancy**  | LLM 判断答案相似度       | 0-1  |
+| **Overall Score**     | 四项指标平均值           | 0-1  |
 
 ### 5. 稳定性保障
 
@@ -61,7 +64,7 @@
 ✅ **超时保护**: `asyncio.wait_for(timeout=120)`  
 ✅ **异常处理**: 捕获并记录，不中断整体流程  
 ✅ **失败统计**: 成功/失败/超时分类统计  
-✅ **进度追踪**: 实时更新评测进度  
+✅ **进度追踪**: 实时更新评测进度
 
 ### 6. HTML 可视化报告
 
@@ -179,17 +182,17 @@ curl http://localhost:8000/api/evaluation/experiments/{experiment_id}
 ✅ **并发数**: 5  
 ✅ **失败样本**: 0 个  
 ✅ **超时样本**: 0 个  
-✅ **平均耗时**: 30-120 秒（取决于配置）  
+✅ **平均耗时**: 30-120 秒（取决于配置）
 
 ### 指标目标
 
-| 指标 | 目标值 |
-|------|--------|
+| 指标              | 目标值 |
+|-------------------|--------|
 | Context Precision | > 0.75 |
-| Context Recall | > 0.60 |
-| Faithfulness | > 0.70 |
-| Answer Relevancy | > 0.80 |
-| Overall Score | > 0.70 |
+| Context Recall    | > 0.60 |
+| Faithfulness      | > 0.70 |
+| Answer Relevancy  | > 0.80 |
+| Overall Score     | > 0.70 |
 
 ## 🎯 应用场景
 
@@ -279,6 +282,7 @@ python -m app.evaluation.cli custom --config my_config.json
 HTML 报告路径：`evaluation_reports/report_{experiment_name}_{timestamp}.html`
 
 报告内容：
+
 - 📊 总体摘要卡片（配置数、样本数、成功率）
 - 📈 指标对比图表（横向柱状图）
 - 📝 详细结果（Tab 分组展示）

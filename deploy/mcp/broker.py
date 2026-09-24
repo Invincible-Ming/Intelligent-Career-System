@@ -52,7 +52,8 @@ class SearchResults(HTMLParser):
             self.depth -= 1
             if self.depth == 0:
                 if self.item["url"] and self.item["title"].strip():
-                    self.results.append({k: " ".join(v.split())[:(600 if k == "snippet" else 1500)] for k, v in self.item.items()})
+                    self.results.append(
+                        {k: " ".join(v.split())[:(600 if k == "snippet" else 1500)] for k, v in self.item.items()})
                 self.item = None
                 self.heading = self.paragraph = False
 
@@ -71,10 +72,12 @@ def fetch_search(query, count):
     html = None
     for address in addresses:
         connection = http.client.HTTPSConnection(SEARCH_HOST, timeout=15, context=ssl.create_default_context())
-        connection._create_connection = lambda destination, timeout, source_address=None, ip=address: socket.create_connection((ip, 443), timeout)
+        connection._create_connection = lambda destination, timeout, source_address=None,
+                                               ip=address: socket.create_connection((ip, 443), timeout)
         try:
             connection.request("GET", "/search?" + urlencode({"q": query, "count": count}),
-                               headers={"User-Agent": "Mozilla/5.0", "Accept": "text/html", "Accept-Encoding": "identity"})
+                               headers={"User-Agent": "Mozilla/5.0", "Accept": "text/html",
+                                        "Accept-Encoding": "identity"})
             response = connection.getresponse()
             if response.status != 200:
                 raise ValueError("搜索服务拒绝请求；不跟随重定向")

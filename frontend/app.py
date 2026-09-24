@@ -72,6 +72,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+
 # ----------------------------------------------------------------------
 # API 客户端封装
 # ----------------------------------------------------------------------
@@ -112,7 +113,7 @@ def browser_auth_component():
 def clear_browser_cookie():
     base, return_to = browser_auth_urls()
     browser_auth_component()(data={"mode": "logout", "url": base + "/api/auth/browser-logout",
-                                  "return_to": return_to}, key="cookie_cleanup")
+                                   "return_to": return_to}, key="cookie_cleanup")
     st.stop()
 
 
@@ -841,7 +842,7 @@ with login_area.container():
                     st.error('登录需要前后端使用同一域名，请配置 BROWSER_API_BASE_URL。')
                 else:
                     browser_auth_component()(data={"mode": "login", "url": browser_base + '/api/auth/browser-login',
-                                                  "return_to": return_to}, key="browser_login")
+                                                   "return_to": return_to}, key="browser_login")
             with register_tab:
                 if security_options['registration_enabled']:
                     with st.form('register_form'):
@@ -855,7 +856,8 @@ with login_area.container():
                             st.error('两次密码不一致')
                         else:
                             try:
-                                request_api('POST', '/api/auth/register', json={'username':new_username, 'password':new_password})
+                                request_api('POST', '/api/auth/register',
+                                            json={'username': new_username, 'password': new_password})
                                 st.success('注册成功，请在登录页登录。')
                             except APIError as exc:
                                 st.error(str(exc))
@@ -870,6 +872,8 @@ try:
 except APIError as exc:
     st.error(str(exc))
     st.stop()
+
+
 def select_page(page: str):
     st.session_state.active_page = page
 
@@ -1013,7 +1017,8 @@ with private_area.container():
         # 欢迎语固定放在对话页顶部；快捷主题已移除，减少首屏占用。
         if not st.session_state.chat_messages:
             username = escape(st.session_state.auth_user['username'])
-            st.markdown(f'<div class="chat-welcome"><h1>你好，{username}</h1><p>今天想为求职做些什么？</p></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="chat-welcome"><h1>你好，{username}</h1><p>今天想为求职做些什么？</p></div>',
+                        unsafe_allow_html=True)
 
         chat_scroll_area = st.container(key="chat_history")
 
@@ -1212,8 +1217,8 @@ with private_area.container():
         if history_runs:
             paused_count = sum(1 for r in history_runs if r.get("status") == "paused")
             with st.expander(
-                "岗位匹配历史记录",
-                expanded=bool(paused_count) or bool(st.session_state.get("match_paused")),
+                    "岗位匹配历史记录",
+                    expanded=bool(paused_count) or bool(st.session_state.get("match_paused")),
             ):
                 if paused_count:
                     st.info(f"检测到 **{paused_count}** 个已挂起、等待人工审核的任务，可直接载入继续。")
@@ -1502,7 +1507,8 @@ with private_area.container():
                                     st.session_state["match_report"] = report
                                     st.session_state["match_paused"] = False
                                     resume_box.update(
-                                        label="报告已完成，存在需复核的问题" if data.get("is_degraded") else "匹配报告校验完成！",
+                                        label="报告已完成，存在需复核的问题" if data.get(
+                                            "is_degraded") else "匹配报告校验完成！",
                                         state="complete",
                                         expanded=False,
                                     )
@@ -1744,6 +1750,7 @@ with private_area.container():
                 mime="text/html",
             )
 
+
         def evaluation_config_form(prefix: str, default_name: str) -> dict[str, Any]:
             """渲染一个评测配置（基线或变体），返回与后端 ExperimentConfig 对齐的字典。"""
             name_col, mode_col = st.columns(2)
@@ -1777,6 +1784,7 @@ with private_area.container():
                     "max_iterations": max_iterations,
                 },
             }
+
 
         st.subheader("新建实验")
         if not datasets:

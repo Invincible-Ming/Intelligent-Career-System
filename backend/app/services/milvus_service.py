@@ -270,8 +270,8 @@ class MilvusService:
         return int(result.get("delete_count", 0))
 
     async def list_chunks(
-        self,
-        limit: int = 10000,
+            self,
+            limit: int = 10000,
     ) -> list[dict[str, Any]]:
         """
         读取 Milvus 中的全部文本块。

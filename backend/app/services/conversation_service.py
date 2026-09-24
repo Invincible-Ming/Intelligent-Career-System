@@ -60,9 +60,10 @@ class ConversationService:
             Conversation.pinned.desc(), Conversation.updated_at.desc()).limit(limit))).scalars())
 
     async def get_messages(self, *, session, owner_id, conversation_id, limit=40, offset=0):
-        rows = (await session.execute(select(Message).join(Conversation, Conversation.id == Message.conversation_id).where(
-            Message.conversation_id == conversation_id, Conversation.owner_id == owner_id).order_by(
-            Message.created_at.desc(), Message.id.desc()).limit(limit).offset(offset))).scalars().all()
+        rows = (
+            await session.execute(select(Message).join(Conversation, Conversation.id == Message.conversation_id).where(
+                Message.conversation_id == conversation_id, Conversation.owner_id == owner_id).order_by(
+                Message.created_at.desc(), Message.id.desc()).limit(limit).offset(offset))).scalars().all()
         return list(reversed(rows))
 
     async def update_conversation(self, *, session, owner_id, conversation_id, title=None, pinned=None):
@@ -85,7 +86,8 @@ class ConversationService:
         return True
 
     def messages_to_dict(self, messages):
-        return [{'role': item.role, 'content': item.content} for item in messages if item.role in ('user','assistant') and not (item.meta_data or {}).get('incomplete')]
+        return [{'role': item.role, 'content': item.content} for item in messages if
+                item.role in ('user', 'assistant') and not (item.meta_data or {}).get('incomplete')]
 
 
 conversation_service = ConversationService()

@@ -81,21 +81,26 @@ async def init_database() -> None:
         await checkpointer_pool.open()
 
     # 2. 导入模型并同步建表
-    from app import models  # noqa: F401
+    from app.core import models  # noqa: F401
 
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
         from sqlalchemy import text
         for table in ("documents", "agent_runs", "conversations"):
-            await connection.execute(text(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS owner_id UUID REFERENCES users(id)"))
+            await connection.execute(
+                text(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS owner_id UUID REFERENCES users(id)"))
             await connection.execute(text(f"CREATE INDEX IF NOT EXISTS ix_{table}_owner_id ON {table}(owner_id)"))
-            has_legacy = (await connection.execute(text(f"SELECT EXISTS(SELECT 1 FROM {table} WHERE owner_id IS NULL)"))).scalar()
+            has_legacy = (
+                await connection.execute(text(f"SELECT EXISTS(SELECT 1 FROM {table} WHERE owner_id IS NULL)"))).scalar()
             if not has_legacy:
                 await connection.execute(text(f"ALTER TABLE {table} ALTER COLUMN owner_id SET NOT NULL"))
         await connection.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS context_summary TEXT"))
-        await connection.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS pinned BOOLEAN NOT NULL DEFAULT FALSE"))
-        await connection.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS summary_until_message_id UUID"))
-        await connection.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS summary_version INTEGER NOT NULL DEFAULT 0"))
+        await connection.execute(
+            text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS pinned BOOLEAN NOT NULL DEFAULT FALSE"))
+        await connection.execute(
+            text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS summary_until_message_id UUID"))
+        await connection.execute(
+            text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS summary_version INTEGER NOT NULL DEFAULT 0"))
         await connection.execute(text("DELETE FROM auth_sessions WHERE expires_at < now()"))
         await connection.execute(text("DELETE FROM operation_leases WHERE expires_at < now()"))
         await connection.execute(text("DELETE FROM rate_limit_buckets WHERE window_start < now() - interval '2 days'"))

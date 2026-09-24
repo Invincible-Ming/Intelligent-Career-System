@@ -21,12 +21,12 @@ class HybridSearchService:
     """混合检索服务。"""
 
     async def search(
-        self,
-        *,
-        query: str,
-        document_type: str | None = None,
-        top_k: int = 5,
-        allowed_document_ids: list[str] | None = None,
+            self,
+            *,
+            query: str,
+            document_type: str | None = None,
+            top_k: int = 5,
+            allowed_document_ids: list[str] | None = None,
     ) -> list[dict[str, Any]]:
         """
         执行：
@@ -89,12 +89,12 @@ class HybridSearchService:
         return await enrich_results(results)
 
     async def _dense_search(
-        self,
-        *,
-        query: str,
-        document_type: str | None,
-        top_k: int,
-        allowed_document_ids: list[str] | None = None,
+            self,
+            *,
+            query: str,
+            document_type: str | None,
+            top_k: int,
+            allowed_document_ids: list[str] | None = None,
     ) -> list[dict[str, Any]]:
         """执行 Milvus Dense Search。"""
 
@@ -111,11 +111,11 @@ class HybridSearchService:
 
 
 def rrf_fusion(
-    *,
-    dense_results: list[dict[str, Any]],
-    bm25_results: list[dict[str, Any]],
-    top_k: int,
-    rrf_k: int = 60,
+        *,
+        dense_results: list[dict[str, Any]],
+        bm25_results: list[dict[str, Any]],
+        top_k: int,
+        rrf_k: int = 60,
 ) -> list[dict[str, Any]]:
     """按照结果排名执行 Reciprocal Rank Fusion。"""
 
@@ -171,17 +171,17 @@ def rrf_fusion(
 
 
 def add_ranked_results(
-    *,
-    fused: dict[str, dict[str, Any]],
-    results: list[dict[str, Any]],
-    source: str,
-    rrf_k: int,
+        *,
+        fused: dict[str, dict[str, Any]],
+        results: list[dict[str, Any]],
+        source: str,
+        rrf_k: int,
 ) -> None:
     """添加一路已经排序的召回结果。"""
 
     for rank, result in enumerate(
-        results,
-        start=1,
+            results,
+            start=1,
     ):
         key = build_result_key(result)
         score = 1.0 / (rrf_k + rank)
@@ -209,7 +209,7 @@ def add_ranked_results(
 
 
 def build_result_key(
-    result: dict[str, Any],
+        result: dict[str, Any],
 ) -> str:
     """根据文档 ID 和文本内容去重。"""
 

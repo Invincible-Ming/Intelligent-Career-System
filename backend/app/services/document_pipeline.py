@@ -25,11 +25,11 @@ class Block:
 
 def is_heading(text: str) -> bool:
     return bool(re.match(r"^#{1,6}\s+", text) or (
-        len(text) < 60 and re.match(
-            r"^(教育背景|教育经历|工作经历|实习经历|项目经历|项目经验|专业技能|技能清单|"
-            r"个人技能|自我评价|岗位职责|工作职责|任职要求|岗位要求|加分项|福利待遇|"
-            r"项目名称|公司名称|项目[：:]|Education\b|Experience\b|Skills\b|Projects\b|Requirements\b)",
-            text, re.I)))
+            len(text) < 60 and re.match(
+        r"^(教育背景|教育经历|工作经历|实习经历|项目经历|项目经验|专业技能|技能清单|"
+        r"个人技能|自我评价|岗位职责|工作职责|任职要求|岗位要求|加分项|福利待遇|"
+        r"项目名称|公司名称|项目[：:]|Education\b|Experience\b|Skills\b|Projects\b|Requirements\b)",
+        text, re.I)))
 
 
 def page_needs_ocr(text: str, has_images: bool) -> bool:
@@ -112,48 +112,58 @@ def parse_non_pdf(data: bytes, extension: str, guard=None) -> list[Block]:
                     guard.check()
                     if number > 10000 or len(row) > 200:
                         raise ValueError('工作表行列数量超限')
-                    if not any(v is not None for v in row):continue
+                    if not any(v is not None for v in row): continue
                     if headers is None:
-                        headers = [str(v).strip() if v is not None else f'列{i+1}' for i,v in enumerate(row)]
+                        headers = [str(v).strip() if v is not None else f'列{i + 1}' for i, v in enumerate(row)]
                         guard.add(' '.join(headers))
                         continue
-                    fields = [f"{headers[i] if i < len(headers) else f'列{i+1}'}：{v}"
-                              for i,v in enumerate(row) if v is not None and str(v).strip()]
+                    fields = [f"{headers[i] if i < len(headers) else f'列{i + 1}'}：{v}"
+                              for i, v in enumerate(row) if v is not None and str(v).strip()]
                     text = '\n'.join(fields)
                     guard.add(text)
                     out.append(Block(text, section=sheet.title, sheet=sheet.title, row=number, kind='record'))
-        finally:book.close()
+        finally:
+            book.close()
         return out
     if extension == '.docx':
         from docx import Document
         from docx.table import Table
         from docx.text.paragraph import Paragraph
-        doc=Document(io.BytesIO(data));out=[];section=''
-        for count,child in enumerate(doc.element.body.iterchildren(),1):
+        doc = Document(io.BytesIO(data));
+        out = [];
+        section = ''
+        for count, child in enumerate(doc.element.body.iterchildren(), 1):
             guard.check()
-            if count > 10000:raise ValueError('文档段落数量超限')
+            if count > 10000: raise ValueError('文档段落数量超限')
             if child.tag.endswith('}p'):
-                paragraph=Paragraph(child,doc);text=paragraph.text.strip()
-                if not text:continue
+                paragraph = Paragraph(child, doc);
+                text = paragraph.text.strip()
+                if not text: continue
                 guard.add(text)
-                if (paragraph.style and paragraph.style.name.startswith('Heading')) or is_heading(text):section=text
-                out.append(Block(text,section=section))
+                if (paragraph.style and paragraph.style.name.startswith('Heading')) or is_heading(text): section = text
+                out.append(Block(text, section=section))
             elif child.tag.endswith('}tbl'):
-                table=Table(child,doc);header=''
-                for index,row in enumerate(table.rows):
+                table = Table(child, doc);
+                header = ''
+                for index, row in enumerate(table.rows):
                     guard.check()
-                    if index >= 10000 or len(row.cells) > 200:raise ValueError('文档表格行列数量超限')
-                    text=' | '.join(cell.text.strip() for cell in row.cells)
-                    if index:text=header+'\n'+text
-                    else:header=text
-                    guard.add(text);out.append(Block(text,section=section,kind='record'))
+                    if index >= 10000 or len(row.cells) > 200: raise ValueError('文档表格行列数量超限')
+                    text = ' | '.join(cell.text.strip() for cell in row.cells)
+                    if index:
+                        text = header + '\n' + text
+                    else:
+                        header = text
+                    guard.add(text);
+                    out.append(Block(text, section=section, kind='record'))
         return out
     if extension == '.txt':
-        for encoding in ('utf-8-sig','gb18030','utf-16'):
+        for encoding in ('utf-8-sig', 'gb18030', 'utf-16'):
             try:
-                text=data.decode(encoding);guard.add(text)
-                return [Block(p.strip()) for p in re.split(r'\n\s*\n',text.replace('\r\n','\n')) if p.strip()]
-            except UnicodeError:continue
+                text = data.decode(encoding);
+                guard.add(text)
+                return [Block(p.strip()) for p in re.split(r'\n\s*\n', text.replace('\r\n', '\n')) if p.strip()]
+            except UnicodeError:
+                continue
         raise ValueError('无法识别文本编码')
     raise ValueError(f'不支持的文件格式：{extension}')
 
@@ -165,7 +175,7 @@ def split_sentences(text: str, size: int, overlap: int) -> list[str]:
     units = []
     for unit in re.split(r"(?<=[。！？!?；;])|(?<=\n)", text):
         if unit:
-            units.extend(unit[i:i+size] for i in range(0, len(unit), size))
+            units.extend(unit[i:i + size] for i in range(0, len(unit), size))
     out, current = [], ""
     for unit in units:
         if current and len(current) + len(unit) > size:
@@ -213,7 +223,8 @@ def build_chunks(blocks: list[Block], size: int = 800, overlap: int = 100) -> li
             section = block.text.strip("# ")
         section = block.section or section
         # Spreadsheet/table rows must not merge into neighbouring records.
-        if block.kind == "record" or is_heading(block.text) or not parents or parents[-1][0] != section or parents[-1][1][-1].kind == "record":
+        if block.kind == "record" or is_heading(block.text) or not parents or parents[-1][0] != section or \
+                parents[-1][1][-1].kind == "record":
             parents.append((section, [block]))
         else:
             parents[-1][1].append(block)
@@ -232,7 +243,7 @@ def build_chunks(blocks: list[Block], size: int = 800, overlap: int = 100) -> li
             if question:
                 prefix += question + "\n"
         prefix = prefix[:min(160, size // 3)]
-        pieces = split_sentences(parent_text, size - len(prefix), min(overlap, max(0, size-len(prefix)-1)))
+        pieces = split_sentences(parent_text, size - len(prefix), min(overlap, max(0, size - len(prefix) - 1)))
         previous_start = -1
         for piece in pieces:
             content = prefix + piece

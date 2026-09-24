@@ -12,7 +12,8 @@ from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.security.auth import AuthenticatedUser, CurrentUser, anonymous_auth_limit, consume_limits, hash_password, token_hash, verify_password
+from app.security.auth import AuthenticatedUser, CurrentUser, anonymous_auth_limit, consume_limits, hash_password, \
+    token_hash, verify_password
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.models import AuthSession, User
@@ -46,7 +47,8 @@ async def options():
             "generation_requests_per_minute": settings.GENERATION_REQUESTS_PER_MINUTE,
             "generation_requests_per_day": settings.GENERATION_REQUESTS_PER_DAY,
             "upload_total_timeout": settings.UPLOAD_TOTAL_TIMEOUT, "api_total_timeout": settings.API_TOTAL_TIMEOUT,
-            "chat_total_timeout": settings.CHAT_TOTAL_TIMEOUT, "analysis_total_timeout": settings.ANALYSIS_TOTAL_TIMEOUT,
+            "chat_total_timeout": settings.CHAT_TOTAL_TIMEOUT,
+            "analysis_total_timeout": settings.ANALYSIS_TOTAL_TIMEOUT,
             "match_total_timeout": settings.MATCH_TOTAL_TIMEOUT,
             "max_upload_size_mb": settings.MAX_UPLOAD_SIZE_MB, "jd_max_input_chars": settings.MAX_DOCUMENT_TEXT_CHARS,
             "feedback_max_input_chars": 2000, "search_max_input_chars": 2000}
@@ -56,7 +58,8 @@ async def options():
 async def register(credentials: Credentials, session: DatabaseSession):
     if not settings.AUTH_REGISTRATION_ENABLED:
         raise HTTPException(403, "当前未开放注册")
-    user = User(username=credentials.username, password_hash=await asyncio.to_thread(hash_password, credentials.password), is_admin=False)
+    user = User(username=credentials.username,
+                password_hash=await asyncio.to_thread(hash_password, credentials.password), is_admin=False)
     session.add(user)
     try:
         await session.commit()
@@ -79,7 +82,8 @@ async def login(credentials: Credentials, session: DatabaseSession):
     expires = datetime.now(timezone.utc) + timedelta(hours=settings.AUTH_SESSION_HOURS)
     session.add(AuthSession(token_hash=token_hash(token), user_id=user.id, expires_at=expires))
     await session.commit()
-    return {"access_token": token, "token_type": "bearer", "expires_at": expires.isoformat(), "user": user_response(user)}
+    return {"access_token": token, "token_type": "bearer", "expires_at": expires.isoformat(),
+            "user": user_response(user)}
 
 
 @router.get("/me")
@@ -90,7 +94,8 @@ async def me(user: CurrentUser):
 @router.post("/logout")
 async def logout(request: Request, user: AuthenticatedUser, session: DatabaseSession):
     token = request.headers["authorization"].split(None, 1)[1]
-    await session.execute(delete(AuthSession).where(AuthSession.token_hash == token_hash(token), AuthSession.user_id == user.id))
+    await session.execute(
+        delete(AuthSession).where(AuthSession.token_hash == token_hash(token), AuthSession.user_id == user.id))
     await session.commit()
     return {"message": "已退出登录"}
 
@@ -127,7 +132,8 @@ async def browser_login(request: Request, session: DatabaseSession,
         credentials = Credentials(username=username, password=password)
         result = await login(credentials, session)
     except ValidationError:
-        return JSONResponse({"detail": "请检查用户名格式及密码长度"}, status_code=422, headers={"Cache-Control": "no-store"})
+        return JSONResponse({"detail": "请检查用户名格式及密码长度"}, status_code=422,
+                            headers={"Cache-Control": "no-store"})
     except HTTPException as exc:
         if exc.status_code not in (401, 429):
             raise

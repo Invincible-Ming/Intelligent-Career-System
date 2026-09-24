@@ -79,6 +79,7 @@ class AnalysisCache:
         remaining = budget.deadline - time.monotonic() if budget else settings.MATCH_TOTAL_TIMEOUT
         lock_ttl = max(1, math.ceil(remaining)) + 10
         locked = False
+
         async def read_validated():
             raw = await self.client.get(key)
             if raw is not None:

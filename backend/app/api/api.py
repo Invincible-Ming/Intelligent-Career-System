@@ -484,6 +484,7 @@ async def match_resume_stream(
     )
 
     stream_run_id = run.id
+
     async def sse_event_generator():
         init_payload = {
             "run_id": str(run.id),
@@ -592,6 +593,7 @@ async def resume_match_stream_endpoint(
     await session.commit()
 
     stream_run_id = run.id
+
     async def sse_event_generator():
         # 🌟 修复关键：定义一个本地 flag 以避免在 session.commit() 后直接读取 run.status 引发 MissingGreenlet 异常
         is_successfully_completed = False
@@ -983,5 +985,6 @@ def to_run_response(
 async def fail_unfinished_run(run_id, owner_id):
     async with AsyncSessionLocal() as session:
         await session.execute(update(AgentRun).where(AgentRun.id == run_id, AgentRun.owner_id == owner_id,
-            AgentRun.status == 'running').values(status='failed', error_message='执行已中断，请重新提交'))
+                                                     AgentRun.status == 'running').values(status='failed',
+                                                                                          error_message='执行已中断，请重新提交'))
         await session.commit()

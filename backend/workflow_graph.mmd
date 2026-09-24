@@ -3,19 +3,20 @@ config:
   flowchart:
     curve: linear
 ---
-graph TD;
-	__start__([<p>__start__</p>]):::first
-	resume_agent(resume_agent)
-	jd_agent(jd_agent)
-	match_agent(match_agent)
-	verify_agent(verify_agent)
-	__end__([<p>__end__</p>]):::last
-	__start__ --> resume_agent;
-	jd_agent --> match_agent;
-	match_agent --> verify_agent;
-	resume_agent --> jd_agent;
-	verify_agent -.-> __end__;
-	verify_agent -.-> match_agent;
-	classDef default fill:#f2f0ff,line-height:1.2
-	classDef first fill-opacity:0
-	classDef last fill:#bfb6fc
+graph TD
+;
+    __start__([<p>__start__</p>]):::first
+    resume_agent(resume_agent)
+    jd_agent(jd_agent)
+    match_agent(match_agent)
+    verify_agent(verify_agent)
+    __end__([<p>__end__</p>]):::last
+    __start__ --> resume_agent;
+    jd_agent --> match_agent;
+    match_agent --> verify_agent;
+    resume_agent --> jd_agent;
+    verify_agent -.-> __end__;
+    verify_agent -.-> match_agent;
+    classDef default fill: #f2f0ff, line-height: 1.2
+    classDef first fill-opacity: 0
+    classDef last fill: #bfb6fc

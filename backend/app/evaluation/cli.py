@@ -167,7 +167,7 @@ def create_full_experiment() -> ExperimentConfig:
 
 
 async def run_evaluation(
-    experiment_config: ExperimentConfig,
+        experiment_config: ExperimentConfig,
 ) -> None:
     """运行评测。"""
 

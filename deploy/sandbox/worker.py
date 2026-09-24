@@ -9,6 +9,7 @@ from document_pipeline import parse_blocks, serialize_blocks
 
 PROTOCOL_OUT = sys.stdout
 
+
 def send(message):
     PROTOCOL_OUT.write(json.dumps(message, ensure_ascii=False, separators=(",", ":")) + "\n")
     PROTOCOL_OUT.flush()

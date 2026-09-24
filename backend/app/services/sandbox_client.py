@@ -79,10 +79,12 @@ async def parse_document(*, owner_id: uuid.UUID, run_id: uuid.UUID, data: bytes,
                 async def stop_remote():
                     try:
                         fresh = httpx.AsyncHTTPTransport(uds=settings.SANDBOX_RUNNER_SOCKET)
-                        async with httpx.AsyncClient(transport=fresh, base_url="http://sandbox", timeout=3) as cancel_client:
+                        async with httpx.AsyncClient(transport=fresh, base_url="http://sandbox",
+                                                     timeout=3) as cancel_client:
                             await cancel_client.post(f"/cancel/{session_id}")
                     except (httpx.HTTPError, OSError):
                         pass
+
                 stop = asyncio.create_task(stop_remote())
                 try:
                     await asyncio.wait_for(asyncio.shield(stop), 4)

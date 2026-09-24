@@ -47,10 +47,12 @@ else:
     path.chmod(0o600)
 listener.listen(128)
 
+
 def exit_on_term(_signum, _frame):
     # Uvicorn re-raises a captured SIGTERM after shutdown. Convert that final
     # signal into an exception so the socket cleanup below still runs.
     raise SystemExit(0)
+
 
 signal.signal(signal.SIGTERM, exit_on_term)
 try:

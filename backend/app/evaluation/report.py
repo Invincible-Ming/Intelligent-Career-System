@@ -11,8 +11,8 @@ class ReportGenerator:
     """HTML 报告生成器。"""
 
     def generate(
-        self,
-        report_data: dict[str, Any],
+            self,
+            report_data: dict[str, Any],
     ) -> str:
         """生成完整的 HTML 报告。"""
 
@@ -356,8 +356,8 @@ class ReportGenerator:
         """
 
     def _render_header(
-        self,
-        report_data: dict[str, Any],
+            self,
+            report_data: dict[str, Any],
     ) -> str:
         """渲染页面头部。"""
 
@@ -373,8 +373,8 @@ class ReportGenerator:
         """
 
     def _render_summary(
-        self,
-        report_data: dict[str, Any],
+            self,
+            report_data: dict[str, Any],
     ) -> str:
         """渲染总体摘要。"""
 
@@ -426,8 +426,8 @@ class ReportGenerator:
         """
 
     def _render_metrics_comparison(
-        self,
-        report_data: dict[str, Any],
+            self,
+            report_data: dict[str, Any],
     ) -> str:
         """渲染指标对比。"""
 
@@ -478,8 +478,8 @@ class ReportGenerator:
         """
 
     def _render_detailed_results(
-        self,
-        report_data: dict[str, Any],
+            self,
+            report_data: dict[str, Any],
     ) -> str:
         """渲染详细结果。"""
 

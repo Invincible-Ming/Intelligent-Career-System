@@ -97,7 +97,8 @@ class DocumentService:
             return existing_doc  # 直接返回已存在的文档记录，0 Token消耗，0 延迟！
         # ==========================================
 
-        count = (await session.execute(select(func.count()).select_from(Document).where(Document.owner_id == owner_id))).scalar_one()
+        count = (await session.execute(
+            select(func.count()).select_from(Document).where(Document.owner_id == owner_id))).scalar_one()
         if count >= settings.MAX_DOCUMENTS_PER_USER:
             raise ValueError("文档数量已达到限制，请删除不再使用的文档")
 

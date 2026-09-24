@@ -22,7 +22,8 @@ def firewall(destinations):
     for address, port in destinations:
         ipaddress.IPv4Address(address)
         subprocess.run(["iptables", "-A", "OUTPUT", "-p", "tcp", "-d", address,
-                        "--dport", str(port), "-m", "conntrack", "--ctstate", "NEW,ESTABLISHED", "-j", "ACCEPT"], check=True)
+                        "--dport", str(port), "-m", "conntrack", "--ctstate", "NEW,ESTABLISHED", "-j", "ACCEPT"],
+                       check=True)
 
 
 mode = sys.argv[1]

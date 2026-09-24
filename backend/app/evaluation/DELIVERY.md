@@ -19,13 +19,13 @@
 
 **已实现的指标计算** (`metrics.py`, 9.16 KB):
 
-| 指标 | 实现方式 | 状态 |
-|------|----------|------|
+| 指标              | 实现方式           | 状态    |
+|-------------------|--------------------|---------|
 | Context Precision | LLM 判断检索相关性 | ✅ 完成 |
-| Context Recall | 关键词覆盖率计算 | ✅ 完成 |
-| Faithfulness | LLM 判断答案忠实度 | ✅ 完成 |
-| Answer Relevancy | LLM 判断答案相似度 | ✅ 完成 |
-| Overall Score | 综合得分计算 | ✅ 完成 |
+| Context Recall    | 关键词覆盖率计算   | ✅ 完成 |
+| Faithfulness      | LLM 判断答案忠实度 | ✅ 完成 |
+| Answer Relevancy  | LLM 判断答案相似度 | ✅ 完成 |
+| Overall Score     | 综合得分计算       | ✅ 完成 |
 
 ### ✅ 2. A/B 实验框架
 
@@ -36,7 +36,7 @@
 ✅ **Chunk Size**: 200-2000 (可配置)  
 ✅ **Chunk Overlap**: 0-500 (可配置)  
 ✅ **BGE Reranker**: 启用/禁用  
-✅ **Reflection**: 启用/禁用，最多 5 次迭代  
+✅ **Reflection**: 启用/禁用，最多 5 次迭代
 
 ### ✅ 3. HTML 可视化报告
 
@@ -47,7 +47,7 @@
 ✅ 指标对比横向柱状图  
 ✅ Tab 切换查看详细结果  
 ✅ 美观的渐变配色  
-✅ 交互式 JavaScript 功能  
+✅ 交互式 JavaScript 功能
 
 ### ✅ 4. 并发控制与稳定性
 
@@ -57,7 +57,7 @@
 ✅ **超时保护**: 120 秒可配置超时  
 ✅ **异常捕获**: 不中断整体流程  
 ✅ **进度追踪**: 实时更新评测状态  
-✅ **失败统计**: 成功/失败/超时分类  
+✅ **失败统计**: 成功/失败/超时分类
 
 ### ✅ 5. 30 条回归样本
 
@@ -67,7 +67,7 @@
 ✅ 覆盖 Python、数据库、架构等领域  
 ✅ 包含标准答案 (ground_truth)  
 ✅ 包含参考上下文 (reference_contexts)  
-✅ JSON 格式，易于扩展  
+✅ JSON 格式，易于扩展
 
 ---
 
@@ -75,38 +75,38 @@
 
 ### 核心模块 (10 个)
 
-| 文件 | 大小 | 功能 |
-|------|------|------|
-| `config.py` | 1.81 KB | 配置模型定义 |
-| `dataset.py` | 1.0 KB | 测试数据集模型 |
-| `metrics.py` | 9.16 KB | RAGAS 指标计算 |
-| `executor.py` | 6.6 KB | RAG 查询执行器 |
-| `runner.py` | 10.08 KB | 并发评测运行器 |
-| `report.py` | 16.21 KB | HTML 报告生成 |
-| `api.py` | 3.13 KB | FastAPI REST 端点 |
-| `cli.py` | 6.98 KB | 命令行工具 |
-| `health_check.py` | 4.89 KB | 系统健康检查 |
-| `verify_installation.py` | 4.62 KB | 安装验证脚本 |
+| 文件                     | 大小     | 功能              |
+|--------------------------|----------|-------------------|
+| `config.py`              | 1.81 KB  | 配置模型定义      |
+| `dataset.py`             | 1.0 KB   | 测试数据集模型    |
+| `metrics.py`             | 9.16 KB  | RAGAS 指标计算    |
+| `executor.py`            | 6.6 KB   | RAG 查询执行器    |
+| `runner.py`              | 10.08 KB | 并发评测运行器    |
+| `report.py`              | 16.21 KB | HTML 报告生成     |
+| `api.py`                 | 3.13 KB  | FastAPI REST 端点 |
+| `cli.py`                 | 6.98 KB  | 命令行工具        |
+| `health_check.py`        | 4.89 KB  | 系统健康检查      |
+| `verify_installation.py` | 4.62 KB  | 安装验证脚本      |
 
 ### 脚本与配置 (6 个)
 
-| 文件 | 大小 | 功能 |
-|------|------|------|
-| `run_evaluation.py` | 4.69 KB | 主评测脚本 |
-| `test_dataset_30.json` | 11.9 KB | 30 条测试样本 |
-| `example_config.json` | 1.24 KB | 配置示例 |
-| `start_evaluation.sh` | 1.24 KB | Linux 启动脚本 |
+| 文件                   | 大小    | 功能             |
+|------------------------|---------|------------------|
+| `run_evaluation.py`    | 4.69 KB | 主评测脚本       |
+| `test_dataset_30.json` | 11.9 KB | 30 条测试样本    |
+| `example_config.json`  | 1.24 KB | 配置示例         |
+| `start_evaluation.sh`  | 1.24 KB | Linux 启动脚本   |
 | `start_evaluation.bat` | 1.17 KB | Windows 启动脚本 |
-| `__init__.py` | 0.18 KB | 模块入口 |
+| `__init__.py`          | 0.18 KB | 模块入口         |
 
 ### 文档 (4 个)
 
-| 文件 | 大小 | 内容 |
-|------|------|------|
-| `README.md` | 10.71 KB | 评测系统完整文档 |
-| `IMPLEMENTATION_SUMMARY.md` | 9.1 KB | 实施总结文档 |
-| `../README.md` | 4.8 KB | 项目总文档 |
-| `DELIVERY.md` | 本文件 | 交付文档 |
+| 文件                        | 大小     | 内容             |
+|-----------------------------|----------|------------------|
+| `README.md`                 | 10.71 KB | 评测系统完整文档 |
+| `IMPLEMENTATION_SUMMARY.md` | 9.1 KB   | 实施总结文档     |
+| `../README.md`              | 4.8 KB   | 项目总文档       |
+| `DELIVERY.md`               | 本文件   | 交付文档         |
 
 ---
 
@@ -178,23 +178,23 @@ curl -X POST http://localhost:8000/api/evaluation/experiments \
 
 运行 30 条回归样本后应达到：
 
-| 指标 | 目标值 | 状态 |
-|------|--------|------|
-| **成功率** | 100% (30/30) | ✅ 保证 |
-| **并发限制** | 5 | ✅ 可配置 |
-| **失败样本** | 0 个 | ✅ 零失败 |
-| **超时样本** | 0 个 | ✅ 超时保护 |
-| **总耗时** | < 10 分钟 | ✅ 高效 |
+| 指标         | 目标值       | 状态        |
+|--------------|--------------|-------------|
+| **成功率**   | 100% (30/30) | ✅ 保证     |
+| **并发限制** | 5            | ✅ 可配置   |
+| **失败样本** | 0 个         | ✅ 零失败   |
+| **超时样本** | 0 个         | ✅ 超时保护 |
+| **总耗时**   | < 10 分钟    | ✅ 高效     |
 
 ### RAGAS 指标目标
 
-| 指标 | 目标值 |
-|------|--------|
+| 指标              | 目标值 |
+|-------------------|--------|
 | Context Precision | > 0.75 |
-| Context Recall | > 0.60 |
-| Faithfulness | > 0.70 |
-| Answer Relevancy | > 0.80 |
-| Overall Score | > 0.70 |
+| Context Recall    | > 0.60 |
+| Faithfulness      | > 0.70 |
+| Answer Relevancy  | > 0.80 |
+| Overall Score     | > 0.70 |
 
 ---
 
@@ -250,6 +250,7 @@ python -m app.evaluation.cli quick
 ```
 
 **检查点**:
+
 - 成功率是否 100%
 - 是否有新增失败样本
 - 指标是否下降
@@ -263,6 +264,7 @@ python -m app.evaluation.cli full
 ```
 
 **分析**:
+
 - 查看 HTML 报告中的指标对比图
 - 选择 Overall Score 最高的配置
 - 考虑性能和效果的平衡
@@ -277,6 +279,7 @@ python -m app.evaluation.cli custom --config new_strategy.json
 ```
 
 **对比维度**:
+
 - 新旧检索策略
 - 不同的 Chunk 切分方式
 - 启用/禁用 Reflection
@@ -315,6 +318,7 @@ jobs:
 **原因**: 缺少依赖包
 
 **解决**:
+
 ```bash
 pip install -r app/requirements.txt
 ```
@@ -326,6 +330,7 @@ pip install -r app/requirements.txt
 **原因**: 网络慢或并发过高
 
 **解决**:
+
 ```python
 # 修改配置，增加超时时间
 timeout_seconds=180  # 从 120 增加到 180
@@ -341,6 +346,7 @@ max_concurrency=3  # 从 5 降低到 3
 **原因**: Milvus 服务未启动
 
 **解决**:
+
 ```bash
 # 使用 Docker Compose 启动
 docker-compose up -d milvus
@@ -356,6 +362,7 @@ docker ps | grep milvus
 **原因**: API Key 未配置或错误
 
 **解决**:
+
 ```bash
 # 检查 .env 文件
 DASHSCOPE_API_KEY=your_actual_api_key
@@ -371,6 +378,7 @@ export DASHSCOPE_API_KEY=your_actual_api_key
 **原因**: 权限不足或磁盘空间不足
 
 **解决**:
+
 ```bash
 # 检查目录权限
 mkdir -p evaluation_reports

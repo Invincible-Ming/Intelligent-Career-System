@@ -5,7 +5,7 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
-from app import chat_api
+from app.api import chat_api
 from app.core.config import settings
 
 

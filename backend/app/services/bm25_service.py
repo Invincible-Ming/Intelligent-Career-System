@@ -42,8 +42,8 @@ class BM25Service:
         self.lock = asyncio.Lock()
 
     async def rebuild(
-        self,
-        rows: list[dict[str, Any]],
+            self,
+            rows: list[dict[str, Any]],
     ) -> None:
         """使用全部 Milvus Chunk 重建 BM25 索引。"""
 
@@ -70,11 +70,11 @@ class BM25Service:
             self._build_model()
 
     async def add_document(
-        self,
-        *,
-        document_id: str,
-        document_type: str,
-        chunks: list[str],
+            self,
+            *,
+            document_id: str,
+            document_type: str,
+            chunks: list[str],
     ) -> None:
         """将一个文档的文本块加入 BM25 索引。"""
 
@@ -106,8 +106,8 @@ class BM25Service:
             self._build_model()
 
     async def delete_document(
-        self,
-        document_id: str,
+            self,
+            document_id: str,
     ) -> None:
         """从 BM25 索引中删除一个文档。"""
 
@@ -121,12 +121,12 @@ class BM25Service:
             self._build_model()
 
     async def search(
-        self,
-        *,
-        query: str,
-        document_type: str | None = None,
-        top_k: int = 5,
-        allowed_document_ids: list[str] | None = None,
+            self,
+            *,
+            query: str,
+            document_type: str | None = None,
+            top_k: int = 5,
+            allowed_document_ids: list[str] | None = None,
     ) -> list[dict[str, Any]]:
         """执行 BM25 关键词检索。"""
 
@@ -153,16 +153,16 @@ class BM25Service:
                 if allowed is not None and chunk.document_id not in allowed:
                     continue
                 if (
-                    document_type
-                    and chunk.document_type
-                    != document_type
+                        document_type
+                        and chunk.document_type
+                        != document_type
                 ):
                     continue
 
                 # 至少存在一个关键词交集，避免返回完全无关内容。
                 if not (
-                    query_token_set
-                    & self.token_sets[index]
+                        query_token_set
+                        & self.token_sets[index]
                 ):
                     continue
 
@@ -240,7 +240,7 @@ def tokenize(text: str) -> list[str]:
         token.strip()
         for token in tokens
         if token.strip()
-        and re.search(
+           and re.search(
             r"[a-z0-9\u4e00-\u9fff]",
             token,
         )

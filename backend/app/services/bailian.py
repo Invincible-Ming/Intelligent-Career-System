@@ -410,12 +410,14 @@ class BailianService:
                 last_error = exc
 
                 status = getattr(exc, "status_code", None)
-                if (status is not None and 400 <= status < 500 and status != 429) or attempt >= settings.MODEL_MAX_RETRIES:
+                if (
+                        status is not None and 400 <= status < 500 and status != 429) or attempt >= settings.MODEL_MAX_RETRIES:
                     break
 
                 await asyncio.sleep(2 ** attempt)
 
-        raise ModelServiceError(getattr(last_error, "code", None), getattr(last_error, "status_code", None)) from last_error
+        raise ModelServiceError(getattr(last_error, "code", None),
+                                getattr(last_error, "status_code", None)) from last_error
 
     async def _embedding_retry(
             self,
@@ -474,7 +476,8 @@ class BailianService:
 
             await asyncio.sleep(2 ** attempt)
 
-        raise ModelServiceError(getattr(last_error, "code", None), getattr(last_error, "status_code", None)) from last_error
+        raise ModelServiceError(getattr(last_error, "code", None),
+                                getattr(last_error, "status_code", None)) from last_error
 
     async def close(self) -> None:
         """关闭聊天模型 HTTP 客户端。"""

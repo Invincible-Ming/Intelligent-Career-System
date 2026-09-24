@@ -29,12 +29,12 @@ class Settings(BaseSettings):
 
     @classmethod
     def settings_customise_sources(
-        cls,
-        settings_cls,
-        init_settings,
-        env_settings,
-        dotenv_settings,
-        file_secret_settings,
+            cls,
+            settings_cls,
+            init_settings,
+            env_settings,
+            dotenv_settings,
+            file_secret_settings,
     ):
         # 去掉 env_settings：不读取操作系统环境变量，只认 .env 文件。
         return (init_settings, dotenv_settings, file_secret_settings)
@@ -87,7 +87,7 @@ class Settings(BaseSettings):
     MAX_DOCUMENT_TEXT_CHARS: int = 30000
     MAX_PARSED_DOCUMENT_CHARS: int = 200000
     SANDBOX_DOCUMENTS_ENABLED: bool = True
-    SANDBOX_RUNNER_SOCKET: str = str(Path(__file__).resolve().parents[2] / "deploy/.local/sandbox.sock")
+    SANDBOX_RUNNER_SOCKET: str = str(Path(__file__).resolve().parents[3] / "deploy/.local/sandbox.sock")
 
     # PostgreSQL
     DATABASE_URL: str = (
@@ -139,8 +139,8 @@ class Settings(BaseSettings):
     MCP_ENABLED: bool = True
     MCP_IMAGE: str = "career-mcp:1"
     MCP_SEARCH_SOCKET_VOLUME: str = "career-mcp-search-socket"
-    MCP_FILES_ENABLED: bool = True
-    MCP_DATABASE_ENABLED: bool = True
+    # 百度地图 MCP（远程 Streamable HTTP，AK 在地址中携带）；留空则不加载
+    BAIDU_MAP_MCP_URL: str = ""
     MCP_STARTUP_TIMEOUT: float = 30.0
     MCP_RESEARCH_TIMEOUT: float = 45.0
     MATCH_SEARCH_TIMEOUT: float = 20.0
