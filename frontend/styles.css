@@ -458,3 +458,45 @@ header[data-testid="stHeader"] {
         font-size: 1.65rem;
     }
 }
+
+/* 账户弹层内的额度区块（ChatGPT 风格：细分隔线 + 小字标签 + 细进度条） */
+.st-key-sidebar_account .st-key-quota_section {
+    border-top: 1px solid var(--ui-line);
+    margin-top: .5rem;
+    padding-top: .6rem;
+}
+.st-key-sidebar_account .st-key-quota_section [data-testid="stProgress"] > div {
+    height: 6px;
+    border-radius: 999px;
+}
+.st-key-sidebar_account .st-key-quota_section [data-testid="stProgress"] > div > div {
+    border-radius: 999px;
+}
+
+/* 账户弹层（含额度进度条，用 :has 命中；对话"…"菜单无进度条不受影响）：
+   原生 popover 被传送到 DOM 外层且 fixed 定位会飘到页面中部，钉回侧边栏内、账户按钮上方 */
+[data-testid="stPopoverBody"]:has([data-testid="stProgress"]) {
+    position: fixed !important;
+    top: auto !important;
+    left: 12px !important;
+    right: auto !important;
+    bottom: 53px !important;
+    width: 240px !important;
+    max-width: none !important;
+    transform: none !important;
+    margin: 0 !important;
+}
+
+
+/* 首页欢迎区的订阅方案入口链接 */
+.pricing-link {
+    color: var(--ui-muted, #6b7280);
+    text-decoration: none;
+    font-size: .82em;
+    border-bottom: 1px dashed currentColor;
+    padding-bottom: 1px;
+}
+.pricing-link:hover {
+    color: #2563eb;
+    border-bottom-color: #2563eb;
+}

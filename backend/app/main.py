@@ -60,7 +60,7 @@ from app.evaluation.api import router as evaluation_router
 from app.api.auth_api import router as auth_router
 from app.core.limits import RequestBodyTooLarge, SecurityLimitsMiddleware
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 # ----------------------------------------------------------------------
 # 日志配置
@@ -309,6 +309,20 @@ async def root() -> dict:
             "evaluation": f"{settings.API_PREFIX}/evaluation/experiments",
         },
     }
+
+
+PRICING_HTML_PATH = Path(__file__).resolve().parents[2] / "frontend" / "projectflow-pricing.html"
+
+
+@app.get(
+    "/pricing",
+    tags=["系统"],
+    summary="订阅方案页",
+    description="返回订阅方案定价页（公开访问，无需登录）。",
+)
+async def pricing_page():
+    """定价/订阅方案静态页，供前端账户弹层与首页入口跳转。"""
+    return FileResponse(PRICING_HTML_PATH, media_type="text/html")
 
 
 # ----------------------------------------------------------------------

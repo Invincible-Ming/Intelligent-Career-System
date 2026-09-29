@@ -16,7 +16,7 @@ from app.security.auth import AuthenticatedUser, CurrentUser, anonymous_auth_lim
     token_hash, verify_password
 from app.core.config import settings
 from app.core.database import get_db
-from app.core.models import AuthSession, User
+from app.core.models import AuthSession, RateLimitBucket, User
 
 router = APIRouter(prefix="/auth", tags=["登录"])
 DatabaseSession = Annotated[AsyncSession, Depends(get_db, scope="request")]
@@ -161,3 +161,37 @@ async def browser_logout(request: Request, session: DatabaseSession,
     response.delete_cookie(settings.AUTH_COOKIE_NAME, path="/", httponly=True,
                            secure=settings.AUTH_COOKIE_SECURE or request.url.scheme == "https", samesite="lax")
     return response
+
+
+@router.get("/usage")
+async def usage(user: CurrentUser, session: DatabaseSession):
+    """当前账户的生成配额使用情况（管理员不限次数）。"""
+    if user.is_admin:
+        return {"is_admin": True, "generation_daily": None, "generation_minute": None}
+    now = datetime.now(timezone.utc)
+    timestamp = int(now.timestamp())
+    day_start = datetime.fromtimestamp(timestamp - timestamp % 86400, timezone.utc)
+    minute_start = datetime.fromtimestamp(timestamp - timestamp % 60, timezone.utc)
+    day_key = f"generation-day:{user.id}"
+    minute_key = f"generation-minute:{user.id}"
+    # 必须按各自当前窗口精确匹配：分钟桶存在多条历史记录，
+    # 只按 key 聚合会取到过期窗口的旧计数。
+    stmt = select(RateLimitBucket.key, RateLimitBucket.count).where(
+        RateLimitBucket.key.in_([day_key, minute_key]),
+        RateLimitBucket.window_start.in_([day_start, minute_start]),
+    )
+    used = {key: count for key, count in (await session.execute(stmt)).all()}
+    daily_limit = settings.GENERATION_REQUESTS_PER_DAY
+    minute_limit = settings.GENERATION_REQUESTS_PER_MINUTE
+    daily_used = min(used.get(day_key, 0), daily_limit)
+    minute_used = min(used.get(minute_key, 0), minute_limit)
+    return {
+        "is_admin": False,
+        "generation_daily": {"used": daily_used, "limit": daily_limit,
+                             "remaining": max(0, daily_limit - daily_used),
+                             "resets_at": (day_start + timedelta(seconds=86400)).isoformat()},
+        "generation_minute": {"used": minute_used, "limit": minute_limit,
+                              "remaining": max(0, minute_limit - minute_used),
+                              "resets_in_seconds": 60 - timestamp % 60},
+    }
+

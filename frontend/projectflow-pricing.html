@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProjectFlow · 智能求职管理 —— 定价方案</title>
+<meta name="description" content="ProjectFlow：把求职当项目管理。四档方案按需选择，随求职进度一起成长。">
+<style>
+  :root {
+    --bg: #faf9f7;
+    --surface: #ffffff;
+    --surface-2: #f3f1ec;
+    --border: #e7e4dc;
+    --border-strong: #d8d4c8;
+    --text: #1a1c1a;
+    --text-2: #5c6058;
+    --text-3: #8f948a;
+    --accent: #0e7a5f;
+    --accent-deep: #0a5c48;
+    --accent-soft: #e3f2ec;
+    --accent-softer: #f0f8f4;
+    --amber: #b45309;
+    --amber-soft: #fef3e2;
+    --danger: #b04a3a;
+    --shadow-sm: 0 1px 2px rgba(26,28,26,.05), 0 2px 8px rgba(26,28,26,.04);
+    --shadow-md: 0 4px 12px rgba(26,28,26,.07), 0 12px 32px rgba(26,28,26,.08);
+    --shadow-lg: 0 8px 24px rgba(10,92,72,.10), 0 24px 64px rgba(26,28,26,.12);
+    --radius: 16px;
+    --radius-lg: 24px;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection { background: var(--accent-soft); color: var(--accent-deep); }
+
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; }
+  svg { display: block; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+  /* ============ 页头 ============ */
+  .site-header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(250,249,247,.82);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid transparent;
+    transition: border-color .3s, box-shadow .3s;
+  }
+  .site-header.scrolled {
+    border-bottom-color: var(--border);
+    box-shadow: 0 1px 12px rgba(26,28,26,.05);
+  }
+  .header-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 68px; gap: 24px;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 19px; letter-spacing: -.02em; }
+  .logo-mark {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 100%);
+    display: grid; place-items: center;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 2px 6px rgba(10,92,72,.3);
+  }
+  .logo-text em { font-style: normal; color: var(--accent); }
+  .logo-sub {
+    font-size: 11px; font-weight: 500; color: var(--text-3);
+    display: block; line-height: 1.2; letter-spacing: .04em;
+  }
+  .main-nav { display: flex; gap: 6px; }
+  .main-nav a {
+    padding: 8px 16px; border-radius: 10px;
+    font-size: 15px; font-weight: 500; color: var(--text-2);
+    transition: color .2s, background .2s;
+  }
+  .main-nav a:hover { color: var(--text); background: var(--surface-2); }
+  .main-nav a.active { color: var(--accent-deep); background: var(--accent-soft); }
+  .header-cta {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 20px; border-radius: 999px;
+    background: var(--text); color: #fff;
+    font-size: 14px; font-weight: 600;
+    transition: transform .15s var(--ease-out), background .2s;
+  }
+  .header-cta:hover { background: #000; }
+  .header-cta:active { transform: scale(.97); }
+
+  /* ============ 价格区头部 ============ */
+  .pricing-hero {
+    position: relative;
+    padding: 80px 0 24px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .pricing-hero::before {
+    content: "";
+    position: absolute; inset: -40% -20% auto;
+    height: 480px;
+    background:
+      radial-gradient(600px 300px at 30% 20%, rgba(14,122,95,.10), transparent 70%),
+      radial-gradient(500px 260px at 72% 10%, rgba(180,83,9,.06), transparent 70%);
+    pointer-events: none;
+  }
+  .eyebrow {
+    position: relative;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px; border-radius: 999px;
+    background: var(--accent-soft); color: var(--accent-deep);
+    font-size: 13px; font-weight: 600; letter-spacing: .02em;
+    border: 1px solid rgba(14,122,95,.18);
+  }
+  .eyebrow .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(14,122,95,.4); }
+    50% { box-shadow: 0 0 0 6px rgba(14,122,95,0); }
+  }
+  .pricing-hero h1 {
+    position: relative;
+    margin-top: 20px;
+    font-size: clamp(32px, 5.2vw, 52px);
+    font-weight: 800; letter-spacing: -.03em; line-height: 1.18;
+  }
+  .pricing-hero .sub {
+    position: relative;
+    margin: 16px auto 0;
+    max-width: 560px;
+    font-size: 17px; color: var(--text-2);
+  }
+
+  /* ============ 计费切换 ============ */
+  .billing-toggle-wrap {
+    position: relative;
+    margin-top: 36px;
+    display: inline-flex; align-items: center; gap: 14px;
+  }
+  .billing-toggle {
+    display: inline-flex; position: relative;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px;
+  }
+  .billing-toggle .thumb {
+    position: absolute; top: 4px; left: 4px;
+    width: calc(50% - 4px); height: calc(100% - 8px);
+    background: var(--surface);
+    border-radius: 999px;
+    box-shadow: var(--shadow-sm), 0 0 0 1px rgba(26,28,26,.04);
+    transition: transform .35s var(--ease-out);
+  }
+  .billing-toggle[data-mode="yearly"] .thumb { transform: translateX(100%); }
+  .billing-toggle button {
+    position: relative; z-index: 1;
+    padding: 9px 22px; border-radius: 999px;
+    font-size: 15px; font-weight: 600; color: var(--text-3);
+    transition: color .25s;
+  }
+  .billing-toggle button[aria-pressed="true"] { color: var(--text); }
+  .save-badge {
+    display: inline-flex; align-items: center;
+    padding: 4px 12px; border-radius: 999px;
+    background: var(--amber-soft); color: var(--amber);
+    font-size: 13px; font-weight: 700;
+    border: 1px solid rgba(180,83,9,.18);
+    white-space: nowrap;
+    transition: opacity .3s, transform .3s var(--ease-out);
+  }
+  .save-badge.dim { opacity: .45; transform: scale(.96); }
+  .billing-hint {
+    display: block; margin-top: 10px;
+    font-size: 13px; color: var(--text-3);
+  }
+
+  /* ============ 价格卡片 ============ */
+  .plans {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    padding: 40px 0 72px;
+    align-items: stretch;
+  }
+  .plan {
+    position: relative;
+    display: flex; flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 30px 26px 26px;
+    box-shadow: var(--shadow-sm);
+    transition: transform .3s var(--ease-out), box-shadow .3s, border-color .3s;
+  }
+  .plan:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--border-strong); }
+  .plan.featured {
+    background: linear-gradient(180deg, #fdfefc 0%, var(--surface) 100%);
+    border: 1.5px solid var(--accent);
+    box-shadow: var(--shadow-lg);
+  }
+  .plan.featured:hover { transform: translateY(-6px); }
+  .popular-tag {
+    position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 16px; border-radius: 999px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    color: #fff; font-size: 12.5px; font-weight: 700; letter-spacing: .04em;
+    box-shadow: 0 4px 12px rgba(10,92,72,.35);
+    white-space: nowrap;
+  }
+  .plan-name { font-size: 19px; font-weight: 700; letter-spacing: -.01em; }
+  .plan-desc { margin-top: 4px; font-size: 13.5px; color: var(--text-2); min-height: 42px; }
+  .plan-price { margin-top: 18px; display: flex; align-items: baseline; gap: 6px; min-height: 58px; }
+  .price-num {
+    font-size: 42px; font-weight: 800; letter-spacing: -.04em; line-height: 1;
+    font-variant-numeric: tabular-nums;
+    transition: opacity .2s, transform .2s var(--ease-out);
+  }
+  .price-num.tick { animation: priceTick .4s var(--ease-out); }
+  @keyframes priceTick {
+    0% { opacity: 0; transform: translateY(10px) scale(.96); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .price-unit { font-size: 14px; color: var(--text-3); font-weight: 500; }
+  .price-note { display: block; margin-top: 6px; font-size: 12.5px; color: var(--text-3); min-height: 20px; }
+  .price-note s { color: var(--text-3); }
+  .price-note .save { color: var(--amber); font-weight: 700; }
+
+  .plan-cta {
+    margin-top: 18px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 13px 0;
+    border-radius: 12px;
+    font-size: 15px; font-weight: 700;
+    transition: transform .15s var(--ease-out), background .2s, box-shadow .2s;
+  }
+  .plan-cta:active { transform: scale(.98); }
+  .cta-ghost {
+    background: var(--surface); color: var(--text);
+    border: 1.5px solid var(--border-strong);
+  }
+  .cta-ghost:hover { border-color: var(--text-3); background: var(--surface-2); }
+  .cta-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(10,92,72,.3), inset 0 1px 0 rgba(255,255,255,.2);
+  }
+  .cta-primary:hover { box-shadow: 0 6px 20px rgba(10,92,72,.4); }
+  .cta-dark { background: var(--text); color: #fff; }
+  .cta-dark:hover { background: #000; }
+
+  .plan-divider { margin: 22px 0 16px; border: none; border-top: 1px solid var(--border); }
+  .plan-feats-label { font-size: 12px; font-weight: 700; color: var(--text-3); letter-spacing: .1em; margin-bottom: 12px; }
+  .plan-feats { list-style: none; display: flex; flex-direction: column; gap: 11px; }
+  .plan-feats li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--text-2); }
+  .plan-feats li strong { color: var(--text); font-weight: 600; }
+  .check-ico { flex-shrink: 0; margin-top: 4px; color: var(--accent); }
+  .plan-feats .muted { color: var(--text-3); }
+
+  /* ============ 功能对比矩阵 ============ */
+  .section { padding: 88px 0; }
+  .section-head { text-align: center; max-width: 620px; margin: 0 auto 48px; }
+  .section-head h2 { font-size: clamp(26px, 3.6vw, 36px); font-weight: 800; letter-spacing: -.02em; }
+  .section-head p { margin-top: 12px; color: var(--text-2); font-size: 16px; }
+
+  .matrix-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+  .matrix-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table.matrix { width: 100%; border-collapse: collapse; min-width: 760px; font-size: 14.5px; }
+  .matrix thead th {
+    position: sticky; top: 68px; z-index: 5;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 18px 16px;
+    text-align: center;
+    font-size: 14px; font-weight: 700;
+    border-bottom: 1.5px solid var(--border-strong);
+  }
+  .matrix thead th:first-child { text-align: left; padding-left: 28px; }
+  .matrix thead .th-plan small { display: block; font-weight: 500; color: var(--text-3); font-size: 11.5px; margin-top: 2px; }
+  .matrix thead .th-plan.is-featured { color: var(--accent-deep); }
+  .matrix td, .matrix tbody th {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+  }
+  .matrix tbody th {
+    text-align: left; padding-left: 28px;
+    font-weight: 500; color: var(--text-2);
+    width: 30%;
+  }
+  .matrix tbody tr:last-child td, .matrix tbody tr:last-child th { border-bottom: none; }
+  .matrix td { color: var(--text); font-variant-numeric: tabular-nums; }
+  .matrix td .no { color: var(--text-3); }
+  .matrix tr:hover td, .matrix tr:hover th { background: var(--accent-softer); }
+  .matrix td.is-featured, .matrix thead th.is-featured { background: rgba(14,122,95,.045); }
+  .matrix tr:hover td.is-featured { background: rgba(14,122,95,.09); }
+
+  .cat-row th {
+    padding: 12px 28px !important;
+    background: var(--surface-2) !important;
+    font-weight: 700 !important; color: var(--text) !important;
+    font-size: 13px; letter-spacing: .06em;
+  }
+  .cat-row th .cat-inner { display: flex; align-items: center; gap: 8px; }
+  .cat-row th svg { color: var(--accent); }
+  .val-strong { font-weight: 700; color: var(--accent-deep); }
+
+  .icon-yes { color: var(--accent); margin: 0 auto; }
+  .icon-no { color: #c9c6bc; margin: 0 auto; }
+
+  /* ============ FAQ ============ */
+  .faq-list { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+  .faq-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: border-color .25s, box-shadow .25s;
+  }
+  .faq-item.open { border-color: var(--accent); box-shadow: var(--shadow-sm); }
+  .faq-q {
+    width: 100%;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 18px 22px;
+    text-align: left;
+    font-size: 15.5px; font-weight: 600; color: var(--text);
+  }
+  .faq-q .chev {
+    flex-shrink: 0; color: var(--text-3);
+    transition: transform .3s var(--ease-out), color .25s;
+  }
+  .faq-item.open .faq-q .chev { transform: rotate(180deg); color: var(--accent); }
+  .faq-a {
+    display: grid; grid-template-rows: 0fr;
+    transition: grid-template-rows .35s var(--ease-out);
+  }
+  .faq-item.open .faq-a { grid-template-rows: 1fr; }
+  .faq-a-inner { overflow: hidden; }
+  .faq-a-inner p {
+    padding: 0 22px 20px;
+    font-size: 14.5px; color: var(--text-2);
+  }
+
+  /* ============ 底部 CTA ============ */
+  .cta-banner-wrap { padding: 24px 0 88px; }
+  .cta-banner {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #0c6b53 0%, #0a5c48 55%, #084536 100%);
+    border-radius: var(--radius-lg);
+    padding: 64px 40px;
+    text-align: center;
+    color: #fff;
+    box-shadow: var(--shadow-lg);
+  }
+  .cta-banner::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(500px 240px at 85% 15%, rgba(255,255,255,.10), transparent 65%),
+      radial-gradient(420px 220px at 10% 90%, rgba(255,255,255,.06), transparent 65%);
+    pointer-events: none;
+  }
+  .cta-banner h2 {
+    position: relative;
+    font-size: clamp(26px, 3.6vw, 38px);
+    font-weight: 800; letter-spacing: -.02em;
+  }
+  .cta-banner p { position: relative; margin: 14px auto 0; max-width: 520px; font-size: 16px; color: rgba(255,255,255,.82); }
+  .cta-banner-actions { position: relative; margin-top: 32px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn-light {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 32px; border-radius: 12px;
+    background: #fff; color: var(--accent-deep);
+    font-size: 16px; font-weight: 700;
+    box-shadow: 0 6px 20px rgba(0,0,0,.18);
+    transition: transform .15s var(--ease-out), box-shadow .2s;
+  }
+  .btn-light:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,.24); }
+  .btn-light:active { transform: scale(.98); }
+  .btn-outline-light {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 32px; border-radius: 12px;
+    border: 1.5px solid rgba(255,255,255,.4); color: #fff;
+    font-size: 16px; font-weight: 600;
+    transition: background .2s, border-color .2s;
+  }
+  .btn-outline-light:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.7); }
+  .cta-banner .fine { position: relative; margin-top: 20px; font-size: 13px; color: rgba(255,255,255,.55); }
+
+  /* ============ 页脚 ============ */
+  .site-footer { background: #171917; color: #a8ada4; padding: 56px 0 32px; }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 40px;
+  }
+  .footer-brand .logo { color: #fff; }
+  .footer-brand p { margin-top: 14px; font-size: 13.5px; max-width: 300px; line-height: 1.8; }
+  .footer-col h4 { color: #e8eae6; font-size: 13.5px; font-weight: 700; letter-spacing: .06em; margin-bottom: 16px; }
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .footer-col a { font-size: 13.5px; transition: color .2s; }
+  .footer-col a:hover { color: #fff; }
+  .footer-bottom {
+    margin-top: 44px; padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,.08);
+    display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
+    font-size: 12.5px; color: #6f746c;
+  }
+
+  /* ============ 进场动画 ============ */
+  .reveal { opacity: 0; transform: translateY(26px); }
+  .reveal.in {
+    opacity: 1; transform: none;
+    transition: opacity .7s var(--ease-out), transform .7s var(--ease-out);
+    transition-delay: calc(var(--i, 0) * 90ms);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .reveal { opacity: 1; transform: none; }
+    html { scroll-behavior: auto; }
+  }
+
+  /* ============ 响应式 ============ */
+  @media (max-width: 1024px) {
+    .plans { grid-template-columns: repeat(2, 1fr); }
+    .plan.featured { order: -1; }
+  }
+  @media (max-width: 720px) {
+    .main-nav { display: none; }
+    .header-cta span { display: none; }
+    .header-cta { padding: 9px 14px; }
+    .plans { grid-template-columns: 1fr; padding-bottom: 56px; }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+    .matrix thead th { top: 0; }
+    .section { padding: 64px 0; }
+    .cta-banner { padding: 48px 24px; }
+    html { scroll-padding-top: 72px; }
+  }
+  @media (max-width: 440px) {
+    .footer-grid { grid-template-columns: 1fr; }
+    .billing-toggle-wrap { flex-direction: column; gap: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= 页头 ================= -->
+<header class="site-header" id="siteHeader">
+  <div class="container header-inner">
+    <a class="logo" href="#" aria-label="ProjectFlow 首页">
+      <span class="logo-mark" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="4" width="5" height="12" rx="1.5" fill="#fff" opacity=".95"/>
+          <rect x="10" y="4" width="5" height="8" rx="1.5" fill="#fff" opacity=".7"/>
+          <rect x="17" y="4" width="4" height="16" rx="1.5" fill="#fff" opacity=".5"/>
+        </svg>
+      </span>
+      <span class="logo-text">Project<em>Flow</em>
+        <span class="logo-sub">智能求职管理</span>
+      </span>
+    </a>
+    <nav class="main-nav" aria-label="主导航">
+      <a href="#features">功能</a>
+      <a href="#pricing" class="active">价格</a>
+      <a href="#about">关于我们</a>
+    </nav>
+    <a class="header-cta" href="#pricing" data-app-cta>
+      <span>免费开始</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+  </div>
+</header>
+
+<main>
+  <!-- ================= 价格区 ================= -->
+  <section class="pricing-hero" id="pricing">
+    <div class="container" style="text-align:center;">
+      <span class="eyebrow reveal"><span class="dot" aria-hidden="true"></span>定价方案 · 按团队规模灵活升级</span>
+      <h1 class="reveal" style="--i:1">把求职当项目管理<br>按需选择，随团队一起成长</h1>
+      <p class="sub reveal" style="--i:2">从单人投递追踪到校园招聘团队协作，ProjectFlow 用看板管投递、用数据看转化，每一档都为你的求职阶段量身设计。</p>
+
+      <div class="billing-toggle-wrap reveal" style="--i:3">
+        <div class="billing-toggle" id="billingToggle" data-mode="monthly" role="group" aria-label="计费周期切换">
+          <span class="thumb" aria-hidden="true"></span>
+          <button type="button" id="btnMonthly" aria-pressed="true">月付</button>
+          <button type="button" id="btnYearly" aria-pressed="false">年付</button>
+        </div>
+        <span class="save-badge" id="saveBadge">年付立省 20%</span>
+      </div>
+      <small class="billing-hint reveal" style="--i:3" id="billingHint">所有付费方案均含 14 天免费试用，无需绑定支付方式</small>
+    </div>
+
+    <!-- 四档价格卡片 -->
+    <div class="container plans" id="plansGrid">
+
+      <!-- 免费版 -->
+      <article class="plan reveal" style="--i:0">
+        <h3 class="plan-name">免费版</h3>
+        <p class="plan-desc">适合个人求职起步，先把手头机会管起来</p>
+        <div class="plan-price">
+          <span class="price-num" data-monthly="¥0" data-yearly="¥0">¥0</span>
+          <span class="price-unit">/ 永久免费</span>
+        </div>
+        <small class="price-note">无需信用卡，注册即用</small>
+        <a class="plan-cta cta-ghost" href="#" data-app-cta>免费开始求职管理</a>
+        <hr class="plan-divider">
+        <p class="plan-feats-label">包含功能</p>
+        <ul class="plan-feats">
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span><strong>3 个</strong>求职项目（投递批次）</span></li>
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span><strong>1 位</strong>成员</span></li>
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span>投递看板 / 进度追踪</span></li>
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span>基础职位信息收藏</span></li>
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span class="muted">500 MB 简历附件存储</span></li>
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span class="muted">社区支持</span></li>
+        </ul>
+      </article>
+
+      <!-- 入门版 -->
+      <article class="plan reveal" style="--i:1">
+        <h3 class="plan-name">入门版</h3>
+        <p class="plan-desc">适合秋招冲刺的小团队与研友互助小组</p>
+        <div class="plan-price">
+          <span class="price-num" data-monthly="¥29" data-yearly="¥23">¥29</span>
+          <span class="price-unit">/ 成员 / 月</span>
+        </div>
+        <small class="price-note" data-monthly="按月付费，随时取消" data-yearly="按年付费 ¥276，<s>¥348</s> <span class='save'>省 ¥72</span>">按月付费，随时取消</small>
+        <a class="plan-cta cta-ghost" href="#" data-app-cta>开始 14 天免费试用</a>
+        <hr class="plan-divider">
+        <p class="plan-feats-label">包含免费版全部功能，另有</p>
+        <ul class="plan-feats">
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span><strong>10 个</strong>求职项目</span></li>
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span>最多 <strong>5 位</strong>成员</span></li>
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span>面试日程 / 时间线视图</span></li>
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span>基础 AI 职位匹配建议</span></li>
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span>10 GB 简历附件存储</span></li>
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span>工单支持</span></li>
+        </ul>
+      </article>
+
+      <!-- 专业版 -->
+      <article class="plan featured reveal" style="--i:2">
+        <span class="popular-tag">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg>
+          最受欢迎
+        </span>
+        <h3 class="plan-name">专业版</h3>
+        <p class="plan-desc">为全职冲刺与求职工作室打造，项目数量不设上限</p>
+        <div class="plan-price">
+          <span class="price-num" data-monthly="¥79" data-yearly="¥63">¥79</span>
+          <span class="price-unit">/ 成员 / 月</span>
+        </div>
+        <small class="price-note" data-monthly="按月付费，随时取消" data-yearly="按年付费 ¥756，<s>¥948</s> <span class='save'>省 ¥192</span>">按月付费，随时取消</small>
+        <a class="plan-cta cta-primary" href="#" data-app-cta>立即升级专业版</a>
+        <hr class="plan-divider">
+        <p class="plan-feats-label">包含入门版全部功能，另有</p>
+        <ul class="plan-feats">
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span><strong>不限</strong>求职项目</span></li>
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span>最多 <strong>20 位</strong>成员</span></li>
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span>AI 智能建议（6 维度求职诊断）</span></li>
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span>投递漏斗 / 转化率分析</span></li>
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span>100 GB 存储 + API 接入</span></li>
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span>优先邮件支持</span></li>
+        </ul>
+      </article>
+
+      <!-- 企业版 -->
+      <article class="plan reveal" style="--i:3">
+        <h3 class="plan-name">企业版</h3>
+        <p class="plan-desc">面向高校就业中心与大型招聘团队</p>
+        <div class="plan-price">
+          <span class="price-num" data-monthly="定制" data-yearly="定制" style="font-size:34px;">定制</span>
+          <span class="price-unit">/ 按需报价</span>
+        </div>
+        <small class="price-note">专属解决方案顾问，1 对 1 对接</small>
+        <a class="plan-cta cta-dark" href="#">联系销售</a>
+        <hr class="plan-divider">
+        <p class="plan-feats-label">包含专业版全部功能，另有</p>
+        <ul class="plan-feats">
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span><strong>不限</strong>成员数量</span></li>
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span>私有化部署可选</span></li>
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span>SSO / SCIM / 审计日志</span></li>
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span>专属客户成功经理</span></li>
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span>SLA 99.95% 服务保障</span></li>
+          <li><svg class="check-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg><span>对公转账与专票</span></li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <!-- ================= 功能对比矩阵 ================= -->
+  <section class="section" id="features" style="padding-top:24px;">
+    <div class="container">
+      <div class="section-head reveal">
+        <h2>功能对比一览</h2>
+        <p>按类别逐项对比 24 项功能，帮你找到最合适的套餐。</p>
+      </div>
+
+      <div class="matrix-card reveal" style="--i:1">
+        <div class="matrix-scroll">
+          <table class="matrix">
+            <thead>
+              <tr>
+                <th scope="col">功能</th>
+                <th scope="col" class="th-plan">免费版<small>¥0</small></th>
+                <th scope="col" class="th-plan">入门版<small>¥29/月</small></th>
+                <th scope="col" class="th-plan is-featured">专业版<small>¥79/月</small></th>
+                <th scope="col" class="th-plan">企业版<small>定制</small></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="cat-row"><th colspan="5"><span class="cat-inner"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 20V9"/></svg>核心功能</span></th></tr>
+              <tr><th scope="row">求职项目（投递批次）</th><td>3 个</td><td>10 个</td><td class="is-featured"><span class="val-strong">不限</span></td><td><span class="val-strong">不限</span></td></tr>
+              <tr><th scope="row">团队成员</th><td>1 位</td><td>5 位</td><td class="is-featured"><span class="val-strong">20 位</span></td><td><span class="val-strong">不限</span></td></tr>
+              <tr><th scope="row">职位收藏与投递追踪</th><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td class="is-featured"><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td></tr>
+              <tr><th scope="row">看板 / 列表 / 日历视图</th><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td class="is-featured"><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td></tr>
+              <tr><th scope="row">面试日程 / 时间线视图</th><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td class="is-featured"><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td></tr>
+              <tr><th scope="row">简历附件存储</th><td>500 MB</td><td>10 GB</td><td class="is-featured"><span class="val-strong">100 GB</span></td><td><span class="val-strong">按需扩容</span></td></tr>
+              <tr><th scope="row">多版本简历管理</th><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td>3 份</td><td class="is-featured"><span class="val-strong">不限</span></td><td><span class="val-strong">不限</span></td></tr>
+
+              <tr class="cat-row"><th colspan="5"><span class="cat-inner"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.2 3.4-5 6.5-5s5.7 1.8 6.5 5M16 4.5a3.5 3.5 0 010 7M21.5 20c-.6-2.4-2.2-4-4.5-4.6"/></svg>协作能力</span></th></tr>
+              <tr><th scope="row">实时评论 / @提醒</th><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td class="is-featured"><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td></tr>
+              <tr><th scope="row">模拟面试协同安排</th><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td class="is-featured"><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td></tr>
+              <tr><th scope="row">跨项目总览视图</th><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td class="is-featured"><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td></tr>
+              <tr><th scope="row">外部访客协作（导师 / 内推人）</th><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td>最多 2 位</td><td class="is-featured"><span class="val-strong">不限</span></td><td><span class="val-strong">不限</span></td></tr>
+              <tr><th scope="row">工作流自动化</th><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td>100 次/月</td><td class="is-featured"><span class="val-strong">无限次</span></td><td><span class="val-strong">无限次</span></td></tr>
+              <tr><th scope="row">邮件 / 企微消息提醒</th><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td class="is-featured"><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td></tr>
+
+              <tr class="cat-row"><th colspan="5"><span class="cat-inner"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg>数据分析</span></th></tr>
+              <tr><th scope="row">投递漏斗 / 转化率分析</th><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td>基础版</td><td class="is-featured"><span class="val-strong">完整版</span></td><td><span class="val-strong">完整版</span></td></tr>
+              <tr><th scope="row">自定义报表</th><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td>3 张</td><td class="is-featured"><span class="val-strong">不限</span></td><td><span class="val-strong">不限</span></td></tr>
+              <tr><th scope="row">数据导出（CSV / API）</th><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td>CSV</td><td class="is-featured">CSV + API</td><td>CSV + API</td></tr>
+              <tr><th scope="row">AI 求职进度预测</th><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td class="is-featured"><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td></tr>
+              <tr><th scope="row">AI 智能建议（6 维度诊断）</th><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td>基础版</td><td class="is-featured"><span class="val-strong">完整版</span></td><td><span class="val-strong">完整版 + 定制</span></td></tr>
+              <tr><th scope="row">简历智能诊断评分</th><td>每月 3 次</td><td>每月 30 次</td><td class="is-featured"><span class="val-strong">不限</span></td><td><span class="val-strong">不限</span></td></tr>
+              <tr><th scope="row">AI 职位匹配推荐</th><td>每周 5 条</td><td>每周 30 条</td><td class="is-featured"><span class="val-strong">不限</span></td><td><span class="val-strong">不限</span></td></tr>
+
+              <tr class="cat-row"><th colspan="5"><span class="cat-inner"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>安全与支持</span></th></tr>
+              <tr><th scope="row">两步验证</th><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td class="is-featured"><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td></tr>
+              <tr><th scope="row">单点登录 SSO</th><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td class="is-featured"><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td></tr>
+              <tr><th scope="row">SCIM 用户同步</th><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td class="is-featured"><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td><svg class="icon-yes" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="支持"><path d="M4 12.5l5 5L20 6.5"/></svg></td></tr>
+              <tr><th scope="row">审计日志</th><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td class="is-featured">30 天</td><td><span class="val-strong">365 天</span></td></tr>
+              <tr><th scope="row">客户支持</th><td>社区</td><td>工单</td><td class="is-featured"><span class="val-strong">优先邮件</span></td><td><span class="val-strong">7×24 热线</span></td></tr>
+              <tr><th scope="row">服务等级协议 SLA</th><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td><svg class="icon-no" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" role="img" aria-label="不支持"><path d="M6 6l12 12M18 6L6 18"/></svg></td><td class="is-featured">99.9%</td><td><span class="val-strong">99.95%</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FAQ ================= -->
+  <section class="section" id="faq" style="padding-top:16px;">
+    <div class="container">
+      <div class="section-head reveal">
+        <h2>常见问题</h2>
+        <p>找不到答案？直接联系我们，一般在 2 小时内回复。</p>
+      </div>
+      <div class="faq-list">
+        <div class="faq-item reveal" style="--i:0">
+          <button class="faq-q" aria-expanded="false">免费版会不会过期？<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="faq-a"><div class="faq-a-inner"><p>免费版永久可用，没有试用期限制。只要不超出免费版容量（3 个求职项目、1 位成员、500 MB 存储），可以一直免费使用，数据也不会被清理。</p></div></div>
+        </div>
+        <div class="faq-item reveal" style="--i:1">
+          <button class="faq-q" aria-expanded="false">年付和月付的区别是什么？<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="faq-a"><div class="faq-a-inner"><p>年付一次结算 12 个月费用，整体相比按月付费节省 20%。年付不支持按月退款，但可以在下一计费周期降级或取消。功能上两种方式完全一致。</p></div></div>
+        </div>
+        <div class="faq-item reveal" style="--i:2">
+          <button class="faq-q" aria-expanded="false">套餐升级或降级后怎么计费？<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="faq-a"><div class="faq-a-inner"><p>升级后立即生效，按剩余天数折算差额并补扣费。降级会在当前计费周期结束时生效，不会产生退款。所有变更都可以在「设置 &gt; 订阅管理」自助完成。</p></div></div>
+        </div>
+        <div class="faq-item reveal" style="--i:3">
+          <button class="faq-q" aria-expanded="false">AI 智能建议和简历诊断的次数是怎么算的？<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="faq-a"><div class="faq-a-inner"><p>免费版每月 3 次简历诊断、每周 5 条职位推荐，够体验核心能力。入门版提升到每月 30 次。专业版及以上不限次数，且智能建议覆盖 6 个维度（定位、简历、投递、面试、谈薪、复盘）的完整诊断。</p></div></div>
+        </div>
+        <div class="faq-item reveal" style="--i:4">
+          <button class="faq-q" aria-expanded="false">ProjectFlow 支持哪些支付方式？<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="faq-a"><div class="faq-a-inner"><p>支持支付宝、微信支付、Visa / Mastercard 信用卡。企业版支持对公转账与开具增值税专用发票。</p></div></div>
+        </div>
+        <div class="faq-item reveal" style="--i:5">
+          <button class="faq-q" aria-expanded="false">可以随时取消订阅吗？<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="faq-a"><div class="faq-a-inner"><p>可以。在「设置 &gt; 订阅管理」页面一键取消，取消后当前周期剩余时间依然可用，到期后自动切回免费版，所有求职项目数据不会丢失。</p></div></div>
+        </div>
+        <div class="faq-item reveal" style="--i:6">
+          <button class="faq-q" aria-expanded="false">退款政策是怎样的？<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="faq-a"><div class="faq-a-inner"><p>首次订阅享 14 天无理由退款。年付用户在付款 30 天内可申请按比例退款，扣除已使用月份后退还剩余金额，1-3 个工作日原路退回。</p></div></div>
+        </div>
+        <div class="faq-item reveal" style="--i:7">
+          <button class="faq-q" aria-expanded="false">我的求职数据安全吗？存放在哪里？<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="faq-a"><div class="faq-a-inner"><p>数据默认存储在国内合规云节点，传输全程 HTTPS / TLS 1.3，静态数据 AES-256 加密。你的简历和投递记录仅用于为你生成建议，绝不用于训练对外模型，也不会共享给第三方。企业版支持指定区域或私有化部署。</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 底部 CTA ================= -->
+  <section class="cta-banner-wrap" id="about">
+    <div class="container">
+      <div class="cta-banner reveal">
+        <h2>下一个offer，从管好每一次投递开始</h2>
+        <p>免费版永久可用，14 天试用无需绑卡。现在建一个看板，把散落在收藏夹里的机会都收进来。</p>
+        <div class="cta-banner-actions">
+          <a class="btn-light" href="#pricing" data-app-cta>免费开始求职管理
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a class="btn-outline-light" href="#faq">咨询企业版方案</a>
+        </div>
+        <p class="fine">已有 30,000+ 求职者在 ProjectFlow 上追踪投递进度</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ================= 页脚 ================= -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="logo" href="#" aria-label="ProjectFlow 首页">
+          <span class="logo-mark" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="4" width="5" height="12" rx="1.5" fill="#fff" opacity=".95"/>
+              <rect x="10" y="4" width="5" height="8" rx="1.5" fill="#fff" opacity=".7"/>
+              <rect x="17" y="4" width="4" height="16" rx="1.5" fill="#fff" opacity=".5"/>
+            </svg>
+          </span>
+          <span class="logo-text">Project<em>Flow</em></span>
+        </a>
+        <p>把求职当项目管理。用看板管投递、用数据看转化、用 AI 拿建议，让每一次机会都不被错过。</p>
+      </div>
+      <div class="footer-col">
+        <h4>产品</h4>
+        <ul>
+          <li><a href="#features">功能总览</a></li>
+          <li><a href="#pricing">价格方案</a></li>
+          <li><a href="#">更新日志</a></li>
+          <li><a href="#">下载客户端</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>资源</h4>
+        <ul>
+          <li><a href="#">求职攻略博客</a></li>
+          <li><a href="#">帮助中心</a></li>
+          <li><a href="#faq">常见问题</a></li>
+          <li><a href="#">API 文档</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>公司</h4>
+        <ul>
+          <li><a href="#about">关于我们</a></li>
+          <li><a href="#">加入我们</a></li>
+          <li><a href="#">联系我们</a></li>
+          <li><a href="#">服务协议 / 隐私政策</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 ProjectFlow · 杭州 flowtech 网络科技有限公司</span>
+      <span>浙ICP备XXXXXXXX号-1 · 浙公网安备XXXXXXXXXXXXX号</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- 「开始使用」类按钮统一跳转到求职助手应用 ----------
+     部署时只需修改 APP_URL 一处。 */
+  var APP_URL = "http://localhost:8501/";
+  document.querySelectorAll("a[data-app-cta]").forEach(function (a) {
+    a.href = APP_URL;
+  });
+
+  /* ---------- 月付 / 年付切换 ---------- */
+  var toggle = document.getElementById("billingToggle");
+  var btnMonthly = document.getElementById("btnMonthly");
+  var btnYearly = document.getElementById("btnYearly");
+  var saveBadge = document.getElementById("saveBadge");
+  var billingHint = document.getElementById("billingHint");
+
+  function setMode(mode) {
+    toggle.dataset.mode = mode;
+    btnMonthly.setAttribute("aria-pressed", String(mode === "monthly"));
+    btnYearly.setAttribute("aria-pressed", String(mode === "yearly"));
+    saveBadge.classList.toggle("dim", mode !== "yearly");
+
+    document.querySelectorAll(".price-num").forEach(function (el) {
+      var next = el.dataset[mode];
+      if (!next || el.textContent === next) return;
+      el.classList.remove("tick");
+      void el.offsetWidth; /* 重启动画 */
+      el.textContent = next;
+      el.classList.add("tick");
+    });
+
+    document.querySelectorAll(".price-note[data-monthly]").forEach(function (el) {
+      el.innerHTML = el.dataset[mode];
+    });
+
+    billingHint.textContent = mode === "yearly"
+      ? "年付价格已折算为每月等值金额，一次结算 12 个月"
+      : "所有付费方案均含 14 天免费试用，无需绑定支付方式";
+  }
+
+  btnMonthly.addEventListener("click", function () { setMode("monthly"); });
+  btnYearly.addEventListener("click", function () { setMode("yearly"); });
+
+  /* ---------- FAQ 折叠 ---------- */
+  document.querySelectorAll(".faq-item").forEach(function (item) {
+    var btn = item.querySelector(".faq-q");
+    btn.addEventListener("click", function () {
+      var isOpen = item.classList.contains("open");
+      document.querySelectorAll(".faq-item.open").forEach(function (other) {
+        other.classList.remove("open");
+        other.querySelector(".faq-q").setAttribute("aria-expanded", "false");
+      });
+      if (!isOpen) {
+        item.classList.add("open");
+        btn.setAttribute("aria-expanded", "true");
+      }
+    });
+  });
+
+  /* ---------- 滚动进场 ---------- */
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced || !("IntersectionObserver" in window)) {
+    document.querySelectorAll(".reveal").forEach(function (el) { el.classList.add("in"); });
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("in");
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+    document.querySelectorAll(".reveal").forEach(function (el) { io.observe(el); });
+  }
+
+  /* ---------- 页头滚动态 ---------- */
+  var header = document.getElementById("siteHeader");
+  var onScroll = function () {
+    header.classList.toggle("scrolled", window.scrollY > 8);
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+})();
+</script>
+</body>
+</html>

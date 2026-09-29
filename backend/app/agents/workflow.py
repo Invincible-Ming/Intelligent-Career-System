@@ -27,9 +27,11 @@ from langgraph.graph import END, START, StateGraph
 
 # 🌟 新增：LangChain 核心组件与 MCP 服务
 from langchain_openai import ChatOpenAI
+from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
 from app.core.config import settings
 from app.core.limits import BudgetExceeded, ModelBudgetCallback, model_request_timeout
+from app.services.web_fetch import FetchBlocked, fetch_page_text
 from app.services.mcp_tools import mcp_service
 
 # 兼容 LangGraph 不同版本的 RetryPolicy 导入路径
@@ -676,9 +678,23 @@ async def make_match_workflow():
 
 
 # 🌟 新增模块：为对外暴露的 Chat API 专门封装的 MCP Agent
+@tool
+async def fetch_web_page(url: str) -> str:
+    """读取指定网页的正文全文（已去除脚本与广告）。用于打开搜索结果中的链接，获取岗位详情、
+    公司官网介绍、新闻原文等页面内容。仅支持公网 http/https 地址，内网地址会被拒绝。"""
+    try:
+        return await fetch_page_text(url)
+    except FetchBlocked as exc:
+        return f"无法读取该网页：{exc}"
+    except Exception as exc:
+        return f"读取失败：{type(exc).__name__}: {str(exc)[:150]}"
+
+
 def get_chat_agent_tools():
-    """对话 Agent 的工具清单：受限联网搜索 + 百度地图只读查询。"""
-    return mcp_service.get_tools("search") + mcp_service.get_tools("baidu_map")
+    """对话 Agent 的工具清单：受限联网搜索 + 百度地图只读查询 + 网页全文阅读。"""
+    return (mcp_service.get_tools("search")
+            + mcp_service.get_tools("baidu_map")
+            + [fetch_web_page])
 
 
 def get_chat_mcp_agent(*, temperature: float | None = None):

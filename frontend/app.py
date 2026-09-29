@@ -903,6 +903,13 @@ if is_admin:
     page_options["evaluation"] = "评测"
 active_page = st.session_state.active_page
 
+# 页面级侧边栏：仅智能对话显示（会话列表/账户区都在侧边栏），其余页面整栏隐藏。
+if active_page != "chat":
+    st.markdown(
+        "<style>[data-testid='stSidebar'], [data-testid='stSidebarCollapsedControl'] {display: none;}</style>",
+        unsafe_allow_html=True,
+    )
+
 with navigation_area.container():
     with st.container(key="top_navigation"):
         for column, (page, label) in zip(st.columns(len(page_options), gap="small"), page_options.items()):
@@ -991,6 +998,24 @@ with account_area.container():
         # ChatGPT 风格：点击底部用户区域弹出账户菜单，退出登录收纳进菜单。
         with st.popover(username, icon=":material/person:", use_container_width=True):
             st.caption(f"当前登录：{username}")
+            # 账户配额展示：管理员不限次数，普通用户展示当日/当分钟余量
+            with st.container(key="quota_section"):
+                try:
+                    usage = request_api('GET', '/api/auth/usage')
+                except APIError:
+                    usage = None
+                if usage and usage.get('is_admin'):
+                    st.caption('模型调用次数：不限')
+                elif usage:
+                    daily = usage['generation_daily']
+                    minute = usage['generation_minute']
+                    st.caption('今日生成次数')
+                    ratio = min(daily['used'] / daily['limit'], 1.0) if daily['limit'] else 0.0
+                    st.progress(ratio, text=f"{daily['used']} / {daily['limit']}")
+                    st.caption(f"剩余 {daily['remaining']} 次 · 每日北京时间 08:00 重置")
+                    st.caption(f"本分钟：{minute['used']} / {minute['limit']}")
+            st.link_button('订阅方案与价格', f"{API_BASE_URL}/pricing",
+                           icon=":material/workspace_premium:", use_container_width=True)
             if st.button('退出登录', icon=":material/logout:", use_container_width=True):
                 try:
                     request_api('POST', '/api/auth/logout')
@@ -1017,7 +1042,9 @@ with private_area.container():
         # 欢迎语固定放在对话页顶部；快捷主题已移除，减少首屏占用。
         if not st.session_state.chat_messages:
             username = escape(st.session_state.auth_user['username'])
-            st.markdown(f'<div class="chat-welcome"><h1>你好，{username}</h1><p>今天想为求职做些什么？</p></div>',
+            pricing_url = f"{API_BASE_URL}/pricing"
+            st.markdown(f'<div class="chat-welcome"><h1>你好，{username}</h1>'
+                        f'<p>今天想为求职做些什么？ <a class="pricing-link" href="{pricing_url}" target="_blank">查看订阅方案 →</a></p></div>',
                         unsafe_allow_html=True)
 
         chat_scroll_area = st.container(key="chat_history")
