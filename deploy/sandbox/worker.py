@@ -5,7 +5,7 @@ import json
 import sys
 from contextlib import redirect_stdout
 
-from document_pipeline import parse_blocks, serialize_blocks
+from document_pipeline import PIPELINE_VERSION, parse_blocks, serialize_blocks
 
 PROTOCOL_OUT = sys.stdout
 
@@ -37,7 +37,7 @@ async def main():
 
     with redirect_stdout(sys.stderr):
         blocks = await parse_blocks(data, extension, ocr, max_chars=max_chars)
-    send({"type": "result", "blocks": serialize_blocks(blocks)})
+    send({"type": "result", "pipeline_version": PIPELINE_VERSION, "blocks": serialize_blocks(blocks)})
 
 
 if __name__ == "__main__":

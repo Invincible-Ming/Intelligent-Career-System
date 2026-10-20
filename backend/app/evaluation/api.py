@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import time
 import uuid
 from pathlib import Path
 from typing import Annotated
@@ -23,11 +24,11 @@ AdminUser = Annotated[User, Depends(require_admin)]
 
 from app.evaluation.config import ExperimentConfig
 from app.evaluation.runner import EvaluationRunner
+from app.evaluation.metrics import ragas_metrics
+from app.evaluation.scope import EvaluationScope, prepare_evaluation_scope
+from app.services.experiment_store import experiment_store
 
 router = APIRouter(prefix="/evaluation", tags=["评测"])
-
-# 存储运行中的评测任务
-running_experiments: dict[str, dict[str, Any]] = {}
 
 
 class StartExperimentRequest(BaseModel):
@@ -67,6 +68,13 @@ async def start_experiment(
     if len(request.experiment_config.variants) > 3:
         raise HTTPException(400, '最多允许 3 个评测变体')
     request.experiment_config.test_dataset_path = str(candidate)
+    try:
+        ragas_metrics.ensure_available()
+        scope = await prepare_evaluation_scope(
+            owner_id=str(user.id), config=request.experiment_config,
+        )
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
     experiment_id = str(uuid.uuid4())
 
     experiment_status = {
@@ -76,15 +84,22 @@ async def start_experiment(
         "progress": 0.0,
         "report_path": None,
         "error": None,
+        "started_at": time.time(),
     }
 
-    running_experiments[experiment_id] = experiment_status
+    await experiment_store.save(
+        owner_id=str(user.id),
+        experiment_id=experiment_id,
+        status=experiment_status,
+    )
 
     # 在后台执行评测
     background_tasks.add_task(
         run_experiment_background,
+        owner_id=str(user.id),
         experiment_id=experiment_id,
         experiment_config=request.experiment_config,
+        scope=scope,
     )
 
     return ExperimentStatus(**experiment_status)
@@ -100,14 +115,20 @@ async def get_experiment_status(
 ) -> ExperimentStatus:
     """查询评测实验状态。"""
 
-    if experiment_id not in running_experiments or running_experiments[experiment_id]["owner_id"] != str(user.id):
+    # 状态按 owner_id 命名空间存取，越权访问等同于「不存在」。
+    status = await experiment_store.get(
+        owner_id=str(user.id),
+        experiment_id=experiment_id,
+    )
+
+    if status is None:
         raise HTTPException(
             status_code=404,
             detail="实验不存在",
         )
 
     return ExperimentStatus(
-        **running_experiments[experiment_id]
+        **{k: v for k, v in status.items() if k != "started_at"}
     )
 
 
@@ -116,11 +137,13 @@ async def get_experiment_status(
     response_model=list[ExperimentStatus],
 )
 async def list_experiments(user: AdminUser) -> list[ExperimentStatus]:
-    """列出所有评测实验。"""
+    """列出当前管理员名下的所有评测实验。"""
+
+    statuses = await experiment_store.list_for_owner(owner_id=str(user.id))
 
     return [
-        ExperimentStatus(**status)
-        for status in running_experiments.values() if status["owner_id"] == str(user.id)
+        ExperimentStatus(**{k: v for k, v in status.items() if k != "started_at"})
+        for status in statuses
     ]
 
 
@@ -155,7 +178,7 @@ async def list_datasets(user: AdminUser) -> list[dict[str, Any]]:
     response_model=dict[str, str],
 )
 async def get_report(user: AdminUser, path: str) -> dict[str, str]:
-    """读取指定评测实验的 HTML 报告（仅限评测报告目录）。"""
+    """读取当前管理员名下的 HTML 报告。"""
 
     allowed_root = Path("evaluation_reports").resolve()
     candidate = Path(path)
@@ -164,37 +187,64 @@ async def get_report(user: AdminUser, path: str) -> dict[str, str]:
     candidate = candidate.resolve()
     if candidate.parent != allowed_root or candidate.suffix != ".html" or not candidate.is_file():
         raise HTTPException(400, "仅允许访问评测报告目录中的 HTML 报告")
+    statuses = await experiment_store.list_for_owner(owner_id=str(user.id))
+    owned_paths = {
+        Path(status["report_path"]).resolve()
+        for status in statuses
+        if status.get("status") == "completed" and status.get("report_path")
+    }
+    if candidate not in owned_paths:
+        raise HTTPException(404, "报告不存在或已过期")
     return {"html": candidate.read_text(encoding="utf-8")}
 
 
 async def run_experiment_background(
         *,
+        owner_id: str,
+        scope: EvaluationScope,
         experiment_id: str,
         experiment_config: ExperimentConfig,
 ) -> None:
     """后台运行评测实验。"""
 
-    try:
-        runner = EvaluationRunner(experiment_config)
+    async def update(**fields: Any) -> None:
+        """读-改-写当前状态。
 
-        # 更新进度
-        running_experiments[experiment_id]["progress"] = 0.1
+        评测进度只有本协程写入，串行更新不会丢字段；
+        写入失败已在 store 内部降级，不阻断评测。
+        """
+
+        current = await experiment_store.get(
+            owner_id=owner_id,
+            experiment_id=experiment_id,
+        ) or {"owner_id": owner_id, "experiment_id": experiment_id}
+        current.update(fields)
+        await experiment_store.save(
+            owner_id=owner_id,
+            experiment_id=experiment_id,
+            status=current,
+        )
+
+    try:
+        runner = EvaluationRunner(experiment_config, owner_id=owner_id, scope=scope)
+
+        await update(progress=0.1)
 
         # 运行评测
         async with asyncio.timeout(settings.ANALYSIS_TOTAL_TIMEOUT):
             await runner.run()
 
-        running_experiments[experiment_id]["progress"] = 0.8
+        await update(progress=0.8)
 
         # 生成报告
         report_path = await runner.generate_html_report()
 
-        running_experiments[experiment_id]["status"] = "completed"
-        running_experiments[experiment_id]["progress"] = 1.0
-        running_experiments[experiment_id]["report_path"] = report_path
+        await update(status="completed", progress=1.0, report_path=report_path)
 
     except BaseException as exc:
-        running_experiments[experiment_id]["status"] = "failed"
-        running_experiments[experiment_id]["error"] = "评测失败或已达到调用与耗时上限"
+        await update(
+            status="failed",
+            error="评测失败或已达到调用与耗时上限",
+        )
         if not isinstance(exc, (Exception, BudgetExceeded)):
             raise

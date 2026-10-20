@@ -46,6 +46,11 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     API_PREFIX: str = "/api"
 
+    # 日志：text 便于人读，json 便于采集；级别过低会丢掉慢请求诊断信息。
+    LOG_LEVEL: str = "INFO"
+    LOG_JSON: bool = False
+    LOG_ACCESS_ENABLED: bool = True
+
     # 身份与资源预算，由后端强制执行。
     AUTH_REGISTRATION_ENABLED: bool = True
     AUTH_SESSION_HOURS: int = 12
@@ -74,11 +79,23 @@ class Settings(BaseSettings):
     MATCH_MODEL_TIMEOUT: float = 120.0
     MATCH_REPORT_TIMEOUT: float = 75.0
     MATCH_VERIFY_TIMEOUT: float = 60.0
+    MATCH_VERIFY_MAX_ROUNDS: int = 2
+    MATCH_VERIFY_MAX_OUTPUT_TOKENS: int = 3072
+    EVALUATION_METRIC_MAX_CALLS: int = 16
+    EVALUATION_METRIC_MAX_OUTPUT_TOKENS: int = 2048
     MATCH_REASONING_EFFORT: Literal["none", "low", "medium", "xhigh"] = "none"
     ANALYSIS_CACHE_ENABLED: bool = True
     REDIS_URL: str = "redis://127.0.0.1:6379/0"
     ANALYSIS_CACHE_TTL: int = 86400
-    REDIS_SOCKET_TIMEOUT: float = 0.5
+    # Redis 读写与建连超时（秒），需按部署网络延迟调整。
+    REDIS_SOCKET_TIMEOUT: float = 0.2
+    # 三个缓存服务共享的进程内连接池容量；池满时报错，不排队等待。
+    REDIS_POOL_MAX_CONNECTIONS: int = 32
+    # Embedding 向量缓存：同一文本在 TTL 内只调用一次模型。
+    EMBED_CACHE_ENABLED: bool = True
+    EMBED_CACHE_TTL: int = 604800  # 7 天
+    # 评测实验状态：Redis 共享以便多 worker 一致、重启后仍可查。
+    EVALUATION_STORE_REDIS_ENABLED: bool = True
     UPLOAD_TOTAL_TIMEOUT: float = 120.0
     API_TOTAL_TIMEOUT: float = 30.0
     JSON_BODY_MAX_BYTES: int = 160000
@@ -109,6 +126,9 @@ class Settings(BaseSettings):
     BAILIAN_OCR_MODEL: str = "qwen-vl-ocr-latest"
 
     # Embedding 使用 DashScope SDK。
+    # 可选：qwen3.7-text-embedding（256~2560 维）
+    #       qwen3.7-text-embedding-flash（256~1024 维，成本与吞吐更优，默认 1024）
+    # 换模型后维度必须与 Milvus Collection 的 dim 一致，否则需要重建 Collection。
     BAILIAN_EMBEDDING_MODEL: str = "qwen3.7-text-embedding"
     EMBEDDING_DIMENSION: int = 1024
 
@@ -183,7 +203,7 @@ class Settings(BaseSettings):
                   self.MAX_MODEL_CALLS_PER_OPERATION, self.CHAT_TOTAL_TIMEOUT, self.ANALYSIS_TOTAL_TIMEOUT,
                   self.MATCH_TOTAL_TIMEOUT, self.MATCH_MODEL_TIMEOUT,
                   self.MATCH_REPORT_TIMEOUT, self.MATCH_VERIFY_TIMEOUT, self.MATCH_SEARCH_TIMEOUT,
-                  self.ANALYSIS_CACHE_TTL, self.REDIS_SOCKET_TIMEOUT,
+                  self.ANALYSIS_CACHE_TTL, self.REDIS_SOCKET_TIMEOUT, self.EMBED_CACHE_TTL,
                   self.UPLOAD_TOTAL_TIMEOUT, self.API_TOTAL_TIMEOUT, self.JSON_BODY_MAX_BYTES,
                   self.MAX_DOCUMENTS_PER_USER, self.MAX_CHUNKS_PER_DOCUMENT, self.MAX_DOCUMENT_TEXT_CHARS,
                   self.MAX_PARSED_DOCUMENT_CHARS)
@@ -199,10 +219,32 @@ class Settings(BaseSettings):
                 "CHUNK_OVERLAP 必须小于 CHUNK_SIZE"
             )
 
+        if not 1 <= self.MATCH_VERIFY_MAX_ROUNDS <= 4:
+            raise ValueError("MATCH_VERIFY_MAX_ROUNDS 必须在 1 到 4 之间")
+        if not 256 <= self.MATCH_VERIFY_MAX_OUTPUT_TOKENS <= 8192:
+            raise ValueError("校验输出预算须在 256 到 8192 之间，实际值还受全局输出上限约束")
+        if not 1 <= self.EVALUATION_METRIC_MAX_CALLS <= 64:
+            raise ValueError("EVALUATION_METRIC_MAX_CALLS 必须在 1 到 64 之间")
+        if not 256 <= self.EVALUATION_METRIC_MAX_OUTPUT_TOKENS <= 8192:
+            raise ValueError("评测输出预算须在 256 到 8192 之间，实际值还受全局输出上限约束")
+
         if not 256 <= self.EMBEDDING_DIMENSION <= 2560:
             raise ValueError(
                 "qwen3.7-text-embedding 的向量维度"
                 "必须在 256～2560 之间"
+            )
+
+        # flash 版维度上限是 1024，与标准版不同。
+        # 不在启动时拦住的话，要等到调用模型返回维度不符才会报错。
+        if (
+                "flash" in self.BAILIAN_EMBEDDING_MODEL.lower()
+                and self.EMBEDDING_DIMENSION > 1024
+        ):
+            raise ValueError(
+                f"{self.BAILIAN_EMBEDDING_MODEL} 的向量维度上限为 1024，"
+                f"当前配置 EMBEDDING_DIMENSION={self.EMBEDDING_DIMENSION}。"
+                "如需更大维度请改用 qwen3.7-text-embedding，"
+                "并重建 Milvus Collection 以匹配新维度"
             )
 
         if self.MODEL_MAX_RETRIES < 0:

@@ -28,7 +28,7 @@ from app.services.milvus_service import (
 from app.services.minio_service import minio_service
 from app.core.models import Document, DocumentParse
 from app.services.document_pipeline import PIPELINE_VERSION, Block, build_chunks, serialize_blocks
-from app.services.sandbox_client import parse_document
+from app.services.sandbox_client import SandboxUnavailable, parse_document
 
 ALLOWED_EXTENSIONS = {
     ".pdf",
@@ -48,8 +48,13 @@ class DocumentService:
             owner_id: uuid.UUID,
             file: UploadFile,
             document_type: str,
-    ) -> Document:
-        """上传文件并完成解析和向量入库。"""
+    ) -> tuple[Document, bool]:
+        """上传文件并完成解析和向量入库。
+
+        返回 (文档, 是否命中已有文档)。
+        第二项为 True 表示内容哈希相同、已直接复用既有记录（未重复入库），
+        调用方可据此提示用户而无需靠比对 id 猜测。
+        """
 
         if document_type not in DOCUMENT_TYPES:
             raise ValueError(
@@ -78,23 +83,25 @@ class DocumentService:
             )
 
         # ==========================================
-        # ✨ 新增：Hash 校验与增量更新（秒传）逻辑
+        # 整文件去重；变更文件完整重解析，相同分块通过 Embedding 缓存复用。
         # ==========================================
         file_hash = hashlib.sha256(data).hexdigest()
 
         # 查询数据库中是否已有该 Hash 且状态为已就绪的文档
         existing_doc_result = await session.execute(
-            select(Document).where(
+            select(Document).join(DocumentParse, DocumentParse.document_id == Document.id).where(
                 Document.file_hash == file_hash,
                 Document.owner_id == owner_id,
                 Document.document_type == document_type,
-                Document.status == "ready"
+                Document.status == "ready",
+                DocumentParse.pipeline_version == PIPELINE_VERSION,
             )
         )
         existing_doc = existing_doc_result.scalars().first()
 
         if existing_doc:
-            return existing_doc  # 直接返回已存在的文档记录，0 Token消耗，0 延迟！
+            # 内容哈希相同：直接复用既有记录，0 Token 消耗、0 重复入库。
+            return existing_doc, True
         # ==========================================
 
         count = (await session.execute(
@@ -156,6 +163,7 @@ class DocumentService:
 
             inserted_count = await milvus_service.insert(
                 document_id=str(document_id),
+                owner_id=str(owner_id),
                 document_type=document_type,
                 chunks=chunks,
                 vectors=vectors,
@@ -163,6 +171,7 @@ class DocumentService:
 
             await bm25_service.add_document(
                 document_id=str(document_id),
+                owner_id=str(owner_id),
                 document_type=document_type,
                 chunks=chunks,
             )
@@ -178,7 +187,7 @@ class DocumentService:
             await session.commit()
             await session.refresh(document)
 
-            return document
+            return document, False
 
         except BaseException as exc:
             await session.rollback()
@@ -190,9 +199,12 @@ class DocumentService:
 
             if failed_document is not None:
                 failed_document.status = "failed"
-                failed_document.error_message = (
-                    str(exc) if isinstance(exc, ValueError) else "文档处理失败或中断，请重新上传"
-                )
+                # 保留可操作的原因：ValueError 是文档本身的问题，
+                # SandboxUnavailable 是「沙箱没启动」——两者都需要让用户看到。
+                if isinstance(exc, (ValueError, SandboxUnavailable)):
+                    failed_document.error_message = str(exc)
+                else:
+                    failed_document.error_message = "文档处理失败或中断，请重新上传"
                 await session.commit()
 
             # 清理可能已经写入的部分向量。

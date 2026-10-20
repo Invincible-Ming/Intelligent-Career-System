@@ -2,7 +2,7 @@
 评测系统健康检查和验证脚本。
 
 用法：
-    python -m app.evaluation.health_check
+    python -m app.evaluation.health_check --owner-id <用户UUID>
 """
 
 import asyncio
@@ -97,14 +97,15 @@ async def validate_dataset(dataset_path: str) -> bool:
         return False
 
 
-async def test_evaluation_flow() -> bool:
+async def test_evaluation_flow(owner_id: str) -> bool:
     """测试评测流程。"""
 
     logger.info("测试评测流程...")
 
     try:
-        from app.evaluation.config import EvaluationConfig, SearchConfig
+        from app.evaluation.config import EvaluationConfig, ExperimentConfig, SearchConfig
         from app.evaluation.executor import rag_executor
+        from app.evaluation.scope import prepare_evaluation_scope
 
         # 简单的查询测试
         config = EvaluationConfig(
@@ -115,9 +116,18 @@ async def test_evaluation_flow() -> bool:
             ),
         )
 
+        scope = await prepare_evaluation_scope(
+            owner_id=owner_id,
+            config=ExperimentConfig(
+                experiment_name="health_check", baseline=config,
+                test_dataset_path="app/evaluation/test_dataset_30.json",
+            ),
+        )
         result = await rag_executor.execute(
             query="什么是 Python？",
             config=config,
+            owner_id=scope.owner_id,
+            allowed_document_ids=list(scope.document_ids),
         )
 
         logger.info(f"✓ 检索到 {result['retrieved_count']} 条结果")
@@ -137,7 +147,7 @@ async def test_evaluation_flow() -> bool:
         return False
 
 
-async def main():
+async def main(owner_id: str):
     """运行健康检查。"""
 
     print("\n" + "=" * 80)
@@ -145,6 +155,17 @@ async def main():
     print("=" * 80 + "\n")
 
     all_ok = True
+
+    # This command runs outside FastAPI's lifespan as well.
+    from app.evaluation.scope import normalize_owner_id
+
+    owner_id = normalize_owner_id(owner_id)
+    try:
+        await milvus_service.initialize()
+        await bm25_service.rebuild(await milvus_service.list_chunks(owner_id=owner_id))
+    except Exception as exc:
+        logger.error("评测索引初始化失败：%s", type(exc).__name__)
+        all_ok = False
 
     # 1. 检查服务
     services = await check_services()
@@ -167,7 +188,7 @@ async def main():
     print()
 
     # 3. 测试评测流程
-    flow_ok = await test_evaluation_flow()
+    flow_ok = await test_evaluation_flow(owner_id)
 
     if not flow_ok:
         logger.error("\n❌ 评测流程测试失败")
@@ -189,4 +210,10 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    import argparse
+    import uuid
+
+    parser = argparse.ArgumentParser(description="指定用户范围的评测健康检查")
+    parser.add_argument("--owner-id", type=uuid.UUID, required=True)
+    args = parser.parse_args()
+    asyncio.run(main(str(args.owner_id)))

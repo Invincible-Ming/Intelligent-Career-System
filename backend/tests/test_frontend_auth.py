@@ -31,6 +31,16 @@ def api_request(method, url, **kwargs):
     return response([])
 
 
+def assert_session_key_absent(app, key):
+    """断言用户键不在 session_state 中。
+
+    streamlit 1.64 移除了 SessionState.filtered_state；
+    SessionState 实现了 __contains__，可直接用 in 判断用户键。
+    """
+
+    assert key not in app.session_state, f"session_state不应包含 {key}"
+
+
 class FrontendAuthTests(unittest.TestCase):
     def setUp(self):
         st.cache_resource.clear()  # AppTest creates its own component registry.
@@ -63,8 +73,8 @@ class FrontendAuthTests(unittest.TestCase):
             app.run()
             self.assertFalse(app.exception)
             self.assertTrue(app.session_state['clear_browser_session'])
-            self.assertNotIn('access_token', app.session_state.filtered_state)
-            self.assertNotIn('match_report', app.session_state.filtered_state)
+            assert_session_key_absent(app, 'access_token')
+            assert_session_key_absent(app, 'match_report')
             self.assertFalse(app.chat_message)
             self.assertFalse(any('alice' in str(row.value) for row in app.sidebar.markdown))
             cookies.clear()  # Browser component clears Cookie and reloads.
@@ -86,7 +96,7 @@ class FrontendAuthTests(unittest.TestCase):
             app = AppTest.from_file(str(path), default_timeout=15).run()
             self.assertFalse(app.exception)
             self.assertTrue(app.session_state['clear_browser_session'])
-            self.assertNotIn('access_token', app.session_state.filtered_state)
+            assert_session_key_absent(app, 'access_token')
             self.assertTrue(all('/api/auth/' in url for _, url, _ in calls))
 
     def test_match_progress_and_structured_report_are_rendered_before_review(self):
@@ -125,7 +135,7 @@ class FrontendAuthTests(unittest.TestCase):
             app = AppTest.from_file(str(path), default_timeout=15).run()
             app.button(key='nav_match').click().run()
             next(field for field in app.text_area if field.label == '输入岗位描述 (JD)').set_value('Synthetic JD')
-            next(button for button in app.button if button.label == '🚀 开始岗位匹配').click().run()
+            next(button for button in app.button if button.label == '开始岗位匹配').click().run()
             self.assertFalse(app.exception)
             progress.assert_called()
             self.assertTrue(app.session_state['match_paused'])

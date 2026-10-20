@@ -24,14 +24,17 @@ class HybridSearchService:
             self,
             *,
             query: str,
+            owner_id: str | None = None,
             document_type: str | None = None,
             top_k: int = 5,
             allowed_document_ids: list[str] | None = None,
+            enable_reranker: bool | None = None,
+            rrf_candidate_k: int | None = None,
     ) -> list[dict[str, Any]]:
         """
         执行：
 
-        Milvus Dense
+        Milvus Dense（按 owner_id 标量索引过滤）
         → BM25
         → RRF
         → BGE CrossEncoder
@@ -53,12 +56,14 @@ class HybridSearchService:
         dense_results, bm25_results = await asyncio.gather(
             self._dense_search(
                 query=query,
+                owner_id=owner_id,
                 document_type=document_type,
                 top_k=candidate_k,
                 allowed_document_ids=allowed_document_ids,
             ),
             bm25_service.search(
                 query=query,
+                owner_id=owner_id,
                 document_type=document_type,
                 top_k=candidate_k,
                 allowed_document_ids=allowed_document_ids,
@@ -69,13 +74,14 @@ class HybridSearchService:
         rrf_results = rrf_fusion(
             dense_results=dense_results,
             bm25_results=bm25_results,
-            top_k=settings.RERANKER_CANDIDATE_K,
+            top_k=settings.RERANKER_CANDIDATE_K if rrf_candidate_k is None else rrf_candidate_k,
         )
 
         if not rrf_results:
             return []
 
-        if not settings.RERANKER_ENABLED:
+        rerank_enabled = settings.RERANKER_ENABLED if enable_reranker is None else enable_reranker
+        if not rerank_enabled:
             return await enrich_results(rrf_results[:top_k])
 
         results = await reranker_service.rerank(
@@ -85,6 +91,7 @@ class HybridSearchService:
                 top_k,
                 settings.RERANKER_TOP_K,
             ),
+            enabled=rerank_enabled,
         )
         return await enrich_results(results)
 
@@ -92,6 +99,7 @@ class HybridSearchService:
             self,
             *,
             query: str,
+            owner_id: str | None = None,
             document_type: str | None,
             top_k: int,
             allowed_document_ids: list[str] | None = None,
@@ -104,6 +112,7 @@ class HybridSearchService:
 
         return await milvus_service.search(
             query_vector=query_vector,
+            owner_id=owner_id,
             document_type=document_type,
             top_k=top_k,
             allowed_document_ids=allowed_document_ids,

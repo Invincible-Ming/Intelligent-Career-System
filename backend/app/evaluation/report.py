@@ -368,6 +368,11 @@ class ReportGenerator:
                 <strong>实验名称：</strong>{report_data['experiment_name']} |
                 <strong>实验 ID：</strong>{report_data['experiment_id']} |
                 <strong>生成时间：</strong>{report_data['timestamp']}
+                | <strong>评测文档数：</strong>{report_data.get('retrieval_scope', {}).get('document_count', '未记录')}
+                | <strong>评测引擎：</strong>{report_data.get('evaluator', {}).get('backend', 'legacy-custom')}
+                  {report_data.get('evaluator', {}).get('version', '')}
+                | <strong>评分模型：</strong>{report_data.get('evaluator', {}).get('chat_model', '未记录')}
+                | <strong>向量模型：</strong>{report_data.get('evaluator', {}).get('embedding_model', '未记录')}
             </div>
         </div>
         """
@@ -572,7 +577,10 @@ class ReportGenerator:
                     <strong>配置详情：</strong>
                     Search Mode: {config['config']['search']['search_mode']}, 
                     Top-K: {config['config']['search']['top_k']}, 
-                    Chunk Size: {config['config']['search']['chunk_size']}, 
+                    Chunk Size: {config['config']['search']['chunk_size']},
+                    Chunk Overlap: {config['config']['search']['chunk_overlap']},
+                    Reranker: {'启用' if config['config']['search']['enable_reranker'] else '禁用'},
+                    Reranker Top-K: {config['config']['search']['reranker_top_k']},
                     Reflection: {'启用' if config['config']['reflection']['enable_reflection'] else '禁用'}
                 </div>
                 {results_html}

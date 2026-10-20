@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class SearchConfig(BaseModel):
@@ -18,6 +18,12 @@ class SearchConfig(BaseModel):
     chunk_overlap: int = Field(default=100, ge=0, le=500)
     enable_reranker: bool = True
     reranker_top_k: int = Field(default=5, ge=1, le=10)
+
+    @model_validator(mode="after")
+    def valid_chunk_overlap(self) -> "SearchConfig":
+        if self.chunk_overlap >= self.chunk_size:
+            raise ValueError("chunk_overlap 必须小于 chunk_size")
+        return self
 
 
 class ReflectionConfig(BaseModel):
@@ -66,3 +72,10 @@ class ExperimentConfig(BaseModel):
         le=600,
         description="单个查询超时时间（秒）",
     )
+
+    @model_validator(mode="after")
+    def unique_config_names(self) -> "ExperimentConfig":
+        names = [self.baseline.name, *(item.name for item in self.variants)]
+        if len(set(names)) != len(names):
+            raise ValueError("基线和变体的配置名称必须唯一")
+        return self

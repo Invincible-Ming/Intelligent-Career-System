@@ -18,6 +18,7 @@ from redis.exceptions import RedisError
 
 from app.core.config import settings
 from app.core.limits import check_operation_deadline, invocation_budget
+from app.services.redis_pool import get_redis
 
 logger = logging.getLogger(__name__)
 RELEASE_LOCK = """
@@ -36,12 +37,9 @@ class AnalysisCache:
     @property
     def client(self):
         if self._client is None:
-            self._client = Redis.from_url(
-                settings.REDIS_URL, decode_responses=True, max_connections=16,
-                socket_timeout=settings.REDIS_SOCKET_TIMEOUT,
-                socket_connect_timeout=settings.REDIS_SOCKET_TIMEOUT,
-                retry=Retry(NoBackoff(), 0),
-            )
+            # 共享池：三个缓存服务共用一个连接池，避免各自建池互相抢占。
+            # 池统一返回 bytes，因此下方读取处显式 decode。
+            self._client = get_redis()
         return self._client
 
     def key(self, *, owner_id, kind, text, system_prompt, prompt_version, response_model):
@@ -126,9 +124,10 @@ class AnalysisCache:
                         pass  # Redis lock expires if cancellation/crash prevents release.
 
     async def close(self):
-        if self._client is not None:
-            await self._client.aclose()
-            self._client = None
+        # 只丢弃自己的客户端引用，**不要**关闭底层连接池——
+        # 池是进程级共享的，关掉会影响 embed_cache / experiment_store。
+        # 池本身由 app lifespan 统一关闭。
+        self._client = None
 
 
 analysis_cache = AnalysisCache()

@@ -2,6 +2,7 @@
 PostgreSQL 异步连接配置与状态检查点池。
 """
 
+import logging
 from collections.abc import AsyncGenerator
 from psycopg_pool import AsyncConnectionPool
 from sqlalchemy.ext.asyncio import (
@@ -12,6 +13,9 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import DeclarativeBase
 
 from app.core.config import settings
+from app.core.logging_setup import log_event
+
+logger = logging.getLogger(__name__)
 
 
 class Base(DeclarativeBase):
@@ -115,7 +119,14 @@ async def check_database() -> bool:
         async with engine.connect() as connection:
             await connection.execute(text("SELECT 1"))
         return True
-    except Exception:
+    except Exception as exc:
+        # 健康检查失败必须留痕：否则「服务不可用」在日志里毫无线索。
+        log_event(
+            logger,
+            logging.ERROR,
+            "PostgreSQL 健康检查失败",
+            error=type(exc).__name__,
+        )
         return False
 
 

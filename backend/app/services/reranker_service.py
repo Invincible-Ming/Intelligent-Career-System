@@ -110,13 +110,15 @@ class RerankerService:
             query: str,
             results: list[dict[str, Any]],
             top_k: int,
+            enabled: bool | None = None,
     ) -> list[dict[str, Any]]:
         """对 RRF 结果进行 BGE 重排。"""
 
         if not results:
             return []
 
-        if not settings.RERANKER_ENABLED:
+        rerank_enabled = settings.RERANKER_ENABLED if enabled is None else enabled
+        if not rerank_enabled:
             return results[:top_k]
 
         await self.load()

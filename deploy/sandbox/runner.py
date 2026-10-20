@@ -24,6 +24,10 @@ IMAGE = "career-document-sandbox:1"
 # 可用环境变量 SANDBOX_MAX_DOCUMENT_MB 覆盖（在启动 Runner 前设置）。
 MAX_BYTES = int(os.environ.get("SANDBOX_MAX_DOCUMENT_MB", "50")) * 1024 * 1024
 MAX_MCP_SESSION_SECONDS = 120
+# 全局并发容器上限：超出上限的解析请求在此排队等待空位，而不是同时起更多容器。
+# 可用环境变量 SANDBOX_MAX_CONCURRENT 覆盖（在启动 Runner 前设置）。
+MAX_CONCURRENT_CONTAINERS = int(os.environ.get("SANDBOX_MAX_CONCURRENT", "8"))
+container_slots = asyncio.Semaphore(MAX_CONCURRENT_CONTAINERS)
 pending: dict[str, asyncio.Future] = {}
 active: dict[str, tuple[str, asyncio.subprocess.Process]] = {}
 session_meta: dict[str, dict[str, str]] = {}
@@ -118,6 +122,8 @@ async def parse(request: ParseRequest):
 
     async def events():
         process = None
+        # 全局并发容器上限：先拿空位再起容器，超出上限的请求排队等待。
+        await container_slots.acquire()
         try:
             args = [
                 "docker", "run", "--rm", "-i", "--pull=never", "--name", name,
@@ -196,6 +202,8 @@ async def parse(request: ParseRequest):
                     await asyncio.shield(task)
                 except asyncio.CancelledError:
                     pass  # Detached cleanup continues after HTTP disconnect.
+            # 容器已清理完毕后才归还并发名额。
+            container_slots.release()
 
     return StreamingResponse(events(), media_type="application/x-ndjson")
 

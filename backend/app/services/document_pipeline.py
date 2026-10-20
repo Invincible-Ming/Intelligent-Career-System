@@ -5,12 +5,13 @@ import asyncio
 import base64
 import hashlib
 import io
+import math
 import re
 import zipfile
 from dataclasses import asdict, dataclass, replace
 from typing import Awaitable, Callable
 
-PIPELINE_VERSION = "structure-v2"
+PIPELINE_VERSION = "structure-v3"
 
 
 @dataclass
@@ -38,6 +39,60 @@ def page_needs_ocr(text: str, has_images: bool) -> bool:
         return has_images
     good = len(re.findall(r"[\w\u4e00-\u9fff]", compact))
     return (has_images and good < 40) or text.count("\ufffd") / len(compact) > .02 or good / len(compact) < .4
+
+
+def order_pdf_blocks(raw: list, page_width: float) -> list:
+    """Read text blocks using recursive whitespace cuts (left-to-right documents).
+
+    A vertical gutter takes precedence over row order; full-width headings first
+    need a horizontal cut. Ambiguous/overlapping layouts retain geometric order.
+    This is a conservative heuristic, not a learned layout/table detector.
+    """
+    blocks = [block for block in raw
+              if len(block) >= 7 and block[6] == 0 and block[4].strip()]
+    if len(blocks) > 10000:
+        raise ValueError("PDF 页面文本块数量超限")
+    if any(not all(math.isfinite(float(value)) for value in block[:4]) for block in blocks):
+        raise ValueError("PDF 页面坐标无效")
+    if any(block[2] < block[0] or block[3] < block[1] for block in blocks):
+        raise ValueError("PDF 页面文本块边界无效")
+
+    def gaps(items, axis):
+        intervals = sorted((item[axis], item[axis + 2]) for item in items)
+        end = intervals[0][1]
+        found = []
+        for start, stop in intervals[1:]:
+            if start > end:
+                found.append((start - end, (start + end) / 2))
+            end = max(end, stop)
+        return sorted(found, reverse=True)
+
+    def split(items, depth=0):
+        fallback = sorted(items, key=lambda item: (item[1], item[0]))
+        if len(items) < 2 or depth >= 12:
+            return fallback
+        # Avoid mistaking small spacing between adjacent words for a column gutter.
+        for gap, cut in gaps(items, 0):
+            if gap < max(12.0, page_width * .025):
+                continue
+            left = [item for item in items if item[2] < cut]
+            right = [item for item in items if item[0] > cut]
+            if min(len(left), len(right)) < 2:
+                continue
+            if min(max(item[2] for item in side) - min(item[0] for item in side)
+                   for side in (left, right)) < max(72.0, page_width * .15):
+                continue
+            return split(left, depth + 1) + split(right, depth + 1)
+        for gap, cut in gaps(items, 1):
+            if gap < 3.0:
+                continue
+            above = [item for item in items if item[3] < cut]
+            below = [item for item in items if item[1] > cut]
+            if above and below:
+                return split(above, depth + 1) + split(below, depth + 1)
+        return fallback
+
+    return split(blocks)
 
 
 class ParseGuard:
@@ -74,8 +129,9 @@ async def parse_blocks(data: bytes, extension: str, ocr: Callable[[str], Awaitab
                 raise ValueError('PDF 页数超限，请拆分文件')
             for number, page in enumerate(pdf, 1):
                 guard.check()
-                raw = await asyncio.to_thread(lambda: page.get_text('blocks', sort=True))
-                texts = [b[4].strip() for b in raw if b[6] == 0 and b[4].strip()]
+                raw = await asyncio.to_thread(lambda: page.get_text('blocks', sort=False))
+                ordered = await asyncio.to_thread(order_pdf_blocks, raw, page.rect.width)
+                texts = [b[4].strip() for b in ordered]
                 text = '\n\n'.join(texts)
                 if page_needs_ocr(text, bool(page.get_images())):
                     if page.rect.width * page.rect.height * (150 / 72) ** 2 > 20_000_000:

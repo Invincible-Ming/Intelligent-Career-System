@@ -40,14 +40,19 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.database import check_database, close_database, init_database
+from app.core.access_log import AccessLogMiddleware
+from app.core.logging_setup import configure_logging
 
 # 导入底层依赖服务
 from app.services.bailian import bailian_service
 from app.services.analysis_cache import analysis_cache
+from app.services.embed_cache import embed_cache
+from app.services.redis_pool import close_pool, warm_up_redis_pool
+from app.services.experiment_store import experiment_store
 from app.services.bm25_service import bm25_service
 from app.services.milvus_service import milvus_service
 from app.services.minio_service import minio_service
-from app.services.mcp_tools import mcp_service  # 🌟 新增：导入 MCP (Model Context Protocol) 工具服务
+from app.services.mcp_tools import mcp_service
 from app.services.sandbox_client import check_runner
 
 # 导入工作流初始化函数（用于创建 LangGraph Postgres Checkpoint 表）
@@ -66,13 +71,34 @@ from fastapi.responses import FileResponse, JSONResponse
 # 日志配置
 # ----------------------------------------------------------------------
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
+# 每个请求日志都带 trace_id；DEBUG 下同时切到 JSON 便于定位。
+configure_logging(
+    level=settings.LOG_LEVEL,
+    json_output=settings.LOG_JSON or settings.DEBUG,
 )
 
 logger = logging.getLogger(__name__)
+
+CLEANUP_INTERVAL_SECONDS = 1800
+
+
+async def periodic_cleanup() -> None:
+    """定期清理已终态实验的进程内状态副本。
+
+    Redis 不可用期间写入的状态会留在进程内 dict，
+    恢复后由store.save 回写，这里只负责不让它无限增长。
+    """
+
+    while True:
+        try:
+            await asyncio.sleep(CLEANUP_INTERVAL_SECONDS)
+            await experiment_store.clear_expired()
+        except asyncio.CancelledError:
+            logger.info("评测状态清理任务已停止")
+            raise
+        except Exception as exc:
+            # 清理是尽力而为，失败不影响业务。
+            logger.warning("评测状态清理跳过：%s", type(exc).__name__)
 
 
 # ----------------------------------------------------------------------
@@ -101,9 +127,30 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """
 
     app.state.startup_errors = []
+    # 先预热共享池：冷启动时池内无连接，并发建连会触发
+    # TimeoutError 并产生大量无谓的「缓存不可用」告警。
+    await warm_up_redis_pool()
     await analysis_cache.initialize()
+    await embed_cache.initialize()
+    await experiment_store.initialize()
     if not await check_runner():
-        app.state.startup_errors.append("文档沙箱 Runner 不可用；上传将安全失败，不会在后端解析文件")
+        message = (
+            "文档沙箱 Runner 不可用，上传将失败。"
+            f"请先启动：python deploy/sandbox/start.py"
+            f"（预期 socket：{settings.SANDBOX_RUNNER_SOCKET}）"
+        )
+        app.state.startup_errors.append(message)
+        # 启动日志里必须显眼：否则用户只会在上传时看到 500，
+        # 根本不知道要先起 Runner。
+        log_event(
+            logger,
+            logging.ERROR,
+            message,
+            socket=settings.SANDBOX_RUNNER_SOCKET,
+        )
+
+    # 定期回收终态实验的进程内降级副本；Redis 侧终态键自带 TTL。
+    app.state.cleanup_task = asyncio.create_task(periodic_cleanup())
 
     logger.info("=" * 60)
     logger.info("智能求职 Multi-Agent 系统启动中...")
@@ -182,9 +229,23 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # 服务平滑关闭
     logger.info("智能求职系统正在平滑关闭...")
 
+    cleanup_task = getattr(app.state, "cleanup_task", None)
+    if cleanup_task is not None and not cleanup_task.done():
+        cleanup_task.cancel()
+        try:
+            await cleanup_task
+        except asyncio.CancelledError:
+            pass
+        except Exception as exc:
+            logger.warning("清理任务退出异常：%s", type(exc).__name__)
+
     await mcp_service.close()
     await bailian_service.close()
+    await embed_cache.close()
+    await experiment_store.close()
     await analysis_cache.close()
+    # 共享 Redis 池由这里统一关闭——各服务只丢弃自己的客户端引用。
+    await close_pool()
     await milvus_service.close()
     await close_database()
 
@@ -222,6 +283,9 @@ app = FastAPI(
 # 中间件配置
 # ----------------------------------------------------------------------
 
+# 顺序敏感：AccessLog 必须最先添加（最外层），
+# 这样被限流、被校验拒绝的请求也会带上 trace_id，便于排查。
+app.add_middleware(AccessLogMiddleware)
 app.add_middleware(SecurityLimitsMiddleware)
 
 # CORS 跨域配置（保障前端 SSE EventSource / Fetch Stream 请求正常通行）

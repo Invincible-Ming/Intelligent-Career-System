@@ -17,8 +17,10 @@ from typing import Any
 from app.evaluation.config import EvaluationConfig, ExperimentConfig
 from app.evaluation.dataset import TestCase, TestDataset
 from app.evaluation.executor import rag_executor
-from app.evaluation.metrics import ragas_metrics
+from app.evaluation.metrics import RAGAS_VERSION, ragas_metrics
+from app.core.config import settings
 from app.evaluation.report import ReportGenerator
+from app.evaluation.scope import EvaluationScope, normalize_owner_id, prepare_evaluation_scope
 
 logger = logging.getLogger(__name__)
 
@@ -93,8 +95,15 @@ class EvaluationRunner:
     def __init__(
             self,
             experiment_config: ExperimentConfig,
+            *,
+            owner_id: str,
+            scope: EvaluationScope | None = None,
     ):
         self.experiment_config = experiment_config
+        self.owner_id = normalize_owner_id(owner_id)
+        if scope is not None and scope.owner_id != self.owner_id:
+            raise ValueError("评测文档范围与当前用户不一致")
+        self.scope = scope
         self.test_dataset: TestDataset | None = None
         self.config_results: dict[str, ConfigResult] = {}
         self.experiment_id = str(uuid.uuid4())[:8]
@@ -110,6 +119,13 @@ class EvaluationRunner:
             "开始评测实验：%s",
             self.experiment_config.experiment_name,
         )
+        ragas_metrics.ensure_available()
+
+        # All variants use the same owner-bound ready-document snapshot.
+        if self.scope is None:
+            self.scope = await prepare_evaluation_scope(
+                owner_id=self.owner_id, config=self.experiment_config,
+            )
 
         # 加载测试数据集
         self.test_dataset = self._load_dataset(
@@ -214,25 +230,28 @@ class EvaluationRunner:
         """评测单个测试用例。"""
 
         async with semaphore:
+            deadline = time.monotonic() + self.experiment_config.timeout_seconds
             try:
                 # 执行 RAG 查询（带超时）
                 rag_result = await asyncio.wait_for(
                     rag_executor.execute(
                         query=test_case.query,
                         config=config,
+                        owner_id=self.owner_id,
+                        allowed_document_ids=list(self.scope.document_ids),
                         document_type=test_case.document_type,
                     ),
                     timeout=self.experiment_config.timeout_seconds,
                 )
 
                 # 计算 RAGAS 指标
-                metrics = await ragas_metrics.evaluate(
+                metrics = await asyncio.wait_for(ragas_metrics.evaluate(
                     query=test_case.query,
                     answer=rag_result["answer"],
                     contexts=rag_result["contexts"],
                     ground_truth=test_case.ground_truth,
                     reference_contexts=test_case.reference_contexts,
-                )
+                ), timeout=max(.001, deadline - time.monotonic()))
 
                 return EvaluationResult(
                     {
@@ -249,6 +268,8 @@ class EvaluationRunner:
                     }
                 )
 
+            except BudgetExceeded:
+                raise
             except asyncio.TimeoutError:
                 return EvaluationResult(
                     {
@@ -298,6 +319,19 @@ class EvaluationRunner:
             "experiment_id": self.experiment_id,
             "experiment_name": self.experiment_config.experiment_name,
             "timestamp": datetime.now().isoformat(),
+            "evaluator": {
+                "backend": "ragas", "version": RAGAS_VERSION,
+                "chat_model": settings.BAILIAN_CHAT_MODEL,
+                "embedding_model": settings.BAILIAN_EMBEDDING_MODEL,
+                "metric_max_llm_calls_per_case": settings.EVALUATION_METRIC_MAX_CALLS,
+                "answer_relevancy_strictness": 3,
+            },
+            "retrieval_scope": {
+                "owner_id": self.owner_id,
+                "document_ids": list(self.scope.document_ids),
+                "document_count": len(self.scope.document_ids),
+                "index_source": "existing_owner_ready_documents",
+            },
             "dataset": {
                 "name": self.test_dataset.name,
                 "size": self.test_dataset.size,

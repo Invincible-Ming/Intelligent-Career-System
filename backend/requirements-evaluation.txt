@@ -1,0 +1,4 @@
+# Constrain optional dependencies with the backend's main requirements.
+-r requirements.txt
+# Adapter uses the 0.3.9 metric API; upgrade the adapter before changing this pin.
+ragas==0.3.9

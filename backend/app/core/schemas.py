@@ -38,6 +38,17 @@ class DocumentResponse(Schema):
     created_at: datetime | None = None
 
 
+class UploadDocumentResponse(Schema):
+    """上传结果。
+
+    deduplicated 为 True 表示内容哈希与既有文档相同，已直接复用，
+    未重复解析或向量化。
+    """
+
+    document: DocumentResponse
+    deduplicated: bool = False
+
+
 class SearchRequest(Schema):
     query: str = Field(min_length=1, max_length=2000)
     document_type: Literal["resume", "job_description", "knowledge"] | None = None
@@ -134,6 +145,7 @@ class MatchRequest(Schema):
     """岗位匹配请求。"""
 
     resume_document_id: uuid.UUID
+    research_approved: bool = Field(default=False, description="是否授权检索公开岗位资料")
     jd_document_id: uuid.UUID | None = None
     jd_text: str | None = Field(
         default=None,

@@ -5,11 +5,12 @@ import base64
 import asyncio
 import json
 import uuid
+from pathlib import Path
 
 import httpx
 
 from app.core.config import settings
-from app.services.document_pipeline import Block
+from app.services.document_pipeline import PIPELINE_VERSION, Block
 from app.core.limits import check_operation_deadline
 
 
@@ -25,10 +26,22 @@ async def check_runner() -> bool:
         return False
 
 
+class SandboxUnavailable(RuntimeError):
+    """沙箱 Runner 不可用——用户可以自己解决的前置条件问题。
+
+    单独定义类型，让上传端点能把它转成 503 + 明确的操作指引，
+    而不是含糊的 500。
+    """
+
+
 async def parse_document(*, owner_id: uuid.UUID, run_id: uuid.UUID, data: bytes,
                          extension: str, ocr, max_chars: int) -> list[Block]:
     if not settings.SANDBOX_DOCUMENTS_ENABLED:
         raise RuntimeError("文档沙箱未启用")
+    if not Path(settings.SANDBOX_RUNNER_SOCKET).exists():
+        raise SandboxUnavailable(
+            "文档解析沙箱未启动。请在项目根目录执行：python deploy/sandbox/start.py"
+        )
     transport = httpx.AsyncHTTPTransport(uds=settings.SANDBOX_RUNNER_SOCKET)
     session_id = None
     completed = False
@@ -55,6 +68,8 @@ async def parse_document(*, owner_id: uuid.UUID, run_id: uuid.UUID, data: bytes,
                         reply = await client.post(f"/ocr/{session_id}", json={"text": text})
                         reply.raise_for_status()
                     elif message.get("type") == "result":
+                        if message.get("pipeline_version") != PIPELINE_VERSION:
+                            raise SandboxUnavailable("解析沙箱版本不一致，请重新构建解析镜像并重启后端")
                         rows = message.get("blocks")
                         if not isinstance(rows, list) or len(rows) > 10000:
                             raise ValueError("文档结构超出限制")

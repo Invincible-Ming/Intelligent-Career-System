@@ -4,9 +4,15 @@
 
 完整的 RAG 系统评测框架，支持：
 
+当前指标由固定版本 `ragas==0.3.9` 的官方实现计算，已替换早期自定义评分器。
+每个样本最多 16 次指标 LLM 调用，每次输出最多 2048 Token（可配置），
+回答相关性保持 3 次反向问题生成。调用异常、解析失败或 NaN 记为样本失败，
+不补 0.5/0.6；有效零分参与四指标均值。检索、回答生成和指标评测共用样本超时。
+报告记录引擎与模型，旧版自定义指标的分数不能作为新 RAGAS 实验的对照基线。
+
 ✅ **RAGAS 指标评估**：Context Precision、Context Recall、Faithfulness、Answer Relevancy  
 ✅ **A/B 实验对比**：支持多配置并行评测  
-✅ **参数对比测试**：Top-K、检索模式（Dense/BM25/Hybrid）、Chunk Size、Reflection  
+✅ **参数对比测试**：Top-K、检索模式（Dense/BM25/Hybrid）、Reranker、Reflection
 ✅ **并发控制**：可配置并发限制（默认 5）  
 ✅ **超时保护**：单个查询超时控制  
 ✅ **HTML 可视化报告**：自动生成美观的评测报告  
@@ -31,14 +37,28 @@ app/evaluation/
 
 ## 🚀 快速开始
 
+### 用户范围和执行参数
+
+- 网页/API 的 `owner_id` 只来自认证后的当前管理员，忽略客户端自报身份。
+- CLI 必须显式提供 `--owner-id`；缺失、空值或无效 UUID 不允许退回全库检索。
+- 一个实验固定使用该用户启动时的就绪文档，基线和变体共享同一文档列表。
+- Dense、BM25、Hybrid 三条分支均传递 `owner_id`，并按快照文档 ID 进一步收窄。
+- `enable_reranker` 与 `reranker_top_k` 按单个配置生效，不修改全局设置。
+- `top_k` 表示检索返回上限；启用重排后，最终上限为 `min(top_k, reranker_top_k)`。
+- 生成与反思使用实际返回的全部上下文，不再固定截取前 5 条。
+- 检索和生成异常由运行器记录为失败，不将异常字符串或检索故障计为成功。
+- Redis 仅保存实验状态；它不是可恢复任务队列，进程退出不会自动续跑后台实验。
+- 报告读取核对当前用户的已完成实验；状态过期后不会通过路径绕过归属检查。
+- Python 直接调用运行器前应先初始化 Milvus 与该用户的 BM25 索引；CLI 已处理此生命周期。
+
 ### 1. 命令行快速评测
 
 ```bash
 # 快速评测（仅 baseline 配置）
-python -m app.evaluation.cli quick
+python -m app.evaluation.cli quick --owner-id <用户UUID>
 
-# 完整评测（7 个配置对比）
-python -m app.evaluation.cli full
+# 完整评测（6 个配置对比）
+python -m app.evaluation.cli full --owner-id <用户UUID>
 ```
 
 ### 2. Python 脚本评测
@@ -51,7 +71,7 @@ from app.evaluation.config import (
     SearchConfig,
     ReflectionConfig,
 )
-from app.evaluation.runner import EvaluationRunner
+from app.evaluation.cli import run_evaluation
 
 async def run():
     # 定义配置
@@ -80,12 +100,8 @@ async def run():
     )
 
     # 运行评测
-    runner = EvaluationRunner(experiment)
-    report_data = await runner.run()
-
-    # 生成 HTML 报告
-    report_path = await runner.generate_html_report()
-    print(f"报告已生成：{report_path}")
+    # 此入口负责初始化与关闭连接，并生成 HTML 报告。
+    await run_evaluation(experiment, owner_id="填写当前用户的 UUID")
 
 asyncio.run(run())
 ```
@@ -112,10 +128,15 @@ curl "http://localhost:8000/api/evaluation/experiments/{experiment_id}"
 | 指标                  | 说明                                     | 范围 |
 |-----------------------|------------------------------------------|------|
 | **Context Precision** | 检索到的上下文中有多少是真正相关的       | 0-1  |
-| **Context Recall**    | 检索到的上下文覆盖了多少标准答案的上下文 | 0-1  |
+| **Context Recall**    | 标准答案中的陈述有多少能被检索上下文覆盖 | 0-1  |
 | **Faithfulness**      | 答案中的陈述有多少能被检索上下文支持     | 0-1  |
-| **Answer Relevancy**  | 答案与标准答案的相似度                   | 0-1  |
+| **Answer Relevancy**  | 答案反向生成的问题与原问题的向量相似度   | 0-1  |
 | **Overall Score**     | 四个指标的平均值                         | 0-1  |
+
+Context Precision 使用 `LLMContextPrecisionWithReference`，Context Recall 使用
+`LLMContextRecall`，两者均使用数据集的 `ground_truth` 作为 `reference`。
+`reference_contexts` 保留为数据集标注字段，不再用文本重叠率代替 RAGAS Recall。
+空检索或空回答定义为四项零分；基础设施异常则记为失败，报告同时展示失败数量。
 
 ## 🧪 测试配置示例
 
@@ -144,6 +165,7 @@ EvaluationConfig(
     name="top_k_10",
     search=SearchConfig(
         top_k=10,  # 从 5 增加到 10
+        reranker_top_k=10,
         search_mode="hybrid",
         chunk_size=800,
         chunk_overlap=100,
@@ -227,15 +249,14 @@ variants = [
 ]
 ```
 
-### 3. 对比 Chunk Size
+### 3. 切块参数与现有索引
 
-```python
-variants = [
-    EvaluationConfig(name="chunk_400", search=SearchConfig(chunk_size=400)),
-    EvaluationConfig(name="chunk_800", search=SearchConfig(chunk_size=800)),
-    EvaluationConfig(name="chunk_1200", search=SearchConfig(chunk_size=1200)),
-]
-```
+评测复用当前账号已就绪文档的索引，不会因查询配置变化而重新切块或改写线上索引。
+启动前会使用保存的原始 Block 和配置重新计算分块，并与实际存储的 Chunk 内容核对。
+如果 `chunk_size` / `chunk_overlap` 与已有分块不一致，评测会明确拒绝启动。
+
+切块对照需要先建立各自的独立索引并固定语料；不能仅改变配置中的数字。
+当前内置完整实验只比较查询阶段参数，不再包含无效的切块变体。
 
 ### 4. 对比 Reflection
 
@@ -271,8 +292,8 @@ variants = [
 |-------------------|------|----------|-----------------------------|
 | `top_k`           | int  | 5        | 检索返回的文档数量          |
 | `search_mode`     | str  | "hybrid" | 检索模式：dense/bm25/hybrid |
-| `chunk_size`      | int  | 800      | 文档切块大小                |
-| `chunk_overlap`   | int  | 100      | 切块重叠大小                |
+| `chunk_size`      | int  | 800      | 校验现有索引的文档切块大小  |
+| `chunk_overlap`   | int  | 100      | 校验现有索引的切块重叠大小  |
 | `enable_reranker` | bool | True     | 是否启用 BGE 重排           |
 | `reranker_top_k`  | int  | 5        | 重排后返回的数量            |
 
@@ -344,8 +365,12 @@ failure_count = len(results) - success_count
 评测系统需要以下额外依赖：
 
 ```bash
-pip install ragas  # RAGAS 评测库（可选，我们实现了自定义版本）
+python -m pip install -r requirements-evaluation.txt
 ```
+
+在 `backend` 目录、与后端相同的 Python 环境执行。该文件同时引用主依赖约束，
+避免单独安装评测库时无约束升级应用依赖。下载的是库和依赖；评分模型仍使用已有百炼接口，
+评测会产生模型调用费用。未安装时，仅评测入口返回明确错误，其他页面不依赖 RAGAS 导入。
 
 ## 🎓 使用示例
 
@@ -353,7 +378,7 @@ pip install ragas  # RAGAS 评测库（可选，我们实现了自定义版本�
 
 ```bash
 # 使用 30 条回归样本快速验证
-python -m app.evaluation.cli quick
+python -m app.evaluation.cli quick --owner-id <用户UUID>
 
 # 检查成功率是否达到 100%
 ```
@@ -361,8 +386,8 @@ python -m app.evaluation.cli quick
 ### 场景 2：优化检索参数
 
 ```bash
-# 对比不同 Top-K 和 Chunk Size
-python -m app.evaluation.cli full
+# 对比不同 Top-K、检索模式、重排与反思策略
+python -m app.evaluation.cli full --owner-id <用户UUID>
 
 # 查看 HTML 报告，选择最优配置
 ```
@@ -371,19 +396,15 @@ python -m app.evaluation.cli full
 
 ```bash
 # 在 CI 流程中运行评测
-python -m app.evaluation.run_evaluation
+python -m app.evaluation.run_evaluation --owner-id <用户UUID>
 
 # 检查退出码，失败则阻止部署
 ```
 
 ## 📊 预期结果
 
-运行 30 条回归样本后，预期结果：
-
-- ✅ **成功率**：100%（30/30）
-- ✅ **并发限制**：5
-- ✅ **无失败样本**：0 个超时或错误
-- ✅ **平均耗时**：根据配置不同，约 30-120 秒
+运行后应检查成功/失败数量、四项指标、实际耗时和模型配置。
+预置样本数不等于成功数；准确率、指标提升与耗时均需真实运行后记录，不能预设为 100%。
 
 ## 🐛 故障排查
 

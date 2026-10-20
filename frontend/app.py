@@ -12,16 +12,13 @@ UI 架构特点：
 
 from __future__ import annotations
 
-import json
 import os
-import time
 from datetime import datetime
 from html import escape
 from pathlib import Path
-from typing import Any, Iterator
-from urllib.parse import urlsplit, urlunsplit
+from typing import Any
+from urllib.parse import urlsplit
 
-import requests
 import streamlit as st
 from streamlit.components.v1 import html as render_html_component
 
@@ -78,674 +75,180 @@ st.markdown(
 # ----------------------------------------------------------------------
 
 
-class APIError(Exception):
-    """后端 API 请求异常。"""
 
+# ----------------------------------------------------------------------
+# 可复用模块：API 客户端 / 会话 / 业务接口 / 视图组件
+# ----------------------------------------------------------------------
 
-def browser_auth_urls() -> tuple[str, str]:
-    """Browser and Streamlit must use the same hostname to share a host-only cookie."""
-    frontend = urlsplit(st.context.url or "http://localhost:8501/")
-    backend = urlsplit(os.getenv("BROWSER_API_BASE_URL", API_BASE_URL))
-    if backend.hostname in ("localhost", "127.0.0.1") and frontend.hostname in ("localhost", "127.0.0.1"):
-        netloc = frontend.hostname + (f":{backend.port}" if backend.port else "")
-        backend = backend._replace(netloc=netloc)
-    return urlunsplit(backend).rstrip("/"), f"{frontend.scheme}://{frontend.netloc}/"
+from career_ui.api import (  # noqa: E402
+    APIError,
+    request_api,
+    security_options,
+    stream_chat_api,
+    stream_match_api,
+    stream_match_resume_api,
+)
+from career_ui.config import (  # noqa: E402
+    DIFFICULTY_NAMES,
+    DOCUMENT_TYPE_NAMES,
+    SEARCH_MODE_NAMES,
+)
+from career_ui.endpoints import (  # noqa: E402
+    MATCH_STATUS_NAMES,
+    create_interview_plan,
+    create_learning_plan,
+    delete_chat_conversation,
+    delete_document,
+    fetch_match_context,
+    get_conversation_messages,
+    get_conversations,
+    get_documents,
+    get_evaluation_datasets,
+    get_evaluation_report_html,
+    list_evaluation_experiments,
+    match_report_of,
+    match_run_label,
+    search_documents,
+    start_evaluation_experiment,
+    update_chat_conversation,
+    upload_document,
+)
+from career_ui.render import (  # noqa: E402
+    document_label,
+    match_progress_updates,
+    show_interview_plan,
+    show_learning_plan,
+    show_match_report,
+    show_search_results,
+)
+from career_ui.session import (  # noqa: E402
+    auth_cookie_name,
+    browser_auth_component,
+    browser_auth_urls,
+    clear_browser_cookie,
+    fetch_security_options,
+    reset_login_state,
+)
 
+def _switch_to_direct_jd_input() -> None:
+    """把 JD 来源切回「直接输入」。
 
-def reset_login_state():
-    # Do not restore the stale initial-request cookie on the following rerun.
-    st.session_state.clear()
-    st.session_state.clear_browser_session = True
+    必须通过按钮的 on_click 回调修改 session_state：
+    在同一次脚本运行里直接赋值会抛
+    StreamlitWidgetAlreadyInstantiatedError（widget 已实例化后再改其 key）。
+    """
+
+    st.session_state["jd_source_choice"] = "直接输入"
     st.rerun()
 
 
-@st.cache_resource
-def browser_auth_component():
-    assets = Path(__file__).parent / "auth_browser"
-    return st.components.v2.component(
-        "browser_auth",
-        html=(assets / "form.html").read_text(encoding="utf-8"),
-        css=(assets / "style.css").read_text(encoding="utf-8"),
-        js=(assets / "auth.js").read_text(encoding="utf-8"),
-    )
-
-
-def clear_browser_cookie():
-    base, return_to = browser_auth_urls()
-    browser_auth_component()(data={"mode": "logout", "url": base + "/api/auth/browser-logout",
-                                   "return_to": return_to}, key="cookie_cleanup")
-    st.stop()
-
-
-def auth_headers() -> dict[str, str]:
-    token = st.session_state.get('access_token')
-    return {'Authorization': f'Bearer {token}'} if token else {}
-
-
-def operation_read_timeout(path):
-    limits = globals().get('security_options', {})
-    if '/chat/completions' in path:
-        return limits.get('chat_total_timeout', 90) + 10
-    if '/documents/upload' in path:
-        return limits.get('upload_total_timeout', 120) + 10
-    if '/match' in path:
-        return limits.get('match_total_timeout', 600) + 10
-    if any(part in path for part in ('/interview', '/learning-plan', '/evaluation')):
-        return limits.get('analysis_total_timeout', 180) + 10
-    return limits.get('api_total_timeout', 30) + 10
-
-
-def request_api(
-        method: str,
-        path: str,
+def _run_match_flow(
         *,
-        timeout: int = SHORT_TIMEOUT,
-        **kwargs: Any,
-) -> Any:
-    """调用 FastAPI，并统一处理错误。"""
+        selected_resume: dict[str, Any],
+        selected_job: dict[str, Any] | None,
+        jd_source: str,
+        jd_text: str,
+        research_approved: bool = False,
+) -> None:
+    """执行岗位匹配流式请求并把结果写入 session_state。"""
 
-    kwargs["headers"] = {**kwargs.pop("headers", {}), **auth_headers()}
-    url = f"{API_BASE_URL}{path}"
-
-    try:
-        response = requests.request(
-            method=method,
-            url=url,
-            timeout=(5, operation_read_timeout(path) if timeout == LONG_TIMEOUT else timeout),
-            **kwargs,
-        )
-    except requests.ConnectionError as exc:
-        raise APIError(f"无法连接后端服务：{API_BASE_URL}") from exc
-    except requests.Timeout as exc:
-        raise APIError("请求超时，请检查后端日志后重试") from exc
-    except requests.RequestException as exc:
-        raise APIError(f"请求失败：{exc}") from exc
-
-    if not response.ok:
-        if response.status_code == 401 and path != "/api/auth/login":
-            reset_login_state()
-        try:
-            error_data = response.json()
-            detail = error_data.get("detail", error_data)
-        except ValueError:
-            detail = response.text or response.reason
-
-        raise APIError(f"HTTP {response.status_code}：{detail}")
-
-    if not response.content:
-        return None
-
-    try:
-        return response.json()
-    except ValueError as exc:
-        raise APIError("后端返回了无法解析的数据") from exc
-
-
-def stream_chat_api(
-        prompt: str,
-        conversation_id: str | None = None,
-) -> Iterator[str]:
-    """调用智能对话 SSE 流式接口，逐 Token 产出文字供打字机渲染。"""
-    url = f"{API_BASE_URL}/api/chat/completions"
     payload: dict[str, Any] = {
-        "message": prompt,
-        "stream": True,
+        "resume_document_id": selected_resume["id"], "research_approved": research_approved,
     }
-    if conversation_id:
-        payload["conversation_id"] = conversation_id
-
-    try:
-        response = requests.post(
-            url,
-            json=payload,
-            stream=True,
-            headers=auth_headers(),
-            timeout=(5, operation_read_timeout(url)),
-        )
-    except requests.ConnectionError as exc:
-        raise APIError(f"无法连接后端服务：{API_BASE_URL}") from exc
-    except requests.Timeout as exc:
-        raise APIError("流式对话连接超时") from exc
-    except requests.RequestException as exc:
-        raise APIError(f"对话请求失败：{exc}") from exc
-
-    if response.status_code == 401:
-        response.close()
-        reset_login_state()
-    if not response.ok:
-        try:
-            detail = response.json().get("detail", response.text)
-        except Exception:
-            detail = response.text or response.reason
-        response.close()
-        raise APIError(f"HTTP {response.status_code}：{detail}")
-
-    try:
-        for line in response.iter_lines(decode_unicode=True):
-            if not line:
-                continue
-            if line.startswith("data:"):
-                data_str = line[len("data:"):].strip()
-                if data_str == "[DONE]":
-                    break
-                try:
-                    data_json = json.loads(data_str)
-                    if "error" in data_json:
-                        raise APIError(data_json["error"].get("message", "回复生成已中断"))
-
-                    # 记录返回的 conversation_id
-                    if "conversation_id" in data_json and not st.session_state.conversation_id:
-                        st.session_state.conversation_id = data_json["conversation_id"]
-
-                    choices = data_json.get("choices", [])
-                    if choices and isinstance(choices, list):
-                        delta = choices[0].get("delta", {})
-                        token = delta.get("content", "")
-                        if token:
-                            yield token
-                    elif "content" in data_json:
-                        yield data_json["content"]
-                except json.JSONDecodeError:
-                    if data_str:
-                        yield data_str
-    except requests.RequestException as exc:
-        raise APIError("流式连接已中断，请稍后重试") from exc
-    finally:
-        response.close()
-
-
-def stream_match_api(
-        payload: dict[str, Any],
-) -> Iterator[tuple[str, dict[str, Any]]]:
-    """调用岗位匹配 SSE 流式接口，实时产出 (event_type, payload_dict)。"""
-    url = f"{API_BASE_URL}/api/match/stream"
-
-    try:
-        response = requests.post(
-            url,
-            json=payload,
-            stream=True,
-            headers=auth_headers(),
-            timeout=(5, operation_read_timeout(url)),
-        )
-    except requests.ConnectionError as exc:
-        raise APIError(f"无法连接后端服务：{API_BASE_URL}") from exc
-    except requests.Timeout as exc:
-        raise APIError("岗位匹配流式连接超时") from exc
-    except requests.RequestException as exc:
-        raise APIError(f"请求失败：{exc}") from exc
-
-    if response.status_code == 401:
-        response.close()
-        reset_login_state()
-    if not response.ok:
-        try:
-            detail = response.json().get("detail", response.text)
-        except Exception:
-            detail = response.text or response.reason
-        response.close()
-        raise APIError(f"HTTP {response.status_code}：{detail}")
-
-    current_event = "message"
-    try:
-        for line in response.iter_lines(chunk_size=1, decode_unicode=True):
-            if not line:
-                continue
-            if line.startswith("event:"):
-                current_event = line[len("event:"):].strip()
-            elif line.startswith("data:"):
-                data_str = line[len("data:"):].strip()
-                try:
-                    data_json = json.loads(data_str)
-                    yield current_event, data_json
-                except json.JSONDecodeError:
-                    continue
-    except requests.RequestException as exc:
-        raise APIError("流式连接已中断，请稍后重试") from exc
-    finally:
-        response.close()
-
-
-def stream_match_resume_api(
-        thread_id: str,
-        human_feedback: str | None = None,
-) -> Iterator[tuple[str, dict[str, Any]]]:
-    """调用人工干预与唤醒 SSE 流式接口。"""
-    url = f"{API_BASE_URL}/api/match/stream/resume"
-    payload: dict[str, Any] = {
-        "thread_id": thread_id,
-        "human_feedback": human_feedback or None,
-    }
-
-    try:
-        response = requests.post(
-            url,
-            json=payload,
-            stream=True,
-            headers=auth_headers(),
-            timeout=(5, operation_read_timeout(url)),
-        )
-    except requests.ConnectionError as exc:
-        raise APIError(f"无法连接后端服务：{API_BASE_URL}") from exc
-    except requests.Timeout as exc:
-        raise APIError("唤醒工作流流式连接超时") from exc
-    except requests.RequestException as exc:
-        raise APIError(f"请求失败：{exc}") from exc
-
-    if response.status_code == 401:
-        response.close()
-        reset_login_state()
-    if not response.ok:
-        try:
-            detail = response.json().get("detail", response.text)
-        except Exception:
-            detail = response.text or response.reason
-        response.close()
-        raise APIError(f"HTTP {response.status_code}：{detail}")
-
-    current_event = "message"
-    try:
-        for line in response.iter_lines(chunk_size=1, decode_unicode=True):
-            if not line:
-                continue
-            if line.startswith("event:"):
-                current_event = line[len("event:"):].strip()
-            elif line.startswith("data:"):
-                data_str = line[len("data:"):].strip()
-                try:
-                    data_json = json.loads(data_str)
-                    yield current_event, data_json
-                except json.JSONDecodeError:
-                    continue
-    except requests.RequestException as exc:
-        raise APIError("流式连接已中断，请稍后重试") from exc
-    finally:
-        response.close()
-
-
-def get_documents() -> list[dict[str, Any]]:
-    return request_api("GET", "/api/documents")
-
-
-def get_runs(
-        *,
-        task_type: str | None = "match",
-        status: str | None = None,
-        limit: int = 20,
-) -> list[dict[str, Any]]:
-    """查询历史或待恢复任务列表。"""
-    params: dict[str, Any] = {"limit": limit}
-    if task_type:
-        params["task_type"] = task_type
-    if status:
-        params["status"] = status
-    return request_api("GET", "/api/runs", params=params)
-
-
-# 获取历史会话列表 API
-def get_conversations() -> list[dict[str, Any]]:
-    """获取用户的历史对话列表"""
-    try:
-        return request_api("GET", "/api/chat/conversations")
-    except APIError:
-        return []
-
-
-# 获取会话历史消息 API
-def get_conversation_messages(conversation_id: str) -> list[dict[str, Any]]:
-    """获取指定对话的历史消息记录"""
-    try:
-        return request_api("GET", f"/api/chat/conversations/{conversation_id}/messages")
-    except APIError:
-        return []
-
-
-# 新增：删除对话 API
-def delete_chat_conversation(conversation_id: str) -> None:
-    """删除指定的对话记录"""
-    request_api("DELETE", f"/api/chat/conversations/{conversation_id}")
-
-
-# 新增：重命名 / 置顶对话 API
-def update_chat_conversation(
-        conversation_id: str,
-        *,
-        title: str | None = None,
-        pinned: bool | None = None,
-) -> dict[str, Any]:
-    """重命名或置顶指定的对话记录"""
-    params: dict[str, Any] = {}
-    if title is not None:
-        params["title"] = title
-    if pinned is not None:
-        params["pinned"] = "true" if pinned else "false"
-    return request_api("PATCH", f"/api/chat/conversations/{conversation_id}", params=params)
-
-
-# 岗位匹配任务的状态与报告读取工具（匹配 / 面试 / 学习三个页面共用）
-MATCH_STATUS_NAMES = {
-    "paused": "待人工审核",
-    "completed": "已完成",
-    "running": "进行中",
-    "failed": "失败",
-}
-
-
-def fetch_match_context(*, limit: int = 20) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """拉取岗位匹配任务历史与文档清单。"""
-    try:
-        runs = get_runs(task_type="match", limit=limit)
-    except Exception:
-        runs = []
-    try:
-        documents = get_documents()
-    except APIError:
-        documents = []
-    return runs, documents
-
-
-def match_report_of(run: dict[str, Any]) -> dict[str, Any]:
-    """兼容三种落库形态：报告本体（SSE 完成）/ {"current_report":...}（同步接口）/ {"report":...}。"""
-    data = run.get("result") or {}
-    if not isinstance(data, dict):
-        return {}
-    if "total_score" in data or "resume_analysis" in data:
-        return data
-    return data.get("current_report") or data.get("report") or {}
-
-
-def match_run_label(run: dict[str, Any], documents: list[dict[str, Any]]) -> str:
-    """用时间 + 简历 × JD + 状态 + 分数生成可读标签，替代裸任务 ID。"""
-    doc_name = {d["id"]: d.get("filename", "未命名文档") for d in documents}
-    inp = run.get("input_data") or {}
-    created = (str(run.get("created_at") or ""))[:16].replace("T", " ")
-    resume_name = doc_name.get(inp.get("resume_document_id"), "简历")
-    if inp.get("jd_input_type") == "text":
-        jd_name = "手动输入 JD"
+    if jd_source == "直接输入":
+        payload["jd_text"] = jd_text.strip()
     else:
-        jd_name = doc_name.get(inp.get("jd_document_id"), "JD 文档")
-    parts = [created, f"{resume_name} × {jd_name}", MATCH_STATUS_NAMES.get(run.get("status"), run.get("status", ""))]
-    score = match_report_of(run).get("total_score")
-    if score is not None:
-        parts.append(f"{score}分")
-    return " ｜ ".join(parts)
+        payload["jd_document_id"] = selected_job["id"]
 
+    # 清空历史状态
+    st.session_state.pop("match_report", None)
+    st.session_state.pop("match_run_id", None)
+    st.session_state.pop("match_paused", None)
+    st.session_state.pop("match_thread_id", None)
+    st.session_state.pop("preliminary_report", None)
 
-# 评测模块 API（仅管理员）
-def get_evaluation_datasets() -> list[dict[str, Any]]:
-    """列出可用的评测数据集"""
-    return request_api("GET", "/api/evaluation/datasets")
+    # 动态流式状态框展示
+    with st.status("正在分析简历和岗位要求…", expanded=True) as status_box:
 
+        update_progress = match_progress_updates(status_box)
 
-def start_evaluation_experiment(config: dict[str, Any]) -> dict[str, Any]:
-    """启动评测实验（后台异步执行）"""
-    return request_api("POST", "/api/evaluation/experiments", json={"experiment_config": config})
+        try:
+            for event_type, data in stream_match_api(payload):
+                update_progress(event_type, data)
+                if event_type == "init":
+                    run_id = data.get("run_id")
+                    if run_id:
+                        st.session_state["match_run_id"] = run_id
+                        st.session_state["match_thread_id"] = run_id
+                    st.caption("任务已创建，正在准备分析。")
 
+                elif event_type == "start":
+                    st.write("正在同时分析简历与岗位要求。")
 
-def list_evaluation_experiments() -> list[dict[str, Any]]:
-    """列出当前会话中的评测实验状态"""
-    return request_api("GET", "/api/evaluation/experiments")
+                # 兼容公开调研提示；匹配报告不再逐字输出。
+                elif event_type == "token":
+                    node = data.get("node")
+                    if node == "match_agent":
+                        st.markdown(data.get("content", ""))
 
+                elif event_type == "node_update":
+                    node = data.get("node")
+                    msg = data.get("message", "")
 
-def get_evaluation_report_html(path: str) -> str:
-    """读取评测实验的 HTML 报告"""
-    return request_api("GET", "/api/evaluation/report", params={"path": path}).get("html", "")
+                    if node == "resume_agent":
+                        st.write(f"**[Resume Agent]** {msg}")
+                    elif node == "jd_agent":
+                        st.write(f"**[JD Agent]** {msg}")
+                    elif node == "match_agent":
+                        score = data.get("score")
+                        score_info = f" (初评总分: {score}分)" if score else ""
+                        st.write(f"**[Match Agent]** {msg}{score_info}")
+                    elif node == "verify_agent":
+                        if data.get("status") == "passed":
+                            status_box.write(f"**[Verify Agent]** {msg}")
+                        else:
+                            status_box.warning(msg)
+                            if data.get("feedback"):
+                                status_box.caption(data["feedback"])
 
+                # 捕获人机协同挂起事件
+                elif event_type == "interrupt":
+                    st.session_state["match_paused"] = True
+                    st.session_state["match_thread_id"] = data.get("thread_id")
+                    st.session_state["preliminary_report"] = data.get("current_report")
+                    status_box.update(
+                        label="自动校验未通过，等待人工审核",
+                        state="complete",
+                        expanded=True,
+                    )
+                    st.rerun()
 
-def upload_document(uploaded_file: Any, document_type: str) -> dict[str, Any]:
-    if uploaded_file.size > security_options["max_upload_size_mb"] * 1024 * 1024:
-        raise APIError("上传文件超过大小限制")
-    files = {
-        "file": (
-            uploaded_file.name,
-            uploaded_file.getvalue(),
-            uploaded_file.type or "application/octet-stream",
-        ),
-    }
-    return request_api(
-        "POST",
-        "/api/documents/upload",
-        files=files,
-        data={"document_type": document_type},
-        timeout=LONG_TIMEOUT,
-    )
+                elif event_type == "complete":
+                    report = data.get("report")
+                    if report:
+                        st.session_state["match_report"] = report
+                        status_box.update(
+                            label="岗位多维匹配与事实校验全部完成！",
+                            state="complete",
+                            expanded=False,
+                        )
 
+                elif event_type == "error":
+                    st.error(f"执行异常：{data.get('message')}")
+                    status_box.update(
+                        label="匹配中断",
+                        state="error",
+                        expanded=True,
+                    )
+                    break
 
-def delete_document(document_id: str) -> None:
-    request_api("DELETE", f"/api/documents/{document_id}", timeout=LONG_TIMEOUT)
-
-
-def search_documents(
-        *, query: str, document_type: str | None, top_k: int, search_mode: str
-) -> list[dict[str, Any]]:
-    endpoints = {
-        "dense": "/api/search",
-        "bm25": "/api/search/bm25",
-        "hybrid": "/api/search/hybrid",
-    }
-    endpoint = endpoints.get(search_mode, "/api/search/hybrid")
-    return request_api(
-        "POST",
-        endpoint,
-        json={
-            "query": query,
-            "document_type": document_type,
-            "top_k": top_k,
-        },
-        timeout=LONG_TIMEOUT,
-    )
-
-
-def create_interview_plan(
-        *, match_run_id: str, difficulty: str, question_count: int
-) -> dict[str, Any]:
-    return request_api(
-        "POST",
-        "/api/interview",
-        json={
-            "match_run_id": match_run_id,
-            "difficulty": difficulty,
-            "question_count": question_count,
-        },
-        timeout=LONG_TIMEOUT,
-    )
-
-
-def create_learning_plan(
-        *, match_run_id: str, available_weeks: int, hours_per_week: int
-) -> dict[str, Any]:
-    return request_api(
-        "POST",
-        "/api/learning-plan",
-        json={
-            "match_run_id": match_run_id,
-            "available_weeks": available_weeks,
-            "hours_per_week": hours_per_week,
-        },
-        timeout=LONG_TIMEOUT,
-    )
-
-
-# ----------------------------------------------------------------------
-# 视图展示组件
-# ----------------------------------------------------------------------
-
-
-def document_label(document: dict[str, Any]) -> str:
-    document_type = document.get("document_type", "unknown")
-    type_name = DOCUMENT_TYPE_NAMES.get(document_type, document_type)
-    return (
-        f"{document.get('filename', '未命名文档')} "
-        f"· {type_name} "
-        f"· {document.get('status', 'unknown')}"
-    )
-
-
-def show_string_list(title: str, values: list[str] | None) -> None:
-    st.markdown(f"#### {title}")
-    if not values:
-        st.caption("暂无")
-        return
-    for value in values:
-        st.markdown(f"- {value}")
-
-
-def show_match_report(report: dict[str, Any]) -> None:
-    st.subheader("岗位多维匹配报告")
-
-    score_column, level_column = st.columns(2)
-    with score_column:
-        st.metric("综合加权匹配分", f"{float(report.get('total_score', 0)):.1f} 分")
-    with level_column:
-        st.metric("匹配等级", report.get("match_level", "未知"))
-
-    scores = report.get("scores", {})
-    st.markdown("#### 维度分项明细")
-
-    score_columns = st.columns(5)
-    score_items = [
-        ("技能匹配", "skill"),
-        ("经历匹配", "experience"),
-        ("职责匹配", "responsibility"),
-        ("教育背景", "education"),
-        ("加分项", "bonus"),
-    ]
-
-    for column, (label, key) in zip(score_columns, score_items, strict=True):
-        column.metric(label, f"{float(scores.get(key, 0)):.0f} 分")
-
-    left_column, right_column = st.columns(2)
-    with left_column:
-        show_string_list("已匹配技能", report.get("matched_skills"))
-        show_string_list("候选人核心优势", report.get("strengths"))
-
-    with right_column:
-        show_string_list("缺失/待补足技能", report.get("missing_skills"))
-        show_string_list("潜在风险点", report.get("risks"))
-
-    show_string_list("专家改进建议", report.get("suggestions"))
-
-    with st.expander("查看简历结构化抽取明细 (Resume Agent)"):
-        st.json(report.get("resume_analysis", {}))
-
-    with st.expander("查看岗位要求拆解明细 (JD Agent)"):
-        st.json(report.get("job_analysis", {}))
-
-
-def match_progress_updates(status_box, *, resuming=False):
-    """Advance only when a real stage finishes; spinner continues between events."""
-    stages = {"match_agent", "verify_agent"} if resuming else {"resume_agent", "jd_agent", "match_agent"}
-    completed = set()
-    stage = "正在恢复评估…" if resuming else "正在分析简历和岗位要求…"
-    bar = st.progress(0.0, text=f"阶段进度 0 / {len(stages)} · {stage}")
-    waiting = st.empty()
-
-    def update(event_type, data):
-        nonlocal stage
-        if event_type == "progress":
-            stage = data.get("message", stage)
-            status_box.update(label=stage, state="running")
-        elif event_type == "heartbeat":
-            waiting.caption(f"已等待 {data.get('elapsed_seconds', 0)} 秒 · {stage}")
-        elif event_type == "node_update":
-            node = data.get("node")
-            if node in stages and data.get("status") in ("completed", "passed", "warning"):
-                completed.add(node)
-            if node == "verify_agent" and data.get("status") == "retry":
-                completed.discard("match_agent")
-                stage = "正在根据校验意见修正报告…"
-                status_box.update(label=stage, state="running")
-        elif event_type in ("complete", "interrupt"):
-            completed.update(stages)
-            waiting.empty()
-            stage = "等待你审核报告" if event_type == "interrupt" else "报告已完成"
-        bar.progress(len(completed) / len(stages), text=f"阶段进度 {len(completed)} / {len(stages)} · {stage}")
-
-    return update
-
-
-def show_interview_plan(plan: dict[str, Any]) -> None:
-    st.subheader(f"面试预测题库：{plan.get('job_title', '目标岗位')}")
-    show_string_list("重点准备方向", plan.get("focus_areas"))
-
-    questions = plan.get("questions", [])
-    if not questions:
-        st.info("暂未生成面试问题")
-        return
-
-    for index, question in enumerate(questions, start=1):
-        question_text = question.get("question", f"面试问题 {index}")
-        with st.expander(f"{index}. {question_text}", expanded=index == 1):
-            st.markdown(f"**问题类型：** {question.get('question_type', '未分类')}")
-            st.markdown(f"**考察目的：** {question.get('purpose', '')}")
-            show_string_list("回答要点", question.get("answer_points"))
-
-
-def show_learning_plan(plan: dict[str, Any]) -> None:
-    st.subheader(f"能力提升路径：{plan.get('target_role', '目标岗位')}")
-    summary = plan.get("summary", "")
-    if summary:
-        st.info(summary)
-
-    items = plan.get("items", [])
-    for index, item in enumerate(items, start=1):
-        priority = item.get("priority", "medium")
-        priority_name = {"high": "高", "medium": "中", "low": "低"}.get(priority, priority)
-        skill = item.get("skill", f"学习任务 {index}")
-
-        with st.expander(f"{index}. {skill} ｜ 优先级：{priority_name}", expanded=index == 1):
-            st.markdown(f"**提升原因：** {item.get('reason', '')}")
-            st.markdown(f"**预计周期：** {item.get('estimated_days', 0)} 天")
-            show_string_list("具体行动任务", item.get("tasks"))
-
-    show_string_list("每周执行安排", plan.get("weekly_plan"))
-
-
-def get_search_score_display(
-        result: dict[str, Any], search_mode: str
-) -> tuple[str, str, float]:
-    source = result.get("source", search_mode)
-    if source == "hybrid_reranked":
-        return (
-            "BGE 重排分",
-            "Milvus + BM25 + RRF + BGE",
-            float(result.get("rerank_score", result.get("score", 0.0))),
-        )
-    if source == "hybrid":
-        return (
-            "RRF 综合分",
-            "Milvus + BM25 + RRF",
-            float(result.get("rrf_score", result.get("score", 0.0))),
-        )
-    if source == "bm25":
-        return ("BM25 分数", "BM25", float(result.get("score", 0.0)))
-
-    return ("余弦相似度", "Milvus", float(result.get("score", 0.0)))
-
-
-def show_search_results(results: list[dict[str, Any]], search_mode: str) -> None:
-    if not results:
-        st.info("没有检索到相关内容")
-        return
-
-    for index, result in enumerate(results, start=1):
-        score_name, source_name, main_score = get_search_score_display(
-            result, search_mode
-        )
-        with st.expander(f"结果 {index}｜{score_name} {main_score:.8f}", expanded=index == 1):
-            st.caption(f"召回来源：{source_name}")
-            st.write(result.get("content", ""))
-
-            rrf_score = result.get("rrf_score")
-            rerank_score = result.get("rerank_score")
-            if rrf_score is not None:
-                st.caption(f"RRF 分数：{float(rrf_score):.8f}")
-            if rerank_score is not None:
-                st.caption(f"BGE 重排分：{float(rerank_score):.8f}")
-
-            document_type = result.get("document_type", "")
-            st.caption(f"文档类型：{DOCUMENT_TYPE_NAMES.get(document_type, document_type)}")
-            st.caption(f"文档 ID：{result.get('document_id', '')}")
+        except APIError as exc:
+            st.error(str(exc))
+            status_box.update(
+                label="请求失败",
+                state="error",
+                expanded=True,
+            )
 
 
 # ----------------------------------------------------------------------
@@ -753,8 +256,10 @@ def show_search_results(results: list[dict[str, Any]], search_mode: str) -> None
 # ----------------------------------------------------------------------
 
 # Authentication must run before loading or rendering private tabs.
+# 注意：不要把返回值绑定到 security_options这个名字——
+# 它已被导入为函数，会遮蔽后续 security_options() 调用。
 try:
-    security_options = request_api('GET', '/api/auth/options')
+    fetch_security_options()
 except APIError as exc:
     st.error(str(exc))
     st.stop()
@@ -775,7 +280,7 @@ if st.session_state.get('clear_browser_session'):
         clear_browser_cookie()
 
 if not st.session_state.get('access_token'):
-    cookie_token = st.context.cookies.get(security_options.get('auth_cookie_name', 'career_session'))
+    cookie_token = st.context.cookies.get(auth_cookie_name())
     if cookie_token and 32 <= len(cookie_token) <= 128:
         # /auth/me below verifies validity before any private content is rendered.
         st.session_state.access_token = cookie_token
@@ -844,7 +349,7 @@ with login_area.container():
                     browser_auth_component()(data={"mode": "login", "url": browser_base + '/api/auth/browser-login',
                                                    "return_to": return_to}, key="browser_login")
             with register_tab:
-                if security_options['registration_enabled']:
+                if security_options()['registration_enabled']:
                     with st.form('register_form'):
                         new_username = st.text_input('新用户名', max_chars=32)
                         new_password = st.text_input('新密码', type='password', max_chars=128)
@@ -1031,7 +536,7 @@ with account_area.container():
 prompt_input = None
 if active_page == "chat":
     prompt_input = st.chat_input("向求职助手提问…", key="chat_prompt",
-                                 max_chars=security_options["chat_max_input_chars"])
+                                 max_chars=security_options()["chat_max_input_chars"])
 
 with private_area.container():
     # ----------------------------------------------------------------------
@@ -1100,6 +605,15 @@ with private_area.container():
 
         with upload_column:
             st.subheader("上传新文档")
+
+            # 上传结果提示：必须在 rerun 之后渲染，因此读session_state。
+            notice = st.session_state.pop("upload_notice", None)
+            if notice:
+                if notice["kind"] == "dedup":
+                    st.info(f"ℹ️ {notice['text']}")
+                else:
+                    st.success(notice["text"])
+
             upload_type = st.selectbox(
                 "文档类型",
                 options=upload_types,
@@ -1126,10 +640,31 @@ with private_area.container():
                 try:
                     with st.spinner("正在解析、切片、向量化并建立索引..."):
                         upload_result = upload_document(uploaded_file, upload_type)
+
                     # 成功后轮换 key：下次渲染是全新的上传框（失败时保留文件便于重试）。
                     st.session_state["uploader_nonce"] = st.session_state.get("uploader_nonce", 0) + 1
-                    st.toast(
-                        f"上传成功：{uploaded_file.name}，生成 {upload_result.get('chunk_count', 0)} 个文本块",
+
+                    document = upload_result.get("document") or {}
+                    # st.rerun() 会清掉本轮渲染输出，
+                    # 提示语必须存进 session_state 才能显示在下一轮。
+                    st.session_state["upload_notice"] = (
+                        {
+                            "kind": "dedup",
+                            "text": (
+                                f"这份内容已上传过："
+                                f"{document.get('filename', uploaded_file.name)}"
+                                f"（{document.get('chunk_count', 0)} 个文本块），"
+                                "本次未重复解析与向量化。"
+                            ),
+                        }
+                        if upload_result.get("deduplicated")
+                        else {
+                            "kind": "new",
+                            "text": (
+                                f"上传成功：{uploaded_file.name}，"
+                                f"生成 {document.get('chunk_count', 0)} 个文本块"
+                            ),
+                        }
                     )
                     st.rerun()
                 except APIError as exc:
@@ -1142,7 +677,7 @@ with private_area.container():
                     "输入检索 Query",
                     placeholder="例如：候选人是否具备微服务架构重构实践？",
                     height=120,
-                    max_chars=security_options["search_max_input_chars"],
+                    max_chars=security_options()["search_max_input_chars"],
                 )
 
                 search_mode = st.selectbox(
@@ -1309,158 +844,116 @@ with private_area.container():
         if not resume_documents:
             st.warning("请先在“知识库”页面上传一份已就绪的简历文档")
         else:
-            selected_resume = st.selectbox(
-                "选择候选人简历",
-                options=resume_documents,
-                format_func=document_label,
-            )
+            # 数据来自本轮开头的一次拉取。若用户刚在「知识库」页上传了新文档，
+            # 这里可能仍是旧快照，给一个显式刷新入口比让用户困惑地看到空列表好。
+            if st.button(
+                "刷新文档列表",
+                key="refresh_match_documents",
+                help="在知识库页上传了新文档后，点击此处拉取最新列表",
+            ):
+                st.rerun()
 
-            selected_job = None
-            jd_text = ""
-
+            # 来源切换是轻量交互，放在 form 外：
+            # form 内控件只有提交时才返回值，把 radio 放进去会导致
+            # 切换来源时整个 form 重跑、状态互相覆盖。
             jd_source = st.radio(
                 "岗位描述 (JD) 来源",
                 options=["直接输入", "已上传文档"],
                 horizontal=True,
+                key="jd_source_choice",
             )
 
-            if jd_source == "直接输入":
-                jd_text = st.text_area(
-                    "输入岗位描述 (JD)",
-                    placeholder="粘贴岗位名称、职责要求与技术栈门槛...",
-                    height=200,
-                    max_chars=security_options["jd_max_input_chars"],
+            # 没有 JD 文档时，在 form 外给出提示与逃生出口。
+            # 放在 form 内的按钮无法用 st.button（Streamlit 会直接报错），
+            # 而 form_submit_button 会触发整表重跑、状态互相覆盖。
+            if jd_source == "已上传文档" and not job_documents:
+                st.warning(
+                    "你还没有上传过「岗位描述」类型的文档，"
+                    "所以这里无法选择已上传的 JD。"
                 )
-            else:
-                if not job_documents:
-                    st.warning("尚未上传岗位描述文档，请切换为“直接输入”")
+                st.caption(
+                    f"当前可用的已就绪文档共 {len(ready_documents)} 份，"
+                    f"其中简历 {len(resume_documents)} 份。"
+                    "请到「知识库」页上传岗位描述，或切换回「直接输入」。"
+                )
+                # on_click 回调在本次脚本运行之前执行，
+                # 因此可以直接改session_state[jd_source_choice] 而不触发
+                # StreamlitWidgetAlreadyInstantiatedError。
+                st.button(
+                    "改用直接输入 JD",
+                    key="switch_to_jd_text",
+                    use_container_width=True,
+                    on_click=_switch_to_direct_jd_input,
+                )
+
+            # 用 form 包裹：JD 文本较长，裸控件在每次 rerun 时会丢输入。
+            with st.form("match_form", border=False):
+                selected_resume = st.selectbox(
+                    "选择候选人简历",
+                    options=resume_documents,
+                    format_func=document_label,
+                )
+
+                selected_job = None
+                jd_text = ""
+
+                if jd_source == "直接输入":
+                    jd_text = st.text_area(
+                        "输入岗位描述 (JD)",
+                        placeholder="粘贴岗位名称、职责要求与技术栈门槛...",
+                        height=200,
+                        max_chars=security_options()["jd_max_input_chars"],
+                    )
                 else:
+                    # 无 JD 文档的情形已在 form 外处理（提示 + 逃生按钮）。
                     selected_job = st.selectbox(
                         "选择岗位描述文档",
                         options=job_documents,
                         format_func=document_label,
                     )
 
-            can_match = bool(
-                selected_resume
-                and (
-                        (jd_source == "直接输入" and jd_text.strip())
-                        or (jd_source == "已上传文档" and selected_job)
+                research_approved = st.checkbox("补充检索公开岗位资料", value=False)
+                can_match = bool(
+                    selected_resume
+                    and (
+                            (jd_source == "直接输入" and jd_text.strip())
+                            or (jd_source == "已上传文档" and selected_job)
+                    )
                 )
-            )
 
-            if st.button(
+                # 不置灰：Streamlit 的 form 提交值只在下一轮脚本运行才可用，
+                # 禁用态会依据上一轮的输入判定，导致刚填完 JD 仍点不动。
+                match_submitted = st.form_submit_button(
                     "开始岗位匹配",
                     type="primary",
-                    disabled=not can_match,
                     use_container_width=True,
-            ):
-                payload: dict[str, Any] = {
-                    "resume_document_id": selected_resume["id"],
-                }
-                if jd_source == "直接输入":
-                    payload["jd_text"] = jd_text.strip()
+                )
+
+            if match_submitted:
+                if not can_match:
+                    st.warning("请先选择简历，并补全岗位描述（直接输入正文或选择已上传文档）。")
                 else:
-                    payload["jd_document_id"] = selected_job["id"]
-
-                # 清空历史状态
-                st.session_state.pop("match_report", None)
-                st.session_state.pop("match_run_id", None)
-                st.session_state.pop("match_paused", None)
-                st.session_state.pop("match_thread_id", None)
-                st.session_state.pop("preliminary_report", None)
-
-                # 动态流式状态框展示
-                with st.status(
-                        "正在分析简历和岗位要求…", expanded=True
-                ) as status_box:
-
-                    update_progress = match_progress_updates(status_box)
-
-                    try:
-                        for event_type, data in stream_match_api(payload):
-                            update_progress(event_type, data)
-                            if event_type == "init":
-                                run_id = data.get("run_id")
-                                if run_id:
-                                    st.session_state["match_run_id"] = run_id
-                                    st.session_state["match_thread_id"] = run_id
-                                st.caption("任务已创建，正在准备分析。")
-
-                            elif event_type == "start":
-                                st.write("正在同时分析简历与岗位要求。")
-
-                            # 兼容公开调研提示；匹配报告不再逐字输出。
-                            elif event_type == "token":
-                                node = data.get("node")
-                                if node == "match_agent":
-                                    st.markdown(data.get("content", ""))
-
-                            elif event_type == "node_update":
-                                node = data.get("node")
-                                msg = data.get("message", "")
-
-                                if node == "resume_agent":
-                                    st.write(f"**[Resume Agent]** {msg}")
-                                elif node == "jd_agent":
-                                    st.write(f"**[JD Agent]** {msg}")
-                                elif node == "match_agent":
-                                    score = data.get("score")
-                                    score_info = f" (初评总分: {score}分)" if score else ""
-                                    st.write(f"**[Match Agent]** {msg}{score_info}")
-
-                            # 捕获人机协同挂起事件
-                            elif event_type == "interrupt":
-                                st.session_state["match_paused"] = True
-                                st.session_state["match_thread_id"] = data.get("thread_id")
-                                st.session_state["preliminary_report"] = data.get("current_report")
-                                status_box.update(
-                                    label="初步匹配打分完成，等待人工审核确认...",
-                                    state="complete",
-                                    expanded=True,
-                                )
-                                st.rerun()
-
-                            elif event_type == "complete":
-                                report = data.get("report")
-                                if report:
-                                    st.session_state["match_report"] = report
-                                    status_box.update(
-                                        label="岗位多维匹配与事实校验全部完成！",
-                                        state="complete",
-                                        expanded=False,
-                                    )
-
-                            elif event_type == "error":
-                                st.error(f"执行异常：{data.get('message')}")
-                                status_box.update(
-                                    label="匹配中断",
-                                    state="error",
-                                    expanded=True,
-                                )
-                                break
-
-                    except APIError as exc:
-                        st.error(str(exc))
-                        status_box.update(
-                            label="请求失败",
-                            state="error",
-                            expanded=True,
-                        )
+                    _run_match_flow(
+                        selected_resume=selected_resume,
+                        selected_job=selected_job,
+                        jd_source=jd_source,
+                        jd_text=jd_text,
+                        research_approved=research_approved,
+                    )
 
         # ==================================================================
         # 人机协同 (Human-in-the-loop) 交互卡片
         # ==================================================================
         if st.session_state.get("match_paused"):
             st.divider()
-            st.warning("**【人机协同】初步匹配已完成，进入人工审核确认节点**")
+            st.warning("**自动校验未通过或已中止，请审核报告；可填写修改意见重新评估。**")
 
             pre_report = st.session_state.get("preliminary_report") or {}
             if pre_report:
                 score_val = pre_report.get("total_score")
                 level_val = pre_report.get("match_level", "待评定")
                 if score_val is not None:
-                    st.info(f"**初始评估总分：{score_val} 分** ｜ 匹配等级：{level_val}")
+                    st.info(f"**当前评估总分：{score_val} 分** ｜ 匹配等级：{level_val}")
                 with st.expander("查看待审核的匹配报告", expanded=True):
                     show_match_report(pre_report)
 
@@ -1468,15 +961,16 @@ with private_area.container():
             with feedback_col:
                 human_feedback_text = st.text_input(
                     "人工修正意见（可选）",
-                    placeholder="例如：候选人具有 5 年架构经验但简历表述含糊，建议按 85 分重新核算经历匹配分...",
-                    max_chars=security_options["feedback_max_input_chars"],
+                    placeholder="例如：请根据简历项目经历重新核对技能匹配，并说明缺少的证据。留空表示接受当前报告。",
+                    max_chars=security_options()["feedback_max_input_chars"],
                 )
+                st.caption("填写意见后会重新生成并校验；留空提交表示人工接受当前报告，原有校验提示仍会保留。")
 
             with action_col:
                 st.write("")  # 垂直对齐占位
                 st.write("")
                 confirm_resume = st.button(
-                    "确认并继续",
+                    "提交审核",
                     type="primary",
                     use_container_width=True,
                 )
@@ -1493,7 +987,8 @@ with private_area.container():
             if confirm_resume:
                 thread_id = st.session_state["match_thread_id"]
 
-                with st.status("正在更新匹配报告并校验事实…", expanded=True) as resume_box:
+                review_stage = "正在根据审核意见重新评估…" if human_feedback_text.strip() else "正在保存人工确认…"
+                with st.status(review_stage, expanded=True) as resume_box:
 
                     update_progress = match_progress_updates(resume_box, resuming=True)
 
@@ -1528,14 +1023,19 @@ with private_area.container():
                                         if feedback:
                                             resume_box.caption(f"校验说明：{feedback}")
 
+                            elif event_type == "interrupt":
+                                st.session_state["match_paused"] = True
+                                st.session_state["preliminary_report"] = data.get("current_report")
+                                resume_box.update(label="重新校验仍未通过，请再次审核", state="complete", expanded=True)
+                                st.rerun()
+
                             elif event_type == "complete":
                                 report = data.get("report")
                                 if report:
                                     st.session_state["match_report"] = report
                                     st.session_state["match_paused"] = False
                                     resume_box.update(
-                                        label="报告已完成，存在需复核的问题" if data.get(
-                                            "is_degraded") else "匹配报告校验完成！",
+                                        label="人工确认已完成" if data.get("manual_accepted") else "匹配报告自动校验完成！",
                                         state="complete",
                                         expanded=False,
                                     )
@@ -1706,6 +1206,7 @@ with private_area.container():
     if active_page == "evaluation":
         st.header("RAG 评测实验")
         st.caption("对检索与回答质量做 A/B 对比评测；仅管理员可见")
+        st.caption("仅检索当前账号的就绪文档；各配置复用同一批文档和现有切块，切块参数变化需先建立对应索引。")
 
         st.session_state.setdefault("experiment_names", {})
         st.session_state.setdefault("variant_count", 0)
@@ -1789,11 +1290,13 @@ with private_area.container():
                 format_func=lambda value: SEARCH_MODE_NAMES[value],
             )
             top_col, rerank_col = st.columns(2)
-            top_k = top_col.slider("召回候选数 Top-K", 1, 20, 5, key=f"{prefix}-topk")
+            top_k = top_col.slider("检索返回数 Top-K", 1, 20, 5, key=f"{prefix}-topk")
             enable_reranker = rerank_col.toggle("启用重排序", value=True, key=f"{prefix}-rerank")
             rerank_top_k = st.slider(
                 "重排序返回数", 1, 10, 5, key=f"{prefix}-rtopk", disabled=not enable_reranker,
             )
+            if enable_reranker:
+                st.caption(f"重排后最多返回 {min(top_k, rerank_top_k)} 条上下文。")
             enable_reflection = st.toggle("启用反思修正", value=False, key=f"{prefix}-reflect")
             max_iterations = st.slider(
                 "反思轮数", 1, 5, 2, key=f"{prefix}-iters", disabled=not enable_reflection,

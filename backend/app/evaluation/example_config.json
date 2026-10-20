@@ -20,10 +20,10 @@
       "search": {
         "top_k": 8,
         "search_mode": "hybrid",
-        "chunk_size": 600,
-        "chunk_overlap": 80,
+        "chunk_size": 800,
+        "chunk_overlap": 100,
         "enable_reranker": true,
-        "reranker_top_k": 5
+        "reranker_top_k": 8
       },
       "reflection": {
         "enable_reflection": false

@@ -5,13 +5,20 @@ RAG 查询执行器，支持不同的检索策略和反思机制。
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Any
 
+from app.core.limits import BudgetExceeded
 from app.services.bailian import bailian_service
 from app.services.bm25_service import bm25_service
 from app.evaluation.config import EvaluationConfig
 from app.services.hybrid_search import hybrid_search_service
 from app.services.milvus_service import milvus_service
+from app.services.milvus_service import validate_document_id
+from app.services.reranker_service import reranker_service
+from app.evaluation.scope import normalize_owner_id
+
+logger = logging.getLogger(__name__)
 
 
 class RAGExecutor:
@@ -22,6 +29,8 @@ class RAGExecutor:
             *,
             query: str,
             config: EvaluationConfig,
+            owner_id: str,
+            allowed_document_ids: list[str],
             document_type: str | None = None,
     ) -> dict[str, Any]:
         """
@@ -36,10 +45,15 @@ class RAGExecutor:
         }
         """
 
+        owner_id = normalize_owner_id(owner_id)
+        for identifier in allowed_document_ids:
+            validate_document_id(identifier)
         # 第一步：检索
         contexts = await self._retrieve(
             query=query,
             config=config,
+            owner_id=owner_id,
+            allowed_document_ids=allowed_document_ids,
             document_type=document_type,
         )
 
@@ -80,34 +94,57 @@ class RAGExecutor:
             *,
             query: str,
             config: EvaluationConfig,
+            owner_id: str,
+            allowed_document_ids: list[str],
             document_type: str | None,
     ) -> list[str]:
         """根据配置执行检索。"""
 
         search_mode = config.search.search_mode
         top_k = config.search.top_k
+        if not allowed_document_ids:
+            return []
+        # Over-retrieve for ranking, but keep the candidate budget comparable
+        # across Dense/BM25/Hybrid experiments.
+        candidate_k = min(max(top_k * 2, 10), 20) if config.search.enable_reranker else top_k
 
         try:
             if search_mode == "dense":
                 results = await self._dense_search(
                     query=query,
+                    owner_id=owner_id,
+                    allowed_document_ids=allowed_document_ids,
                     document_type=document_type,
-                    top_k=top_k,
+                    top_k=candidate_k,
                 )
             elif search_mode == "bm25":
                 results = await bm25_service.search(
                     query=query,
+                    owner_id=owner_id,
+                    allowed_document_ids=allowed_document_ids,
                     document_type=document_type,
-                    top_k=top_k,
+                    top_k=candidate_k,
                 )
             elif search_mode == "hybrid":
                 results = await hybrid_search_service.search(
                     query=query,
+                    owner_id=owner_id,
+                    allowed_document_ids=allowed_document_ids,
                     document_type=document_type,
-                    top_k=top_k,
+                    top_k=candidate_k,
+                    enable_reranker=False,
+                    rrf_candidate_k=candidate_k,
                 )
             else:
-                results = []
+                raise ValueError(f"不支持的评测检索模式：{search_mode}")
+
+            if config.search.enable_reranker:
+                results = await reranker_service.rerank(
+                    query=query, results=results,
+                    top_k=min(top_k, config.search.reranker_top_k), enabled=True,
+                )
+            else:
+                results = results[:top_k]
 
             return [
                 result.get("content", "")
@@ -115,13 +152,20 @@ class RAGExecutor:
                 if result.get("content")
             ]
 
-        except Exception:
-            return []
+        except Exception as exc:
+            logger.warning(
+                "评测检索失败（mode=%s）：%s",
+                search_mode,
+                type(exc).__name__,
+            )
+            raise
 
     async def _dense_search(
             self,
             *,
             query: str,
+            owner_id: str,
+            allowed_document_ids: list[str],
             document_type: str | None,
             top_k: int,
     ) -> list[dict[str, Any]]:
@@ -131,6 +175,8 @@ class RAGExecutor:
 
         return await milvus_service.search(
             query_vector=query_vector,
+            owner_id=owner_id,
+            allowed_document_ids=allowed_document_ids,
             document_type=document_type,
             top_k=top_k,
         )
@@ -145,7 +191,7 @@ class RAGExecutor:
 
         context_text = "\n\n".join(
             f"[{i + 1}] {ctx}"
-            for i, ctx in enumerate(contexts[:5])
+            for i, ctx in enumerate(contexts)
         )
 
         prompt = f"""请基于以下检索到的上下文回答问题。
@@ -157,18 +203,12 @@ class RAGExecutor:
 
 请给出准确、简洁的答案。如果上下文中没有相关信息，请说明。"""
 
-        try:
-            return await bailian_service.chat(
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
-                ],
-                temperature=0.3,
-            )
-        except Exception as exc:
-            return f"生成答案时出错：{exc}"
+        # Let the runner record a failed case instead of scoring an error
+        # message as a successful model answer.
+        return await bailian_service.chat(
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+        )
 
     async def _reflect(
             self,
@@ -218,6 +258,8 @@ class RAGExecutor:
 
                 current_answer = improved_answer
 
+            except BudgetExceeded:
+                raise
             except Exception:
                 break
 
@@ -231,7 +273,7 @@ class RAGExecutor:
 
         return "\n\n".join(
             f"[{i + 1}] {ctx}"
-            for i, ctx in enumerate(contexts[:5])
+            for i, ctx in enumerate(contexts)
         )
 
     def _is_similar(

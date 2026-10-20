@@ -7,6 +7,7 @@ from __future__ import annotations
 import asyncio
 import anyio
 import json
+import logging
 import uuid
 from typing import Annotated, Any
 
@@ -30,6 +31,7 @@ from app.core.database import get_db, AsyncSessionLocal
 from app.services.document_service import document_service
 from app.services.hybrid_search import hybrid_search_service
 from app.services.milvus_service import milvus_service
+from app.services.sandbox_client import SandboxUnavailable
 from app.core.models import AgentRun, AnalysisResult, Document
 from app.core.schemas import (
     DocumentResponse,
@@ -39,6 +41,7 @@ from app.core.schemas import (
     RunResponse,
     SearchRequest,
     SearchResult,
+    UploadDocumentResponse,
 )
 from app.agents.workflow import (
     resume_match,
@@ -51,12 +54,35 @@ from app.agents.workflow import (
 
 from app.security.auth import CurrentUser, owned_record
 from app.core.config import settings
+from app.core.logging_setup import log_event
 
 router = APIRouter()
 DatabaseSession = Annotated[
     AsyncSession,
     Depends(get_db, scope="request"),
 ]
+logger = logging.getLogger(__name__)
+
+
+async def has_ready_document(
+        *,
+        session: AsyncSession,
+        owner_id: uuid.UUID,
+) -> bool:
+    """判断用户是否存在已就绪文档。
+
+    仅用于避免无意义的向量检索与模型调用；真正的数据隔离由
+    Milvus / BM25 的 owner_id 过滤完成，这里不再拉取全量 document_id。
+    """
+
+    document_id = (await session.execute(
+        select(Document.id).where(
+            Document.owner_id == owner_id,
+            Document.status == "ready",
+        ).limit(1)
+    )).scalar_one_or_none()
+
+    return document_id is not None
 
 
 # ----------------------------------------------------------------------
@@ -73,8 +99,45 @@ class MatchResumeRequest(BaseModel):
     human_feedback: str | None = Field(
         None,
         max_length=2000,
-        description="人工审核纠错意见 (若为空则表示确认无误直接继续)",
+        description="修改意见；为空表示人工接受当前报告，不代表 AI 已校验通过",
     )
+
+
+async def persist_match_outcome(session: AsyncSession, run: AgentRun, outcome: dict) -> None:
+    """Persist both automatic completion and repeated human-review pauses consistently."""
+    status = outcome["status"]
+    report = outcome.get("current_report")
+    if not report:
+        raise RuntimeError("工作流没有返回匹配报告")
+    if status not in ("paused", "completed"):
+        raise RuntimeError("工作流返回了无效的终态")
+    if status == "completed" and not (outcome.get("is_valid") or outcome.get("manual_accepted")):
+        raise RuntimeError("报告既未通过自动校验，也未经人工确认")
+    run.status = status
+    run.result_data = outcome if status == "paused" else report
+    run.input_data = {
+        **(run.input_data or {}),
+        "review_status": "needs_review" if status == "paused" else (
+            "manual_accepted" if outcome.get("manual_accepted") else "auto_passed"
+        ),
+    }
+    if status == "completed":
+        session.add(AnalysisResult(
+            run_id=run.id, resume_analysis=report.get("resume_analysis", {}),
+            job_analysis=report.get("job_analysis", {}), match_report=report,
+        ))
+    await session.commit()
+
+
+def match_sse_outcome(chunk: str) -> dict | None:
+    if not chunk.startswith(("event: complete\n", "event: interrupt\n")):
+        return None
+    payload = json.loads(next(line[5:].strip() for line in chunk.splitlines() if line.startswith("data:")))
+    return {
+        **payload,
+        "status": "paused" if chunk.startswith("event: interrupt") else "completed",
+        "current_report": payload.get("current_report") or payload.get("report"),
+    }
 
 
 # ----------------------------------------------------------------------
@@ -84,7 +147,7 @@ class MatchResumeRequest(BaseModel):
 
 @router.post(
     "/documents/upload",
-    response_model=DocumentResponse,
+    response_model=UploadDocumentResponse,
     tags=["文档"],
 )
 async def upload_document(
@@ -95,25 +158,63 @@ async def upload_document(
             str,
             Form(max_length=50),
         ] = "knowledge",
-) -> DocumentResponse:
-    """上传并向量化简历、JD 或知识文档。"""
+) -> UploadDocumentResponse:
+    """上传并向量化简历、JD 或知识文档。
+
+    按内容哈希（SHA-256）判重：同一份内容重复上传会直接复用既有记录，
+    不重复解析或向量化，响应中 deduplicated 为 True。
+    """
 
     try:
-        document = await document_service.upload_document(
+        document, deduplicated = await document_service.upload_document(
             owner_id=user.id,
             session=session,
             file=file,
             document_type=document_type,
         )
 
-        return DocumentResponse.model_validate(document)
+        if deduplicated:
+            log_event(
+                logger,
+                logging.INFO,
+                "上传命中已有文档（内容哈希相同），已跳过重复入库",
+                document_id=str(document.id),
+                document_type=document_type,
+            )
+
+        return UploadDocumentResponse(
+            document=DocumentResponse.model_validate(document),
+            deduplicated=deduplicated,
+        )
 
     except ValueError as exc:
         raise HTTPException(
             status_code=400,
             detail=str(exc),
         ) from exc
+    except SandboxUnavailable as exc:
+        # 前置条件没满足（沙箱未启动），属于服务不可用而非文档本身有问题。
+        # 503 + 明确指引，比笼统的 500 更容易让人立刻行动。
+        log_event(
+            logger,
+            logging.ERROR,
+            f"文档上传被拒：{exc}",
+            error=type(exc).__name__,
+        )
+        raise HTTPException(
+            status_code=503,
+            detail=str(exc),
+        ) from exc
     except Exception as exc:
+        # 诊断日志在此：前端只显示通用文案，没有日志就完全无法定位。
+        log_event(
+            logger,
+            logging.ERROR,
+            f"文档上传处理失败：{type(exc).__name__}: {exc}",
+            error=type(exc).__name__,
+            document_type=document_type,
+        )
+        logger.debug("文档上传异常堆栈", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="文档处理失败，请稍后重试",
@@ -183,24 +284,23 @@ async def search_knowledge(
 ) -> list[SearchResult]:
     """使用 text-embedding-v3 和 Milvus 检索知识库。"""
 
-    allowed_ids = list(map(str, (await session.execute(select(Document.id).where(
-        Document.owner_id == user.id, Document.status == "ready"
-    ))).scalars().all()))
-    if not allowed_ids:
+    owner_id = str(user.id)
+
+    if not await has_ready_document(session=session, owner_id=user.id):
         return []
     try:
         query_vector = await bailian_service.embed_query(request.query)
 
         results = await milvus_service.search(
             query_vector=query_vector,
+            owner_id=owner_id,
             document_type=request.document_type,
             top_k=request.top_k,
-            allowed_document_ids=allowed_ids,
         )
 
         return [
             SearchResult.model_validate(item)
-            for item in results if str(item["document_id"]) in allowed_ids
+            for item in results
         ]
 
     except ValueError as exc:
@@ -227,27 +327,29 @@ async def search_knowledge_with_bm25(
 ) -> list[SearchResult]:
     """使用 BM25 进行关键词检索。"""
 
-    allowed_ids = list(map(str, (await session.execute(select(Document.id).where(
-        Document.owner_id == user.id, Document.status == "ready"
-    ))).scalars().all()))
-    if not allowed_ids:
+    owner_id = str(user.id)
+
+    if not await has_ready_document(session=session, owner_id=user.id):
         return []
     try:
         results = await bm25_service.search(
             query=request.query,
+            owner_id=owner_id,
             document_type=request.document_type,
             top_k=request.top_k,
-            allowed_document_ids=allowed_ids,
         )
 
         return [
             SearchResult.model_validate(item)
-            for item in results if str(item["document_id"]) in allowed_ids
+            for item in results
         ]
 
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
     except Exception as exc:
-        if not isinstance(exc, Exception):
-            raise
         raise HTTPException(
             status_code=500,
             detail="操作失败，请稍后重试",
@@ -266,22 +368,21 @@ async def search_knowledge_hybrid(
 ) -> list[SearchResult]:
     """执行 Dense、BM25、RRF 和 BGE 重排。"""
 
-    allowed_ids = list(map(str, (await session.execute(select(Document.id).where(
-        Document.owner_id == user.id, Document.status == "ready"
-    ))).scalars().all()))
-    if not allowed_ids:
+    owner_id = str(user.id)
+
+    if not await has_ready_document(session=session, owner_id=user.id):
         return []
     try:
         results = await hybrid_search_service.search(
             query=request.query,
+            owner_id=owner_id,
             document_type=request.document_type,
             top_k=request.top_k,
-            allowed_document_ids=allowed_ids,
         )
 
         return [
             SearchResult.model_validate(item)
-            for item in results if str(item["document_id"]) in allowed_ids
+            for item in results
         ]
 
     except ValueError as exc:
@@ -290,8 +391,6 @@ async def search_knowledge_hybrid(
             detail=str(exc),
         ) from exc
     except Exception as exc:
-        if not isinstance(exc, Exception):
-            raise
         raise HTTPException(
             status_code=500,
             detail="操作失败，请稍后重试",
@@ -313,7 +412,7 @@ async def match_resume(
         request: MatchRequest,
         session: DatabaseSession,
 ) -> RunResponse:
-    """分析简历与岗位描述（同步执行到中断点 verify_agent 前暂停）。"""
+    """自动分析并校验；仅未通过校验时暂停人工审核。"""
 
     resume_text = await get_document_text(
         owner_id=user.id,
@@ -342,6 +441,7 @@ async def match_resume(
                 else None
             ),
             "jd_input_type": "text" if request.jd_text else "document",
+            "research_approved": request.research_approved,
         },
     )
 
@@ -352,11 +452,10 @@ async def match_resume(
             jd_text=jd_text,
             owner_id=str(user.id),
             thread_id=str(run.id),
+            research_approved=request.research_approved,
         )
 
-        run.status = match_result.get("status", "paused")
-        run.result_data = match_result
-        await session.commit()
+        await persist_match_outcome(session, run, match_result)
 
         return to_run_response(run)
 
@@ -403,24 +502,12 @@ async def resume_match_endpoint(
 
     created_run_id = run.id
     try:
-        report = await resume_match(
+        outcome = await resume_match(
             thread_id=str(run.id),
             owner_id=str(user.id),
             human_feedback=request.human_feedback,
         )
-        result = report.model_dump(mode="json")
-
-        analysis = AnalysisResult(
-            run_id=run.id,
-            resume_analysis=result.get("resume_analysis", {}),
-            job_analysis=result.get("job_analysis", {}),
-            match_report=result,
-        )
-
-        run.status = "completed"
-        run.result_data = result
-        session.add(analysis)
-        await session.commit()
+        await persist_match_outcome(session, run, outcome)
 
         return to_run_response(run)
 
@@ -480,6 +567,7 @@ async def match_resume_stream(
                 else None
             ),
             "jd_input_type": "text" if request.jd_text else "document",
+            "research_approved": request.research_approved,
         },
     )
 
@@ -501,44 +589,11 @@ async def match_resume_stream(
                     jd_text=jd_text,
                     owner_id=str(user.id),
                     thread_id=str(run.id),
+                    research_approved=request.research_approved,
             ):
-                if sse_chunk.startswith("event: interrupt"):
-                    run.status = "paused"
-                    # 挂起时刻同时落库初步报告，历史记录载入时才能回看初评结果。
-                    try:
-                        for line in sse_chunk.split("\n"):
-                            if line.startswith("data:"):
-                                payload = json.loads(line[5:].strip())
-                                run.result_data = {
-                                    "status": "paused",
-                                    "current_report": payload.get("current_report"),
-                                }
-                                break
-                    except Exception:
-                        pass
-                    await session.commit()
-
-                elif sse_chunk.startswith("event: complete"):
-                    try:
-                        for line in sse_chunk.split("\n"):
-                            if line.startswith("data:"):
-                                payload = json.loads(line[5:].strip())
-                                final_report_result = payload.get("report")
-
-                                if final_report_result:
-                                    analysis = AnalysisResult(
-                                        run_id=run.id,
-                                        resume_analysis=final_report_result.get("resume_analysis", {}),
-                                        job_analysis=final_report_result.get("job_analysis", {}),
-                                        match_report=final_report_result,
-                                    )
-                                    run.status = "completed"
-                                    run.result_data = final_report_result
-                                    session.add(analysis)
-                                    await session.commit()
-                                break
-                    except Exception:
-                        raise RuntimeError("报告保存失败")
+                outcome = match_sse_outcome(sse_chunk)
+                if outcome is not None:
+                    await persist_match_outcome(session, run, outcome)
 
                 yield sse_chunk
 
@@ -595,46 +650,22 @@ async def resume_match_stream_endpoint(
     stream_run_id = run.id
 
     async def sse_event_generator():
-        # 🌟 修复关键：定义一个本地 flag 以避免在 session.commit() 后直接读取 run.status 引发 MissingGreenlet 异常
-        is_successfully_completed = False
-
+        is_settled = False
         try:
             async for sse_chunk in resume_match_stream(
-                    thread_id=str(run.id),
-                    owner_id=str(user.id),
+                    thread_id=str(run.id), owner_id=str(user.id),
                     human_feedback=request.human_feedback,
             ):
-                if sse_chunk.startswith("event: complete"):
-                    try:
-                        for line in sse_chunk.split("\n"):
-                            if line.startswith("data:"):
-                                payload = json.loads(line[5:].strip())
-                                final_report_result = payload.get("report")
-
-                                if final_report_result:
-                                    analysis = AnalysisResult(
-                                        run_id=run.id,
-                                        resume_analysis=final_report_result.get("resume_analysis", {}),
-                                        job_analysis=final_report_result.get("job_analysis", {}),
-                                        match_report=final_report_result,
-                                    )
-                                    run.status = "completed"
-                                    run.result_data = final_report_result
-                                    session.add(analysis)
-                                    await session.commit()
-                                    is_successfully_completed = True
-                                break
-                    except Exception:
-                        raise RuntimeError("报告保存失败")
-
+                outcome = match_sse_outcome(sse_chunk)
+                if outcome is not None:
+                    await persist_match_outcome(session, run, outcome)
+                    is_settled = True
                 yield sse_chunk
 
-            # 🌟 使用本地 flag 作为判断，彻底避免隐式 Lazy-Loading
-            if not is_successfully_completed:
+            if not is_settled:
                 await mark_run_failed(
-                    session=session,
-                    run_id=target_run_id,  # 直接使用目标 ID 避免再次访问 run 属性
-                    error=Exception("恢复执行后未产出最终报告"),
+                    session=session, run_id=target_run_id,
+                    error=Exception("恢复执行后未返回报告或人工审核状态"),
                 )
 
         except Exception as exc:

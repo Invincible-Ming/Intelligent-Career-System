@@ -1,0 +1,51 @@
+[project]
+name = "intelligent-career-system-backend"
+version = "1.0.0"
+description = "智能求职 Multi-Agent 系统后端"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+# 收集阶段即导入整个 app 包；缺可选中间件客户端时给出明确跳过原因，
+# 而不是让 8 个测试文件一起报 ModuleNotFoundError。
+addopts = "-ra --strict-markers"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+exclude = [
+    ".local",
+    "__pycache__",
+    "models",
+    "evaluation_reports",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "UP",   # pyupgrade
+    "ASYNC",# flake8-async
+    "S",    # bandit
+]
+ignore = [
+    "E501",    # 行宽由 formatter 控制
+    "B008",    # FastAPI Depends() 惯用法
+    "S101",    # 测试中允许 assert
+    "UP038",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S", "ASYNC", "E402"]
+"deploy/*" = ["S", "ASYNC", "E402"]
+"scripts/*" = ["S", "ASYNC"]
+
+[tool.ruff.lint.flake8-async]
+# asyncio.to_thread 属于受控的线程池卸载，不视为阻塞调用。
+strict = false

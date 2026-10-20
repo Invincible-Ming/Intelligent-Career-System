@@ -4,18 +4,19 @@ RAG 评测命令行工具。
 
 用法：
     # 快速评测（使用默认配置）
-    python -m app.evaluation.cli quick
+    python -m app.evaluation.cli quick --owner-id <用户UUID>
 
     # 完整评测（多配置对比）
-    python -m app.evaluation.cli full
+    python -m app.evaluation.cli full --owner-id <用户UUID>
 
     # 自定义评测
-    python -m app.evaluation.cli custom --config config.json
+    python -m app.evaluation.cli custom --config config.json --owner-id <用户UUID>
 """
 
 import argparse
 import asyncio
 import sys
+import uuid
 
 from app.evaluation.config import (
     EvaluationConfig,
@@ -24,6 +25,12 @@ from app.evaluation.config import (
     SearchConfig,
 )
 from app.evaluation.runner import EvaluationRunner
+from app.evaluation.metrics import ragas_metrics
+from app.core.database import close_database
+from app.services.bailian import bailian_service
+from app.services.bm25_service import bm25_service
+from app.services.milvus_service import milvus_service
+from app.services.redis_pool import close_pool
 
 
 def create_quick_experiment() -> ExperimentConfig:
@@ -76,6 +83,7 @@ def create_full_experiment() -> ExperimentConfig:
             name="top_k_10",
             search=SearchConfig(
                 top_k=10,
+                reranker_top_k=10,
                 search_mode="hybrid",
                 chunk_size=800,
                 chunk_overlap=100,
@@ -112,32 +120,9 @@ def create_full_experiment() -> ExperimentConfig:
                 enable_reflection=False,
             ),
         ),
-        # Chunk Size 对比
         EvaluationConfig(
-            name="chunk_400",
-            search=SearchConfig(
-                top_k=5,
-                search_mode="hybrid",
-                chunk_size=400,
-                chunk_overlap=50,
-                enable_reranker=True,
-            ),
-            reflection=ReflectionConfig(
-                enable_reflection=False,
-            ),
-        ),
-        EvaluationConfig(
-            name="chunk_1200",
-            search=SearchConfig(
-                top_k=5,
-                search_mode="hybrid",
-                chunk_size=1200,
-                chunk_overlap=150,
-                enable_reranker=True,
-            ),
-            reflection=ReflectionConfig(
-                enable_reflection=False,
-            ),
+            name="without_reranker",
+            search=SearchConfig(enable_reranker=False),
         ),
         # Reflection 对比
         EvaluationConfig(
@@ -168,6 +153,8 @@ def create_full_experiment() -> ExperimentConfig:
 
 async def run_evaluation(
         experiment_config: ExperimentConfig,
+        *,
+        owner_id: str,
 ) -> None:
     """运行评测。"""
 
@@ -175,9 +162,15 @@ async def run_evaluation(
     print(f"🚀 开始评测：{experiment_config.experiment_name}")
     print(f"{'=' * 80}\n")
 
-    runner = EvaluationRunner(experiment_config)
+    runner = EvaluationRunner(experiment_config, owner_id=owner_id)
 
     try:
+        ragas_metrics.ensure_available()
+        # CLI runs in its own process, outside FastAPI's startup lifecycle.
+        # Populate only this owner's BM25 corpus before evaluating it.
+        await milvus_service.initialize()
+        rows = await milvus_service.list_chunks(owner_id=runner.owner_id)
+        await bm25_service.rebuild(rows)
         report_data = await runner.run()
 
         # 生成 HTML 报告
@@ -205,6 +198,11 @@ async def run_evaluation(
 
         traceback.print_exc()
         sys.exit(1)
+    finally:
+        await bailian_service.close()
+        await milvus_service.close()
+        await close_pool()
+        await close_database()
 
 
 def main():
@@ -220,13 +218,13 @@ def main():
     )
 
     # quick 命令
-    subparsers.add_parser(
+    quick_parser = subparsers.add_parser(
         "quick",
         help="快速评测（仅 baseline）",
     )
 
     # full 命令
-    subparsers.add_parser(
+    full_parser = subparsers.add_parser(
         "full",
         help="完整评测（多配置对比）",
     )
@@ -242,6 +240,12 @@ def main():
         required=True,
         help="实验配置 JSON 文件路径",
     )
+
+    for command_parser in (quick_parser, full_parser, custom_parser):
+        command_parser.add_argument(
+            "--owner-id", type=uuid.UUID, required=True,
+            help="只评测此用户 UUID 名下的就绪文档；不支持全用户检索",
+        )
 
     args = parser.parse_args()
 
@@ -269,7 +273,7 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    asyncio.run(run_evaluation(experiment))
+    asyncio.run(run_evaluation(experiment, owner_id=str(args.owner_id)))
 
 
 if __name__ == "__main__":

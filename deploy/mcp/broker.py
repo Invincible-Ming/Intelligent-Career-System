@@ -72,8 +72,10 @@ def fetch_search(query, count):
     html = None
     for address in addresses:
         connection = http.client.HTTPSConnection(SEARCH_HOST, timeout=15, context=ssl.create_default_context())
-        connection._create_connection = lambda destination, timeout, source_address=None,
-                                               ip=address: socket.create_connection((ip, 443), timeout)
+        # 绑定当前重试的 IP：TLS 仍用 SEARCH_HOST 校验，底层连接走指定地址。
+        connection._create_connection = (
+            lambda destination, timeout, source_address=None, ip=address: socket.create_connection((ip, 443), timeout)
+        )
         try:
             connection.request("GET", "/search?" + urlencode({"q": query, "count": count}),
                                headers={"User-Agent": "Mozilla/5.0", "Accept": "text/html",

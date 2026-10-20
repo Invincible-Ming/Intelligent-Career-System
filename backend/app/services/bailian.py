@@ -22,6 +22,7 @@ from pydantic import BaseModel, ValidationError
 
 from app.core.config import settings
 from app.core.limits import charge_model_call, validate_model_input, BudgetExceeded, model_request_timeout
+from app.services.embed_cache import embed_cache
 
 SchemaType = TypeVar(
     "SchemaType",
@@ -78,6 +79,7 @@ class BailianService:
             max_output_tokens: int | None = None,
             model: str | None = None,
             reasoning_effort: str | None = None,
+            max_retries: int | None = None,
     ) -> str:
         """调用百炼聊天模型。"""
 
@@ -99,6 +101,7 @@ class BailianService:
             request_params["reasoning_effort"] = reasoning_effort
 
         response = await self._chat_retry(
+            retry_limit=max_retries,
             **request_params
         )
 
@@ -219,13 +222,18 @@ class BailianService:
             user_prompt: str,
             response_model: type[SchemaType],
             reasoning_effort: str | None = None,
+            max_output_tokens: int | None = None,
+            schema_attempts: int = 2,
+            max_retries: int | None = None,
     ) -> SchemaType:
         """
         调用聊天模型并将返回的 JSON 转换为 Pydantic 模型。
 
-        如果第一次输出不符合 Schema，会要求模型修正一次。
+        默认允许一次 Schema 修正；成本敏感调用可设 schema_attempts=1。
         """
 
+        if not 1 <= schema_attempts <= 2:
+            raise ValueError("schema_attempts 必须为 1 或 2")
         schema = json.dumps(
             response_model.model_json_schema(),
             ensure_ascii=False,
@@ -247,10 +255,12 @@ class BailianService:
             },
         ]
 
-        for attempt in range(2):
+        for attempt in range(schema_attempts):
             content = await self.chat(
                 messages,
                 json_mode=True,
+                max_output_tokens=max_output_tokens,
+                max_retries=max_retries,
                 **({"reasoning_effort": reasoning_effort} if reasoning_effort is not None else {}),
             )
 
@@ -260,7 +270,7 @@ class BailianService:
                     clean_json(content)
                 )
             except ValidationError as exc:
-                if attempt == 1:
+                if attempt == schema_attempts - 1:
                     raise RuntimeError(
                         "模型结构化输出校验失败："
                         f"{exc}"
@@ -296,6 +306,8 @@ class BailianService:
 
         DashScope SDK 是同步接口，因此通过 asyncio.to_thread
         调用，避免阻塞 FastAPI 事件循环。
+
+        命中 Embedding 缓存时不调用模型，也不计模型调用次数。
         """
 
         cleaned_texts = [
@@ -312,9 +324,22 @@ class BailianService:
                 "未配置 DASHSCOPE_API_KEY"
             )
 
-        validate_model_input([{"content": text} for text in cleaned_texts])
+        cached = await embed_cache.lookup(cleaned_texts)
+        pending = [
+            text for text in cleaned_texts
+            if text not in cached
+        ]
+
+        if not pending:
+            return [cached[text] for text in cleaned_texts]
+
+        # 去重后调用：DashScope 按 text_index 顺序返回，
+        # 同一文本重复传入会导致索引与输入的对应关系不明确。
+        unique_pending = list(dict.fromkeys(pending))
+
+        validate_model_input([{"content": text} for text in unique_pending])
         response = await self._embedding_retry(
-            cleaned_texts
+            unique_pending
         )
 
         output = response.output or {}
@@ -342,10 +367,10 @@ class BailianService:
             for item in embedding_items
         ]
 
-        if len(vectors) != len(cleaned_texts):
+        if len(vectors) != len(unique_pending):
             raise RuntimeError(
                 "Embedding 返回数量与输入数量不一致："
-                f"输入 {len(cleaned_texts)} 条，"
+                f"输入 {len(unique_pending)} 条，"
                 f"返回 {len(vectors)} 条"
             )
 
@@ -362,7 +387,13 @@ class BailianService:
                     f"实际返回 {actual_dimension}"
                 )
 
-        return vectors
+        await embed_cache.store(unique_pending, vectors)
+
+        fresh = dict(zip(unique_pending, vectors, strict=True))
+        for text, vector in fresh.items():
+            cached.setdefault(text, vector)
+
+        return [cached[text] for text in cleaned_texts]
 
     async def embed_query(
             self,
@@ -382,6 +413,7 @@ class BailianService:
 
     async def _chat_retry(
             self,
+            retry_limit: int | None = None,
             **request_params: Any,
     ) -> Any:
         """聊天模型失败后进行简单重试。"""
@@ -389,9 +421,12 @@ class BailianService:
         request_params.setdefault("max_tokens", settings.MODEL_MAX_OUTPUT_TOKENS)
         validate_model_input(request_params["messages"])
         last_error: Exception | None = None
+        retry_limit = settings.MODEL_MAX_RETRIES if retry_limit is None else retry_limit
+        if retry_limit < 0:
+            raise ValueError("max_retries 不能为负数")
 
         for attempt in range(
-                settings.MODEL_MAX_RETRIES + 1
+                retry_limit + 1
         ):
             charge_model_call()
             try:
@@ -411,7 +446,7 @@ class BailianService:
 
                 status = getattr(exc, "status_code", None)
                 if (
-                        status is not None and 400 <= status < 500 and status != 429) or attempt >= settings.MODEL_MAX_RETRIES:
+                        status is not None and 400 <= status < 500 and status != 429) or attempt >= retry_limit:
                     break
 
                 await asyncio.sleep(2 ** attempt)
