@@ -216,8 +216,8 @@ class RerankerService:
         if torch.backends.mps.is_available():
             try:
                 torch.mps.empty_cache()
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug("MPS 缓存清理失败（%s）", type(exc).__name__)
 
         async with self._load_lock:
             if self.model is None:
@@ -236,8 +236,8 @@ class RerankerService:
         if torch.backends.mps.is_available():
             try:
                 torch.mps.empty_cache()
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug("MPS 缓存清理失败（%s）", type(exc).__name__)
 
 
 reranker_service = RerankerService()

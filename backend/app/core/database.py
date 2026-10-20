@@ -4,6 +4,7 @@ PostgreSQL 异步连接配置与状态检查点池。
 
 import logging
 from collections.abc import AsyncGenerator
+
 from psycopg_pool import AsyncConnectionPool
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -94,8 +95,9 @@ async def init_database() -> None:
             await connection.execute(
                 text(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS owner_id UUID REFERENCES users(id)"))
             await connection.execute(text(f"CREATE INDEX IF NOT EXISTS ix_{table}_owner_id ON {table}(owner_id)"))
-            has_legacy = (
-                await connection.execute(text(f"SELECT EXISTS(SELECT 1 FROM {table} WHERE owner_id IS NULL)"))).scalar()
+            # table 仅来自上面的三个固定表名，不接收请求输入。
+            legacy_query = f"SELECT EXISTS(SELECT 1 FROM {table} WHERE owner_id IS NULL)"  # noqa: S608
+            has_legacy = (await connection.execute(text(legacy_query))).scalar()
             if not has_legacy:
                 await connection.execute(text(f"ALTER TABLE {table} ALTER COLUMN owner_id SET NOT NULL"))
         await connection.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS context_summary TEXT"))

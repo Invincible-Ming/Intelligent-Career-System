@@ -1,7 +1,7 @@
 """Generate local Redis credentials without printing them; reruns preserve them."""
-from pathlib import Path
 import re
 import secrets
+from pathlib import Path
 
 root = Path(__file__).resolve().parents[2]
 local = root / "deploy" / ".local"

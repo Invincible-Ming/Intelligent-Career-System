@@ -9,12 +9,12 @@ import hashlib
 import re
 from typing import Any
 
+from app.core.config import settings
 from app.services.bailian import bailian_service
 from app.services.bm25_service import bm25_service
-from app.core.config import settings
+from app.services.chunk_context import enrich_results
 from app.services.milvus_service import milvus_service
 from app.services.reranker_service import reranker_service
-from app.services.chunk_context import enrich_results
 
 
 class HybridSearchService:
@@ -232,7 +232,7 @@ def build_result_key(
     raw_key = f"{document_id}\n{content}"
 
     return hashlib.sha1(
-        raw_key.encode("utf-8")
+        raw_key.encode("utf-8"), usedforsecurity=False,
     ).hexdigest()
 
 

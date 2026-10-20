@@ -9,7 +9,6 @@
 这些用例需要 redis / dashscope / openai / langchain_core 等完整依赖，
 缺任一项时由 conftest 在收集阶段跳过本文件。
 """
-import asyncio
 import unittest
 import uuid
 from unittest.mock import patch

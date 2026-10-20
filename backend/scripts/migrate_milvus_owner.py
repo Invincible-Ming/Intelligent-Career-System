@@ -37,13 +37,11 @@ os.chdir(BACKEND)
 from sqlalchemy import select
 
 from app.core.config import settings
-from app.core.database import AsyncSessionLocal, close_database, engine, init_database
+from app.core.database import AsyncSessionLocal, close_database, init_database
 from app.core.models import Document, DocumentParse
 from app.services.bailian import bailian_service
 from app.services.milvus_service import (
     milvus_service,
-    validate_document_id,
-    validate_document_type,
 )
 
 BACKUP_SUFFIX = "_backup_"
@@ -85,7 +83,7 @@ async def collect_documents() -> tuple[list[dict], list[str]]:
 async def embed_all(documents: list[dict], *, dry_run: bool) -> None:
     """按文档重新切块并向量化写入新 Collection。"""
 
-    from app.services.document_pipeline import build_chunks, Block
+    from app.services.document_pipeline import Block, build_chunks
 
     total_chunks = 0
     started = time.monotonic()

@@ -4,19 +4,17 @@ RAG 查询执行器，支持不同的检索策略和反思机制。
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
 from app.core.limits import BudgetExceeded
+from app.evaluation.config import EvaluationConfig
+from app.evaluation.scope import normalize_owner_id
 from app.services.bailian import bailian_service
 from app.services.bm25_service import bm25_service
-from app.evaluation.config import EvaluationConfig
 from app.services.hybrid_search import hybrid_search_service
-from app.services.milvus_service import milvus_service
-from app.services.milvus_service import validate_document_id
+from app.services.milvus_service import milvus_service, validate_document_id
 from app.services.reranker_service import reranker_service
-from app.evaluation.scope import normalize_owner_id
 
 logger = logging.getLogger(__name__)
 
@@ -226,8 +224,10 @@ class RAGExecutor:
         reflection_config = config.reflection
         max_iterations = reflection_config.max_iterations
         current_answer = answer
+        completed_iterations = 0
 
-        for iteration in range(max_iterations):
+        for _ in range(max_iterations):
+            completed_iterations += 1
             # 让模型反思
             reflection_prompt = f"""
 {reflection_config.reflection_prompt}
@@ -263,7 +263,7 @@ class RAGExecutor:
             except Exception:
                 break
 
-        return current_answer, iteration + 1
+        return current_answer, completed_iterations
 
     def _format_contexts(
             self,

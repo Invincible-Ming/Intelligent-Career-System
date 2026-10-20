@@ -1,4 +1,5 @@
 """Security boundaries; no cloud model or running database required."""
+
 import asyncio
 import hashlib
 import os
@@ -13,24 +14,39 @@ from unittest.mock import AsyncMock, patch
 
 MCP_DIR = Path(__file__).resolve().parents[2] / "deploy/mcp"
 sys.path.insert(0, str(MCP_DIR))
-from policy import MAX_FILE_BYTES, public_address, read_workspace_file, result_url, validate_query
-from db_guard import check_identity
 from broker import SearchResults
-from app.services.mcp_tools import MCPService, docker_connection, runner_connection
-from app.services.mcp_container_config import DOCKER_ENV
+from db_guard import check_identity
+from policy import MAX_FILE_BYTES, public_address, read_workspace_file, result_url, validate_query
+
+from app.services.mcp_container_config import DOCKER_ENV, docker_connection
+from app.services.mcp_tools import MCPService, runner_connection
 
 
 class NetworkPolicyTests(unittest.TestCase):
     def test_search_parses_evidence_and_drops_local_links(self):
         parser = SearchResults()
-        parser.feed('<li class="b_algo"><h2><a href="https://example.com">Python 岗位</a></h2><p>技能要求</p></li>'
-                    '<li class="b_algo"><h2><a href="http://127.0.0.1">恶意链接</a></h2><p>内容</p></li>')
-        self.assertEqual(parser.results,
-                         [{"title": "Python 岗位", "snippet": "技能要求", "url": "https://example.com"}])
+        parser.feed(
+            '<li class="b_algo"><h2><a href="https://example.com">Python 岗位</a></h2><p>技能要求</p></li>'
+            '<li class="b_algo"><h2><a href="http://127.0.0.1">恶意链接</a></h2><p>内容</p></li>'
+        )
+        self.assertEqual(
+            parser.results, [{"title": "Python 岗位", "snippet": "技能要求", "url": "https://example.com"}]
+        )
 
     def test_nonpublic_addresses_denied(self):
-        for address in ("127.0.0.1", "10.1.2.3", "172.16.0.1", "192.168.1.1", "169.254.169.254",
-                        "0.0.0.0", "100.64.0.1", "192.0.2.1", "224.0.0.1", "::1", "::ffff:127.0.0.1"):
+        for address in (
+            "127.0.0.1",
+            "10.1.2.3",
+            "172.16.0.1",
+            "192.168.1.1",
+            "169.254.169.254",
+            "0.0.0.0",
+            "100.64.0.1",
+            "192.0.2.1",
+            "224.0.0.1",
+            "::1",
+            "::ffff:127.0.0.1",
+        ):
             self.assertFalse(public_address(address), address)
         self.assertTrue(public_address("8.8.8.8"))
 
@@ -41,9 +57,16 @@ class NetworkPolicyTests(unittest.TestCase):
                 validate_query(query, count)
 
     def test_citation_urls_do_not_accept_local_targets(self):
-        for url in ("file:///etc/passwd", "javascript:alert(1)", "http://localhost", "http://host.docker.internal",
-                    "http://127.0.0.1", "http://169.254.169.254", "http://user:password@example.com",
-                    "http://example.com:5432"):
+        for url in (
+            "file:///etc/passwd",
+            "javascript:alert(1)",
+            "http://localhost",
+            "http://host.docker.internal",
+            "http://127.0.0.1",
+            "http://169.254.169.254",
+            "http://user:password@example.com",
+            "http://example.com:5432",
+        ):
             self.assertIsNone(result_url(url), url)
         self.assertEqual(result_url("https://example.com/jobs"), "https://example.com/jobs")
 
@@ -81,15 +104,18 @@ class CapabilityTests(unittest.TestCase):
     def test_research_never_gets_files_or_database(self):
         service = MCPService()
         search = SimpleNamespace(name="search_web")
-        service.tools_by_service = {"search": [search], "filesystem": [SimpleNamespace(name="read_text_file")],
-                                    "postgres": [SimpleNamespace(name="read_statistics")]}
+        service.tools_by_service = {
+            "search": [search],
+            "filesystem": [SimpleNamespace(name="read_text_file")],
+            "postgres": [SimpleNamespace(name="read_statistics")],
+        }
         self.assertEqual(service.get_tools(), [search])
         self.assertEqual(service.get_tools("search"), [search])
         with self.assertRaises(ValueError):
             service.get_tools("all")
 
-    def test_search_and_files_have_no_network_or_host_secrets(self):
-        for mode in ("search", "filesystem"):
+    def test_search_has_no_network_or_host_secrets(self):
+        for mode in ("search",):
             connection = docker_connection(mode)
             args = connection["args"]
             self.assertEqual(connection["command"], "docker")
@@ -103,7 +129,7 @@ class CapabilityTests(unittest.TestCase):
 
     def test_backend_mcp_transport_only_connects_to_runner(self):
         owner, run = uuid.uuid4(), uuid.uuid4()
-        for mode in ("search", "filesystem", "postgres"):
+        for mode in ("search",):
             connection = runner_connection(mode)
             self.assertEqual(connection["command"], sys.executable)
             self.assertTrue(connection["args"][0].endswith("deploy/sandbox/mcp_bridge.py"))
@@ -114,21 +140,38 @@ class CapabilityTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             runner_connection("filesystem", owner_id=str(owner), run_id=str(run))
 
+    def test_removed_capabilities_are_rejected(self):
+        for mode in ("filesystem", "postgres", "all", "shell"):
+            with self.subTest(mode=mode):
+                for connection in (docker_connection, runner_connection):
+                    with self.assertRaises(ValueError):
+                        connection(mode)
+                with self.assertRaises(ValueError):
+                    MCPService().get_tools(mode)
+
     def test_runner_container_config_does_not_load_backend_secrets(self):
-        result = subprocess.run([sys.executable, "-c",
-                                 "import sys; import app.services.mcp_container_config; "
-                                 "assert 'app.core.config' not in sys.modules"],
-                                cwd=Path(__file__).resolve().parents[1], capture_output=True)
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "import sys; import app.services.mcp_container_config; " "assert 'app.core.config' not in sys.modules",
+            ],
+            cwd=Path(__file__).resolve().parents[1],
+            capture_output=True,
+        )
         self.assertEqual(result.returncode, 0, result.stderr.decode(errors="replace"))
-        self.assertTrue(set(DOCKER_ENV) <= {"PATH", "HOME", "DOCKER_HOST", "DOCKER_CONTEXT",
-                                            "DOCKER_CONFIG", "XDG_RUNTIME_DIR"})
+        self.assertTrue(
+            set(DOCKER_ENV) <= {"PATH", "HOME", "DOCKER_HOST", "DOCKER_CONTEXT", "DOCKER_CONFIG", "XDG_RUNTIME_DIR"}
+        )
 
     def test_unexpected_tool_inventory_fails_closed(self):
         client = SimpleNamespace(get_tools=AsyncMock(return_value=[SimpleNamespace(name="execute_shell")]))
         service = MCPService()
-        with patch("app.services.mcp_tools.MultiServerMCPClient", return_value=client), patch(
-                "app.services.mcp_tools.settings.MCP_FILES_ENABLED", False), patch(
-                "app.services.mcp_tools.settings.MCP_DATABASE_ENABLED", False):
+        with (
+            patch("app.services.mcp_tools.MultiServerMCPClient", return_value=client),
+            patch("app.services.mcp_tools.settings.MCP_ENABLED", True),
+            patch("app.services.mcp_tools.settings.BAIDU_MAP_MCP_URL", ""),
+        ):
             asyncio.run(service.initialize())
         self.assertEqual(service.get_tools(), [])
         self.assertTrue(service.startup_errors)
@@ -146,8 +189,14 @@ class CapabilityTests(unittest.TestCase):
 
 class DatabasePolicyTests(unittest.TestCase):
     def test_privileged_identity_and_inherited_access_denied(self):
-        role = dict(rolname="career_mcp_reader", rolsuper=False, rolcreaterole=False, rolcreatedb=False,
-                    rolreplication=False, rolbypassrls=False)
+        role = dict(
+            rolname="career_mcp_reader",
+            rolsuper=False,
+            rolcreaterole=False,
+            rolcreatedb=False,
+            rolreplication=False,
+            rolbypassrls=False,
+        )
         access = dict(extra_access=False, membership=False, schema_create=False, database_create=False)
         check_identity(role, access, "on")
         for key in access:

@@ -20,7 +20,7 @@ class SearchConfig(BaseModel):
     reranker_top_k: int = Field(default=5, ge=1, le=10)
 
     @model_validator(mode="after")
-    def valid_chunk_overlap(self) -> "SearchConfig":
+    def valid_chunk_overlap(self) -> SearchConfig:
         if self.chunk_overlap >= self.chunk_size:
             raise ValueError("chunk_overlap 必须小于 chunk_size")
         return self
@@ -74,7 +74,7 @@ class ExperimentConfig(BaseModel):
     )
 
     @model_validator(mode="after")
-    def unique_config_names(self) -> "ExperimentConfig":
+    def unique_config_names(self) -> ExperimentConfig:
         names = [self.baseline.name, *(item.name for item in self.variants)]
         if len(set(names)) != len(names):
             raise ValueError("基线和变体的配置名称必须唯一")

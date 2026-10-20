@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import logging
 import mimetypes
 import re
 import traceback
@@ -14,21 +15,32 @@ from datetime import datetime
 from pathlib import Path
 
 from fastapi import UploadFile
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.services.bm25_service import bm25_service
-from app.services.bailian import bailian_service
 from app.core.config import settings
+from app.core.models import Document, DocumentParse
+from app.services.bailian import bailian_service
+from app.services.bm25_service import bm25_service
+from app.services.document_pipeline import PIPELINE_VERSION, Block, build_chunks, serialize_blocks
 from app.services.milvus_service import (
     DOCUMENT_TYPES,
     milvus_service,
 )
 from app.services.minio_service import minio_service
-from app.core.models import Document, DocumentParse
-from app.services.document_pipeline import PIPELINE_VERSION, Block, build_chunks, serialize_blocks
 from app.services.sandbox_client import SandboxUnavailable, parse_document
+
+logger = logging.getLogger(__name__)
+
+
+def record_upload_error(document_id: uuid.UUID, trace: str) -> None:
+    """Write diagnostic files in a worker thread, not the request event loop."""
+    log_path = Path(".local/upload_errors.log")
+    log_path.parent.mkdir(mode=0o700, exist_ok=True)
+    with log_path.open("a", encoding="utf-8") as log_file:
+        log_file.write(f"\n=== {datetime.now().isoformat()} doc={document_id} ===\n")
+        log_file.write(trace)
 
 ALLOWED_EXTENSIONS = {
     ".pdf",
@@ -215,21 +227,17 @@ class DocumentService:
                 await bm25_service.delete_document(
                     str(document_id)
                 )
-            except Exception:
-                pass
+            except Exception as cleanup_error:
+                logger.warning("文档索引清理失败（%s）", type(cleanup_error).__name__)
 
             if not isinstance(exc, Exception):
                 raise
 
             # 诊断日志：真实异常落盘，避免 500 时代码路径不可见。
             try:
-                log_path = Path(".local/upload_errors.log")
-                log_path.parent.mkdir(mode=0o700, exist_ok=True)
-                with log_path.open("a", encoding="utf-8") as log_file:
-                    log_file.write(f"\n=== {datetime.now().isoformat()} doc={document_id} ===\n")
-                    log_file.write(traceback.format_exc())
-            except Exception:
-                pass
+                await asyncio.to_thread(record_upload_error, document_id, traceback.format_exc())
+            except Exception as log_error:
+                logger.debug("上传诊断日志写入失败（%s）", type(log_error).__name__)
 
             # 业务类错误（大小超限、内容为空等）保留具体原因，供接口返回 400。
             if isinstance(exc, ValueError):

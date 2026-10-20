@@ -2,8 +2,14 @@ import asyncio
 import io
 import unittest
 
-from app.services.document_pipeline import Block, build_chunks, parse_blocks, parse_non_pdf, page_needs_ocr, \
-    split_sentences
+from app.services.document_pipeline import (
+    Block,
+    build_chunks,
+    page_needs_ocr,
+    parse_blocks,
+    parse_non_pdf,
+    split_sentences,
+)
 from app.services.token_windows import make_rerank_pairs
 
 

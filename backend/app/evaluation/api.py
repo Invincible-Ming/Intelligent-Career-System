@@ -6,28 +6,27 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import time
 import uuid
 from pathlib import Path
-from typing import Annotated
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from app.security.auth import require_admin
-from app.core.models import User
 from app.core.config import settings
 from app.core.limits import BudgetExceeded
-
-AdminUser = Annotated[User, Depends(require_admin)]
-
+from app.core.models import User
 from app.evaluation.config import ExperimentConfig
-from app.evaluation.runner import EvaluationRunner
 from app.evaluation.metrics import ragas_metrics
+from app.evaluation.runner import EvaluationRunner
 from app.evaluation.scope import EvaluationScope, prepare_evaluation_scope
+from app.security.auth import require_admin
 from app.services.experiment_store import experiment_store
 
+AdminUser = Annotated[User, Depends(require_admin)]
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/evaluation", tags=["评测"])
 
 
@@ -159,7 +158,8 @@ async def list_datasets(user: AdminUser) -> list[dict[str, Any]]:
     for candidate in sorted(dataset_root.glob("*.json")):
         try:
             data = json.loads(candidate.read_text(encoding="utf-8"))
-        except Exception:
+        except (OSError, ValueError) as exc:
+            logger.debug("跳过不可读的评测数据集 %s（%s）", candidate.name, type(exc).__name__)
             continue
         cases = data.get("test_cases") if isinstance(data, dict) else None
         if not isinstance(cases, list) or not cases:

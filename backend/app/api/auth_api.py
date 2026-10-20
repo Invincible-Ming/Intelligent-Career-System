@@ -1,7 +1,7 @@
 """Registration/login/logout; registration can never create an administrator."""
 import asyncio
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 from urllib.parse import urlsplit
 
@@ -12,11 +12,18 @@ from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.security.auth import AuthenticatedUser, CurrentUser, anonymous_auth_limit, consume_limits, hash_password, \
-    token_hash, verify_password
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.models import AuthSession, RateLimitBucket, User
+from app.security.auth import (
+    AuthenticatedUser,
+    CurrentUser,
+    anonymous_auth_limit,
+    consume_limits,
+    hash_password,
+    token_hash,
+    verify_password,
+)
 
 router = APIRouter(prefix="/auth", tags=["登录"])
 DatabaseSession = Annotated[AsyncSession, Depends(get_db, scope="request")]
@@ -79,7 +86,7 @@ async def login(credentials: Credentials, session: DatabaseSession):
     if not valid or not user or not user.is_active:
         raise HTTPException(401, "用户名或密码不正确")
     token = secrets.token_urlsafe(32)
-    expires = datetime.now(timezone.utc) + timedelta(hours=settings.AUTH_SESSION_HOURS)
+    expires = datetime.now(UTC) + timedelta(hours=settings.AUTH_SESSION_HOURS)
     session.add(AuthSession(token_hash=token_hash(token), user_id=user.id, expires_at=expires))
     await session.commit()
     return {"access_token": token, "token_type": "bearer", "expires_at": expires.isoformat(),
@@ -168,10 +175,10 @@ async def usage(user: CurrentUser, session: DatabaseSession):
     """当前账户的生成配额使用情况（管理员不限次数）。"""
     if user.is_admin:
         return {"is_admin": True, "generation_daily": None, "generation_minute": None}
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     timestamp = int(now.timestamp())
-    day_start = datetime.fromtimestamp(timestamp - timestamp % 86400, timezone.utc)
-    minute_start = datetime.fromtimestamp(timestamp - timestamp % 60, timezone.utc)
+    day_start = datetime.fromtimestamp(timestamp - timestamp % 86400, UTC)
+    minute_start = datetime.fromtimestamp(timestamp - timestamp % 60, UTC)
     day_key = f"generation-day:{user.id}"
     minute_key = f"generation-minute:{user.id}"
     # 必须按各自当前窗口精确匹配：分钟桶存在多条历史记录，

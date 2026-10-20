@@ -1,7 +1,9 @@
 """Enrich retrieved chunks from the PostgreSQL parsing sidecar."""
 import hashlib
 import uuid
+
 from sqlalchemy import select
+
 from app.core.database import AsyncSessionLocal
 from app.core.models import DocumentParse
 

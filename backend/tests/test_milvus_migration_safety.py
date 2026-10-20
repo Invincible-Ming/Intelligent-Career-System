@@ -79,7 +79,6 @@ class MigrationScriptTests(unittest.TestCase):
             if isinstance(node, ast.AsyncFunctionDef)
             and node.name == "collect_documents"
         )
-        returns = ast.walk(function)
         annotation = function.returns
         self.assertIsNotNone(annotation, "collect_documents 应标注返回类型")
         # 确认是 tuple[...] 而不是裸 list

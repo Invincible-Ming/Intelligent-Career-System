@@ -1,7 +1,7 @@
 """Rolling chat-summary tests; no cloud model or live database required."""
 
-import uuid
 import unittest
+import uuid
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 

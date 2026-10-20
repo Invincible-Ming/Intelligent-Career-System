@@ -110,7 +110,6 @@ class TraceIdTests(unittest.TestCase):
         logger = logging.getLogger("app.tracecheck")
         logger.addHandler(handler)
         logger.setLevel(logging.INFO)
-        previous = logging.getLogger().handlers[:]
         try:
             bind_request_id("fixed-trace-id")
             logger.info("探针消息")
@@ -204,7 +203,7 @@ class JsonFormatterTests(unittest.TestCase):
 
         # assertLogs 用自己的 handler，这里直接验formatter 行为
         record = captured.records[0]
-        self.assertEqual(getattr(record, "node"), "verify_agent")
+        self.assertEqual(record.node, "verify_agent")
 
         payload = json.loads(JsonFormatter().format(record))
         self.assertEqual(payload["node"], "verify_agent")

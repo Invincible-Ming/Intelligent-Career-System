@@ -153,7 +153,7 @@ class MatchRequest(Schema):
     )
 
     @model_validator(mode="after")
-    def validate_jd_source(self) -> "MatchRequest":
+    def validate_jd_source(self) -> MatchRequest:
         if self.jd_document_id is None and not self.jd_text:
             raise ValueError(
                 "jd_document_id 和 jd_text 至少提供一项"

@@ -4,14 +4,13 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-import uuid
 import sys
+import uuid
 from pathlib import Path
 
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
 from app.core.config import settings
-from app.services.mcp_container_config import docker_connection
 
 logger = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parents[3]

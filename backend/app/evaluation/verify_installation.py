@@ -85,12 +85,13 @@ def check_dataset():
     print("\n🔍 检查测试数据集...")
 
     try:
-        from app.evaluation.dataset import TestDataset
         import json
+
+        from app.evaluation.dataset import TestDataset
 
         dataset_path = Path("app/evaluation/test_dataset_30.json")
 
-        with open(dataset_path, "r", encoding="utf-8") as f:
+        with open(dataset_path, encoding="utf-8") as f:
             data = json.load(f)
 
         dataset = TestDataset.model_validate(data)
@@ -135,7 +136,7 @@ def check_dependencies():
         print(f"\n❌ 缺少依赖包: {', '.join(missing)}")
         return False
 
-    print(f"\n✅ 所有依赖包已安装")
+    print("\n✅ 所有依赖包已安装")
     return True
 
 

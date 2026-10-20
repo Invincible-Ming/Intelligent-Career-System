@@ -11,7 +11,10 @@ from ragas import SingleTurnSample
 from ragas.embeddings.base import BaseRagasEmbeddings
 from ragas.llms.base import BaseRagasLLM
 from ragas.metrics import (
-    Faithfulness, LLMContextPrecisionWithReference, LLMContextRecall, ResponseRelevancy,
+    Faithfulness,
+    LLMContextPrecisionWithReference,
+    LLMContextRecall,
+    ResponseRelevancy,
 )
 from ragas.metrics._answer_relevance import ResponseRelevanceInput
 from ragas.run_config import RunConfig

@@ -5,33 +5,37 @@
 from __future__ import annotations
 
 import asyncio
-import anyio
 import json
 import logging
 import uuid
 from typing import Annotated, Any
 
+import anyio
 from fastapi import (
     APIRouter,
     Depends,
     File,
     Form,
     HTTPException,
-    UploadFile,
     Query,
+    UploadFile,
 )
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import desc, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.services.bailian import bailian_service
-from app.services.bm25_service import bm25_service
-from app.core.database import get_db, AsyncSessionLocal
-from app.services.document_service import document_service
-from app.services.hybrid_search import hybrid_search_service
-from app.services.milvus_service import milvus_service
-from app.services.sandbox_client import SandboxUnavailable
+from app.agents.workflow import (
+    resume_match,
+    resume_match_stream,
+    run_interview,
+    run_learning_plan,
+    run_match,
+    run_match_stream,
+)
+from app.core.config import settings
+from app.core.database import AsyncSessionLocal, get_db
+from app.core.logging_setup import log_event
 from app.core.models import AgentRun, AnalysisResult, Document
 from app.core.schemas import (
     DocumentResponse,
@@ -43,18 +47,13 @@ from app.core.schemas import (
     SearchResult,
     UploadDocumentResponse,
 )
-from app.agents.workflow import (
-    resume_match,
-    resume_match_stream,
-    run_interview,
-    run_learning_plan,
-    run_match,
-    run_match_stream,
-)
-
 from app.security.auth import CurrentUser, owned_record
-from app.core.config import settings
-from app.core.logging_setup import log_event
+from app.services.bailian import bailian_service
+from app.services.bm25_service import bm25_service
+from app.services.document_service import document_service
+from app.services.hybrid_search import hybrid_search_service
+from app.services.milvus_service import milvus_service
+from app.services.sandbox_client import SandboxUnavailable
 
 router = APIRouter()
 DatabaseSession = Annotated[
@@ -72,7 +71,7 @@ async def has_ready_document(
     """判断用户是否存在已就绪文档。
 
     仅用于避免无意义的向量检索与模型调用；真正的数据隔离由
-    Milvus / BM25 的 owner_id 过滤完成，这里不再拉取全量 document_id。
+    Milvus / BM25 的 owner_id 过滤和返回前的归属复核完成，不拉取全量 document_id。
     """
 
     document_id = (await session.execute(
@@ -83,6 +82,31 @@ async def has_ready_document(
     )).scalar_one_or_none()
 
     return document_id is not None
+
+
+async def owned_search_results(session, owner_id, results, document_type=None):
+    """仅复核已召回的少量文档，防止过期/错误索引返回越权内容。
+
+    召回前仍使用 owner_id 索引过滤；此处不加载用户的全量文档 ID。
+    """
+    candidates = set()
+    for item in results:
+        try:
+            identifier = uuid.UUID(str(item.get("document_id", "")))
+        except (ValueError, TypeError, AttributeError):
+            continue
+        candidates.add(identifier)
+    if not candidates:
+        return []
+    query = select(Document.id).where(
+        Document.id.in_(candidates), Document.owner_id == owner_id,
+        Document.status == "ready",
+    )
+    if document_type is not None:
+        query = query.where(Document.document_type == document_type)
+    allowed = {str(identifier) for identifier in (await session.execute(query)).scalars()}
+    return [SearchResult.model_validate(item) for item in results
+            if str(item.get("document_id")) in allowed]
 
 
 # ----------------------------------------------------------------------
@@ -127,6 +151,8 @@ async def persist_match_outcome(session: AsyncSession, run: AgentRun, outcome: d
             job_analysis=report.get("job_analysis", {}), match_report=report,
         ))
     await session.commit()
+    # onupdate 的数据库时间戳会在 flush 后过期，显式刷新以免响应序列化触发异步懒加载。
+    await session.refresh(run)
 
 
 def match_sse_outcome(chunk: str) -> dict | None:
@@ -298,10 +324,7 @@ async def search_knowledge(
             top_k=request.top_k,
         )
 
-        return [
-            SearchResult.model_validate(item)
-            for item in results
-        ]
+        return await owned_search_results(session, user.id, results, request.document_type)
 
     except ValueError as exc:
         raise HTTPException(
@@ -339,10 +362,7 @@ async def search_knowledge_with_bm25(
             top_k=request.top_k,
         )
 
-        return [
-            SearchResult.model_validate(item)
-            for item in results
-        ]
+        return await owned_search_results(session, user.id, results, request.document_type)
 
     except ValueError as exc:
         raise HTTPException(
@@ -380,10 +400,7 @@ async def search_knowledge_hybrid(
             top_k=request.top_k,
         )
 
-        return [
-            SearchResult.model_validate(item)
-            for item in results
-        ]
+        return await owned_search_results(session, user.id, results, request.document_type)
 
     except ValueError as exc:
         raise HTTPException(
@@ -907,7 +924,7 @@ async def get_document_text(
             detail="缺少文档 ID",
         )
 
-    document = await owned_record(session, Document, document_id, owner_id)
+    await owned_record(session, Document, document_id, owner_id)
     try:
         content = await document_service.get_document_text(
             owner_id=owner_id,

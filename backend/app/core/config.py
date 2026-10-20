@@ -41,7 +41,7 @@ class Settings(BaseSettings):
 
     # FastAPI
     APP_NAME: str = "智能求职 Multi-Agent 系统"
-    APP_HOST: str = "0.0.0.0"
+    APP_HOST: str = "0.0.0.0"  # noqa: S104 -- 容器需监听所有接口，端口暴露由部署控制
     APP_PORT: int = 8000
     DEBUG: bool = True
     API_PREFIX: str = "/api"

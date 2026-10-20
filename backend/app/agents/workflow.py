@@ -7,26 +7,28 @@
 from __future__ import annotations
 
 import asyncio
-import anyio
 import functools
 import json
 import logging
 import time
 import uuid
-from typing import Any, AsyncGenerator, Callable, Literal, TypedDict
+from collections.abc import AsyncGenerator, Callable
+from typing import Any, Literal, TypedDict
 
+import anyio
 from langchain_core.runnables import RunnableConfig  # 用于接收 API 层注入的队列
-from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-from langgraph.graph import END, START, StateGraph
+from langchain_core.tools import tool
 
 # 🌟 新增：LangChain 核心组件与 MCP 服务
 from langchain_openai import ChatOpenAI
-from langchain_core.tools import tool
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import create_react_agent
+
 from app.core.config import settings
-from app.core.limits import BudgetExceeded, ModelBudgetCallback, model_request_timeout
-from app.services.web_fetch import FetchBlocked, fetch_page_text
+from app.core.limits import BudgetExceeded, ModelBudgetCallback
 from app.services.mcp_tools import mcp_service
+from app.services.web_fetch import FetchBlocked, fetch_page_text
 
 # 兼容 LangGraph 不同版本的 RetryPolicy 导入路径
 try:
@@ -34,8 +36,6 @@ try:
 except ImportError:
     from langgraph.pregel.types import RetryPolicy
 
-from app.services.bailian import bailian_service
-from app.services.analysis_cache import analysis_cache
 from app.core.database import checkpointer_pool
 from app.core.schemas import (
     InterviewPlan,
@@ -46,6 +46,8 @@ from app.core.schemas import (
     ResumeAnalysis,
     VerificationResult,
 )
+from app.services.analysis_cache import analysis_cache
+from app.services.bailian import bailian_service
 
 logger = logging.getLogger(__name__)
 

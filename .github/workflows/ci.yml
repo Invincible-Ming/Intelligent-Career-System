@@ -37,8 +37,34 @@ jobs:
         run: ruff format --check --diff . || true  # 格式问题仅提示，不阻塞
 
   test:
-    name: 单元测试
+    name: 单元与集成测试
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: career_ci
+          POSTGRES_PASSWORD: career_ci_test
+          POSTGRES_DB: career_ci_test
+        ports:
+          - 15432:5432
+        options: >-
+          --health-cmd "pg_isready -U career_ci -d career_ci_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 16379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      CAREER_TEST_DATABASE_URL: postgresql+asyncpg://career_ci:career_ci_test@127.0.0.1:15432/career_ci_test
+      CAREER_TEST_REDIS_URL: redis://127.0.0.1:16379/15
     defaults:
       run:
         working-directory: backend
@@ -66,8 +92,8 @@ jobs:
         run: pytest tests/test_static_imports.py -q
 
       - name: 运行测试
-        # 未配置中间件时相关模块会被 conftest 收集阶段跳过；
-        # 这里只要求「不崩溃、不失败」。
+        # Redis 缓存与 PostgreSQL 鉴权测试使用本 job 的临时服务。
+        # 模型、对象存储及向量库调用由各测试模拟，不使用真实凭据。
         run: pytest -q --tb=short
 
   frontend:

@@ -10,9 +10,9 @@ import json
 import logging
 from pathlib import Path
 
+from app.evaluation.dataset import TestDataset
 from app.services.bailian import bailian_service
 from app.services.bm25_service import bm25_service
-from app.evaluation.dataset import TestDataset
 from app.services.milvus_service import milvus_service
 
 logging.basicConfig(level=logging.INFO)
@@ -70,8 +70,7 @@ async def validate_dataset(dataset_path: str) -> bool:
             logger.error(f"✗ 数据集文件不存在：{dataset_path}")
             return False
 
-        with open(dataset_file, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        data = json.loads(await asyncio.to_thread(dataset_file.read_text, encoding="utf-8"))
 
         dataset = TestDataset.model_validate(data)
 

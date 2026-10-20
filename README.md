@@ -259,3 +259,33 @@ python scripts/migrate_milvus_owner.py             # 正式执行
 
 脚本会将旧 Collection **重命名**为 `_backup_<时间戳>`（保留而非删除），新建带 `owner_id` 标量索引的
 Collection，并按 PostgreSQL 的解析文本重新向量化回填。回填失败时把 `MILVUS_COLLECTION` 改回备份名即可回滚。
+
+
+## 自动化测试
+
+GitHub Actions 会为测试创建独立的 PostgreSQL 和 Redis 服务，无需配置模型密钥。
+测试配置不读取开发环境 `.env` 的连接地址与凭据，模型、MinIO、Milvus、MCP 调用由测试模拟。
+本地运行完整测试前，可创建同样的临时服务（需要 Docker）：
+
+```bash
+docker run -d --rm --name career-ci-postgres -p 127.0.0.1:15432:5432 -e POSTGRES_USER=career_ci -e POSTGRES_PASSWORD=career_ci_test -e POSTGRES_DB=career_ci_test postgres:17
+docker run -d --rm --name career-ci-redis -p 127.0.0.1:16379:6379 redis:7.4-alpine
+```
+
+待 `docker exec career-ci-postgres pg_isready -U career_ci -d career_ci_test` 和
+`docker exec career-ci-redis redis-cli ping` 确认服务就绪后，在项目虚拟环境中执行：
+
+```bash
+cd backend
+python -m pip install -r requirements.txt pytest==8.4.2
+python -m pytest -q --tb=short
+```
+
+默认连接 PostgreSQL `127.0.0.1:15432/career_ci_test` 和 Redis `127.0.0.1:16379/15`。
+需要调整测试连接时使用 `CAREER_TEST_DATABASE_URL` 和 `CAREER_TEST_REDIS_URL`；
+仅允许本机地址，数据库名称须包含 `test`。鉴权集成测试会创建并删除随机命名的临时数据库，
+因此 PostgreSQL 测试账号需要 `CREATEDB` 权限。测试完成后清理临时服务：
+
+```bash
+docker stop career-ci-postgres career-ci-redis
+```

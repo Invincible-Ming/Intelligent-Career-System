@@ -18,15 +18,15 @@ import asyncio
 import sys
 import uuid
 
+from app.core.database import close_database
 from app.evaluation.config import (
     EvaluationConfig,
     ExperimentConfig,
     ReflectionConfig,
     SearchConfig,
 )
-from app.evaluation.runner import EvaluationRunner
 from app.evaluation.metrics import ragas_metrics
-from app.core.database import close_database
+from app.evaluation.runner import EvaluationRunner
 from app.services.bailian import bailian_service
 from app.services.bm25_service import bm25_service
 from app.services.milvus_service import milvus_service
@@ -263,7 +263,7 @@ def main():
             print(f"❌ 配置文件不存在：{args.config}")
             sys.exit(1)
 
-        with open(config_path, "r", encoding="utf-8") as f:
+        with open(config_path, encoding="utf-8") as f:
             config_data = json.load(f)
 
         experiment = ExperimentConfig.model_validate(

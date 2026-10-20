@@ -7,14 +7,13 @@ import time
 from contextvars import ContextVar
 from dataclasses import dataclass
 
+from langchain_core.callbacks import BaseCallbackHandler
+
 from app.core.config import settings
 
 
 class BudgetExceeded(BaseException):
     """Must not be swallowed by broad Exception-based retries/fallbacks."""
-
-
-from langchain_core.callbacks import BaseCallbackHandler
 
 
 class ModelBudgetCallback(BaseCallbackHandler):

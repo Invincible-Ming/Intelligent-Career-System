@@ -44,8 +44,4 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S", "ASYNC", "E402"]
 "deploy/*" = ["S", "ASYNC", "E402"]
-"scripts/*" = ["S", "ASYNC"]
-
-[tool.ruff.lint.flake8-async]
-# asyncio.to_thread 属于受控的线程池卸载，不视为阻塞调用。
-strict = false
+"scripts/*" = ["S", "ASYNC", "E402"]  # CLI 需先设置项目导入路径

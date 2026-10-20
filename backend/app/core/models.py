@@ -21,8 +21,8 @@ from datetime import datetime
 from typing import Any
 
 from sqlalchemy import (
-    DateTime,
     Boolean,
+    DateTime,
     ForeignKey,
     Integer,
     String,
@@ -201,7 +201,7 @@ class AgentRun(Base):
     )
 
     # 🌟 修复点：添加 lazy="selectin" 防范异步延迟加载崩溃
-    analysis_result: Mapped["AnalysisResult | None"] = relationship(
+    analysis_result: Mapped[AnalysisResult | None] = relationship(
         back_populates="run",
         uselist=False,
         lazy="selectin",
@@ -361,7 +361,7 @@ class Conversation(Base):
     )
 
     # 🌟 修复点：添加 lazy="raise" 防范异步延迟加载崩溃
-    messages: Mapped[list["Message"]] = relationship(
+    messages: Mapped[list[Message]] = relationship(
         back_populates="conversation",
         passive_deletes=True,
         cascade="all, delete-orphan",

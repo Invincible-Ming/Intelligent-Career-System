@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-import anyio
 import hashlib
 import hmac
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
+import anyio
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import delete, func, select, text
@@ -47,11 +47,11 @@ def token_hash(token):
 
 async def consume_limits(entries):
     """Atomic across users/workers, all counters roll back on a rejected request."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     async with AsyncSessionLocal() as session:
         for key, seconds, ceiling in entries:
             timestamp = int(now.timestamp())
-            start = datetime.fromtimestamp(timestamp - timestamp % seconds, timezone.utc)
+            start = datetime.fromtimestamp(timestamp - timestamp % seconds, UTC)
             statement = insert(RateLimitBucket).values(key=key, window_start=start, count=1)
             statement = statement.on_conflict_do_update(
                 index_elements=[RateLimitBucket.key, RateLimitBucket.window_start],
@@ -110,7 +110,7 @@ async def operation_user(request: Request, user: Annotated[User, Depends(get_cur
                 OperationLease.owner_id == user.id))).scalar_one()
             if active >= settings.MAX_CONCURRENT_OPERATIONS:
                 raise HTTPException(429, "同时执行的操作过多，请等待当前任务结束", headers={"Retry-After": "5"})
-            lease = OperationLease(owner_id=user.id, expires_at=datetime.now(timezone.utc) + timedelta(
+            lease = OperationLease(owner_id=user.id, expires_at=datetime.now(UTC) + timedelta(
                 seconds=operation_timeout(request.url.path) + 10))
             session.add(lease)
             await session.commit()

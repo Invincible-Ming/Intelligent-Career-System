@@ -1,18 +1,20 @@
 """Local-only initialization and explicitly requested legacy cleanup."""
 from __future__ import annotations
+
 import argparse
 import asyncio
 import json
 import os
-from pathlib import Path
 import secrets
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from pathlib import Path
 
 BACKEND = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND))
 os.chdir(BACKEND)
 from sqlalchemy import delete, select, text
+
 from app.core.database import AsyncSessionLocal, close_database, engine, init_database
 from app.core.models import AgentRun, Conversation, Document, User
 from app.security.auth import hash_password
@@ -41,9 +43,9 @@ async def bootstrap_admin():
 
 
 async def purge_legacy():
+    from app.services.bm25_service import bm25_service
     from app.services.milvus_service import milvus_service
     from app.services.minio_service import minio_service
-    from app.services.bm25_service import bm25_service
     await minio_service.initialize()
     await milvus_service.initialize()
     async with AsyncSessionLocal() as session:
@@ -95,7 +97,7 @@ async def purge_legacy():
         raise RuntimeError('Legacy vector cleanup verification failed')
     summary = {'documents': len(legacy_documents), 'runs': len(legacy_runs), 'conversations': len(legacy_conversations),
                'objects': len(keys), 'vector_documents': len(vector_ids), 'checkpoint_rows': checkpoint_rows,
-               'completed_at': datetime.now(timezone.utc).isoformat()}
+               'completed_at': datetime.now(UTC).isoformat()}
     directory = BACKEND / '.local'
     directory.mkdir(mode=0o700, exist_ok=True)
     (directory / 'legacy_cleanup.json').write_text(json.dumps(summary, indent=2))

@@ -12,12 +12,12 @@
 """
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 import time
 from typing import Any
 
+from redis.asyncio import Redis
 from redis.exceptions import RedisError
 
 from app.core.config import settings
@@ -58,7 +58,7 @@ class ExperimentStore:
             "Redis 评测状态存储暂不可用（%s），暂用进程内状态",
             type(exc).__name__,
         )
-        for key, status in self._fallback.items():
+        for key in self._fallback:
             self._fallback_keys.add(key)
 
     @staticmethod

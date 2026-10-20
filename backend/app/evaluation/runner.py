@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 import asyncio
-from app.core.limits import BudgetExceeded
 import json
 import logging
 import time
@@ -14,11 +13,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from app.core.config import settings
+from app.core.limits import BudgetExceeded
 from app.evaluation.config import EvaluationConfig, ExperimentConfig
 from app.evaluation.dataset import TestCase, TestDataset
 from app.evaluation.executor import rag_executor
 from app.evaluation.metrics import RAGAS_VERSION, ragas_metrics
-from app.core.config import settings
 from app.evaluation.report import ReportGenerator
 from app.evaluation.scope import EvaluationScope, normalize_owner_id, prepare_evaluation_scope
 
@@ -270,7 +270,7 @@ class EvaluationRunner:
 
             except BudgetExceeded:
                 raise
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 return EvaluationResult(
                     {
                         "status": "timeout",
@@ -307,7 +307,7 @@ class EvaluationRunner:
                 f"测试数据集不存在：{path}"
             )
 
-        with open(dataset_path, "r", encoding="utf-8") as f:
+        with open(dataset_path, encoding="utf-8") as f:
             data = json.load(f)
 
         return TestDataset.model_validate(data)
@@ -378,8 +378,7 @@ class EvaluationRunner:
         generator = ReportGenerator()
         html = generator.generate(report_data)
 
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write(html)
+        await asyncio.to_thread(Path(output_path).write_text, html, encoding="utf-8")
 
         logger.info(
             "HTML 报告已生成：%s",

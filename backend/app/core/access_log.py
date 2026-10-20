@@ -15,7 +15,6 @@ from app.core.logging_setup import (
     actor_var,
     bind_request_id,
     log_event,
-    request_id_var,
     request_start_var,
 )
 

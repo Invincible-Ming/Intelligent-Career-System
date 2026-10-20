@@ -1,8 +1,8 @@
 """Untrusted file parsing through the local, Docker-owning Runner socket."""
 from __future__ import annotations
 
-import base64
 import asyncio
+import base64
 import json
 import uuid
 from pathlib import Path
@@ -10,8 +10,8 @@ from pathlib import Path
 import httpx
 
 from app.core.config import settings
-from app.services.document_pipeline import PIPELINE_VERSION, Block
 from app.core.limits import check_operation_deadline
+from app.services.document_pipeline import PIPELINE_VERSION, Block
 
 
 async def check_runner() -> bool:
@@ -45,7 +45,8 @@ async def parse_document(*, owner_id: uuid.UUID, run_id: uuid.UUID, data: bytes,
     transport = httpx.AsyncHTTPTransport(uds=settings.SANDBOX_RUNNER_SOCKET)
     session_id = None
     completed = False
-    async with httpx.AsyncClient(transport=transport, base_url="http://sandbox", timeout=None) as client:
+    timeout = httpx.Timeout(connect=4.0, read=settings.UPLOAD_TOTAL_TIMEOUT, write=30.0, pool=4.0)
+    async with httpx.AsyncClient(transport=transport, base_url="http://sandbox", timeout=timeout) as client:
         try:
             async with client.stream("POST", "/parse", json={
                 "owner_id": str(owner_id), "run_id": str(run_id), "extension": extension,

@@ -98,7 +98,6 @@ class UploadContractTests(unittest.TestCase):
         """提示若只存局部变量，rerun 后必然丢失——这条专门防这个回归。"""
 
         import ast
-        from pathlib import Path
 
         tree = ast.parse(self.frontend)
         offenders = [

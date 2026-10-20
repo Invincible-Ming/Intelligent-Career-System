@@ -15,8 +15,8 @@ if str(FRONTEND) not in sys.path:
     sys.path.insert(0, str(FRONTEND))
 
 from career_ui.api import (  # noqa: E402
-    APIError,
     DEFAULT_SECURITY_OPTIONS,
+    APIError,
     auth_headers,
     operation_read_timeout,
     security_options,

@@ -1,23 +1,26 @@
 """Authenticated, owned, budgeted chat with bounded SSE responses."""
 from __future__ import annotations
+
 import asyncio
-import anyio
 import json
 import logging
 import uuid
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+
+import anyio
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.security.auth import CurrentUser
-from app.services.bailian import bailian_service, ModelServiceError, public_model_error
+
+from app.agents.workflow import get_chat_agent_tools, get_chat_mcp_agent
 from app.core.config import settings
-from app.services.conversation_service import conversation_service
 from app.core.database import AsyncSessionLocal, engine, get_db
 from app.core.limits import BudgetExceeded, ModelBudgetCallback, bound_history, message_cost
-from app.agents.workflow import get_chat_agent_tools, get_chat_mcp_agent
+from app.security.auth import CurrentUser
+from app.services.bailian import ModelServiceError, bailian_service, public_model_error
+from app.services.conversation_service import conversation_service
 
 router = APIRouter(prefix='/chat', tags=['对话'])
 logger = logging.getLogger(__name__)
@@ -246,7 +249,7 @@ async def stream_chat_with_persistence(*, owner_id, conversation_id, messages, t
             agent = get_chat_mcp_agent(temperature=temperature)
             config = {'callbacks': [ModelBudgetCallback()], 'recursion_limit': 24}
             async for chunk in agent.astream({'messages': messages}, config=config, stream_mode='updates'):
-                for node_name, update in chunk.items():
+                for update in chunk.values():
                     if not isinstance(update, dict):
                         continue
                     for msg in update.get('messages', []):
@@ -300,8 +303,8 @@ async def stream_chat_with_persistence(*, owner_id, conversation_id, messages, t
                                                                        metadata={'incomplete': True})
                     finally:
                         await release_lock(lock_session, lock_key)
-            except (Exception, asyncio.CancelledError):
-                pass
+            except (Exception, asyncio.CancelledError) as exc:
+                logger.debug("对话流清理未完成（%s）", type(exc).__name__)
 
 
 @router.get('/conversations')

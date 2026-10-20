@@ -1,8 +1,11 @@
 """Conversation persistence with ownership enforced on every operation."""
 from __future__ import annotations
+
 import uuid
+
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import raiseload
+
 from app.core.config import settings
 from app.core.models import Conversation, Message
 

@@ -6,7 +6,6 @@
 """
 from __future__ import annotations
 
-import asyncio
 import ipaddress
 import socket
 from urllib.parse import urljoin, urlsplit

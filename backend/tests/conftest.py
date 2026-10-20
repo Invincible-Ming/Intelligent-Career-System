@@ -3,17 +3,36 @@
 测试分为两类：
 
 - 纯单元测试（切块、限流计算、前端鉴权断言），只依赖 fastapi/pydantic；
-- 集成测试（真实 Redis、Milvus、模型调用），需要完整依赖与中间件。
+- 集成测试使用临时 PostgreSQL、Redis；模型/向量库/对象存储调用由用例模拟。
 
 这里的目标是：环境缺依赖时，让需要它的测试被skip 并说明原因，
 而不是让整个 tests/ 目录在收集阶段就崩溃。
 """
+
 import importlib.util
+import os
+from urllib.parse import urlsplit
 
 import pytest
 
-# app.core.config 只依赖 pydantic-settings，始终可用。
-from app.core.config import settings  # noqa: E402
+from app.core.config import Settings, settings
+
+# 在测试模块导入数据库引擎之前重置配置，避免读取开发者 .env 的真实资源/凭据。
+settings.__dict__.update(Settings(_env_file=None).__dict__)
+settings.DATABASE_URL = os.environ.get(
+    "CAREER_TEST_DATABASE_URL",
+    "postgresql+asyncpg://career_ci:career_ci_test@127.0.0.1:15432/career_ci_test",
+)
+settings.REDIS_URL = os.environ.get("CAREER_TEST_REDIS_URL", "redis://127.0.0.1:16379/15")
+for endpoint in (settings.DATABASE_URL, settings.REDIS_URL):
+    parsed = urlsplit(endpoint)
+    if parsed.hostname not in {"127.0.0.1", "localhost", "::1"}:
+        raise RuntimeError("测试只允许连接本机临时服务")
+if "test" not in urlsplit(settings.DATABASE_URL).path:
+    raise RuntimeError("测试数据库名称必须包含 test")
+settings.DASHSCOPE_API_KEY = ""
+settings.BAILIAN_BASE_URL = "http://127.0.0.1:1/v1"
+settings.BAIDU_MAP_MCP_URL = ""
 
 
 def _missing(*modules: str) -> list[str]:
@@ -67,7 +86,7 @@ _MODULE_STACKS: dict[str, tuple[str, ...]] = {
     "test_bm25_owner_isolation.py": _BM25_STACK,
     "test_embed_cache.py": _EMBED_STACK,
     "test_redis_pool.py": _EMBED_STACK,
-    "test_static_imports.py": (),   # 纯 AST 静态检查，无需任何依赖
+    "test_static_imports.py": (),  # 纯 AST 静态检查，无需任何依赖
     "test_embedding_model_config.py": _EMBED_STACK,
     "test_frontend_modules.py": _FRONTEND_STACK,
     "test_frontend_auth.py": _FRONTEND_STACK,
@@ -75,11 +94,7 @@ _MODULE_STACKS: dict[str, tuple[str, ...]] = {
     "test_frontend_match_jd_source.py": _FRONTEND_STACK,
 }
 
-collect_ignore = [
-    name
-    for name, stack in _MODULE_STACKS.items()
-    if _missing(*stack)
-]
+collect_ignore = [name for name, stack in _MODULE_STACKS.items() if _missing(*stack)]
 
 
 @pytest.fixture(scope="session")

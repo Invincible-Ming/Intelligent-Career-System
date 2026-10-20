@@ -11,9 +11,6 @@ import time
 
 import anyio
 from pydantic import ValidationError
-from redis.asyncio import Redis
-from redis.asyncio.retry import Retry
-from redis.backoff import NoBackoff
 from redis.exceptions import RedisError
 
 from app.core.config import settings

@@ -13,15 +13,16 @@ from __future__ import annotations
 import asyncio
 import json
 import re  # 🌟 新增：用于强大的正则提取
+from collections.abc import AsyncGenerator  # 🌟 新增：导入 AsyncGenerator
 from http import HTTPStatus
-from typing import Any, AsyncGenerator, TypeVar  # 🌟 新增：导入 AsyncGenerator
+from typing import Any, TypeVar
 
 import dashscope
 from openai import AsyncOpenAI
 from pydantic import BaseModel, ValidationError
 
 from app.core.config import settings
-from app.core.limits import charge_model_call, validate_model_input, BudgetExceeded, model_request_timeout
+from app.core.limits import BudgetExceeded, charge_model_call, model_request_timeout, validate_model_input
 from app.services.embed_cache import embed_cache
 
 SchemaType = TypeVar(

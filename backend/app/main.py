@@ -12,15 +12,16 @@
 
 """
 
+# SDK 环境清理必须先于应用依赖导入。
+# ruff: noqa: E402
 from __future__ import annotations
 
 import asyncio
 import logging
 import os
-import time  # 用于获取标准时间戳
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import AsyncIterator
 
 # ----------------------------------------------------------------------
 # 运行时 SDK 隔离：配置值一律来自 backend/.env（见 config.py），
@@ -36,36 +37,35 @@ for _sdk_env in ("http_proxy", "https_proxy", "all_proxy",
 os.environ["NO_PROXY"] = "*"
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-
-from app.core.config import settings
-from app.core.database import check_database, close_database, init_database
-from app.core.access_log import AccessLogMiddleware
-from app.core.logging_setup import configure_logging
-
-# 导入底层依赖服务
-from app.services.bailian import bailian_service
-from app.services.analysis_cache import analysis_cache
-from app.services.embed_cache import embed_cache
-from app.services.redis_pool import close_pool, warm_up_redis_pool
-from app.services.experiment_store import experiment_store
-from app.services.bm25_service import bm25_service
-from app.services.milvus_service import milvus_service
-from app.services.minio_service import minio_service
-from app.services.mcp_tools import mcp_service
-from app.services.sandbox_client import check_runner
+from fastapi.responses import FileResponse, JSONResponse
 
 # 导入工作流初始化函数（用于创建 LangGraph Postgres Checkpoint 表）
 from app.agents.workflow import init_workflow
 
 # 导入路由 - 按功能模块分组
 from app.api.api import router as business_router
-from app.api.chat_api import router as chat_router
-from app.evaluation.api import router as evaluation_router
 from app.api.auth_api import router as auth_router
+from app.api.chat_api import router as chat_router
+from app.core.access_log import AccessLogMiddleware
+from app.core.config import settings
+from app.core.database import check_database, close_database, init_database
 from app.core.limits import RequestBodyTooLarge, SecurityLimitsMiddleware
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse
+from app.core.logging_setup import configure_logging, log_event
+from app.evaluation.api import router as evaluation_router
+from app.services.analysis_cache import analysis_cache
+
+# 导入底层依赖服务
+from app.services.bailian import bailian_service
+from app.services.bm25_service import bm25_service
+from app.services.embed_cache import embed_cache
+from app.services.experiment_store import experiment_store
+from app.services.mcp_tools import mcp_service
+from app.services.milvus_service import milvus_service
+from app.services.minio_service import minio_service
+from app.services.redis_pool import close_pool, warm_up_redis_pool
+from app.services.sandbox_client import check_runner
 
 # ----------------------------------------------------------------------
 # 日志配置
