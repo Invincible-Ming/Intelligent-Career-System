@@ -42,7 +42,7 @@
       "reflection": {
         "enable_reflection": true,
         "max_iterations": 2,
-        "reflection_prompt": "请审查上一次的回答，如果存在事实错误、逻辑矛盾或不够准确的地方，请基于检索到的知识进行修正。"
+        "reflection_prompt": "核对证据、条件限定和引用，只修正已确认的问题；没有问题时保留原答案。"
       }
     }
   ],

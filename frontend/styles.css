@@ -500,3 +500,61 @@ header[data-testid="stHeader"] {
     color: #2563eb;
     border-bottom-color: #2563eb;
 }
+
+/* A reading surface, rather than a disabled input with dimmed text. */
+.document-preview-header {
+    padding: 0 0 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.document-preview-header h3 {
+    margin: 0 0 .35rem;
+    padding: 0;
+    color: var(--text-color);
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.document-preview-header p {
+    margin: 0;
+    color: var(--ui-muted);
+    font-size: .85rem;
+}
+
+.document-preview-body {
+    box-sizing: border-box;
+    max-height: min(65vh, 720px);
+    overflow-y: auto;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    background: #ffffff;
+    color: #111111;
+    color-scheme: light;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.4rem 1.6rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-size: 1rem;
+    line-height: 1.85;
+    tab-size: 4;
+    cursor: text;
+}
+
+.document-preview-body::selection {
+    color: #111111;
+    background: #dbeafe;
+}
+
+.document-preview-body:focus-visible {
+    outline: 2px solid #6b7280;
+    outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+    .document-preview-body {
+        padding: 1rem;
+        font-size: .95rem;
+    }
+}

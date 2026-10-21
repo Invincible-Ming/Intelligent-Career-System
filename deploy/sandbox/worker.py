@@ -18,7 +18,7 @@ def send(message):
 async def main():
     request = json.loads(sys.stdin.buffer.readline())
     extension = request["extension"]
-    if extension not in (".pdf", ".docx", ".xlsx", ".txt"):
+    if extension not in (".pdf", ".docx", ".xlsx", ".txt", ".md"):
         raise ValueError("Unsupported extension")
     data = base64.b64decode(request["data"], validate=True)
     # 与 Runner 的 SANDBOX_MAX_DOCUMENT_MB 上限对齐（当前 50MB）。

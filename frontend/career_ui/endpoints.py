@@ -7,10 +7,15 @@ from __future__ import annotations
 from typing import Any
 
 from career_ui.api import (
-    APIError,
     LONG_TIMEOUT,
+    APIError,
     request_api,
     security_options,
+)
+from career_ui.documents import (
+    document_identity_label,
+    document_upload_time,
+    prepare_document_list,
 )
 
 MATCH_STATUS_NAMES = {
@@ -27,7 +32,11 @@ MATCH_STATUS_NAMES = {
 
 
 def get_documents() -> list[dict[str, Any]]:
-    return request_api("GET", "/api/documents")
+    return prepare_document_list(request_api("GET", "/api/documents"))
+
+
+def get_document_preview(document_id: str) -> dict[str, Any]:
+    return request_api("GET", f"/api/documents/{document_id}/text")
 
 
 def upload_document(uploaded_file: Any, document_type: str) -> dict[str, Any]:
@@ -100,6 +109,10 @@ def get_runs(
     return request_api("GET", "/api/runs", params=params)
 
 
+def delete_match_run(run_id: str) -> dict[str, Any]:
+    return request_api("DELETE", f"/api/runs/{run_id}", timeout=LONG_TIMEOUT)
+
+
 def fetch_match_context(
     *, limit: int = 20
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -133,9 +146,9 @@ def match_report_of(run: dict[str, Any]) -> dict[str, Any]:
 def match_run_label(run: dict[str, Any], documents: list[dict[str, Any]]) -> str:
     """用时间 + 简历 × JD + 状态 + 分数生成可读标签，替代裸任务 ID。"""
 
-    doc_name = {d["id"]: d.get("filename", "未命名文档") for d in documents}
+    doc_name = {d["id"]: document_identity_label(d) for d in documents}
     inp = run.get("input_data") or {}
-    created = (str(run.get("created_at") or ""))[:16].replace("T", " ")
+    created = document_upload_time(run)
     resume_name = doc_name.get(inp.get("resume_document_id"), "简历")
     jd_name = (
         "手动输入 JD"

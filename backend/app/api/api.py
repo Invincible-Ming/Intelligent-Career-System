@@ -22,7 +22,7 @@ from fastapi import (
 )
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import desc, select, update
+from sqlalchemy import bindparam, delete, desc, func, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.workflow import (
@@ -36,9 +36,11 @@ from app.agents.workflow import (
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal, get_db
 from app.core.logging_setup import log_event
-from app.core.models import AgentRun, AnalysisResult, Document
+from app.core.matching_policy import can_continue_unverified
+from app.core.models import AgentRun, AnalysisResult, Document, DocumentParse
 from app.core.schemas import (
     DocumentResponse,
+    DocumentTextResponse,
     InterviewRequest,
     LearningRequest,
     MatchRequest,
@@ -135,14 +137,19 @@ async def persist_match_outcome(session: AsyncSession, run: AgentRun, outcome: d
         raise RuntimeError("工作流没有返回匹配报告")
     if status not in ("paused", "completed"):
         raise RuntimeError("工作流返回了无效的终态")
-    if status == "completed" and not (outcome.get("is_valid") or outcome.get("manual_accepted")):
+    unverified = (
+        outcome.get("verification_nonblocking")
+        and (report.get("verification") or {}).get("nonblocking")
+        and can_continue_unverified(report)
+    )
+    if status == "completed" and not (outcome.get("is_valid") or outcome.get("manual_accepted") or unverified):
         raise RuntimeError("报告既未通过自动校验，也未经人工确认")
     run.status = status
     run.result_data = outcome if status == "paused" else report
     run.input_data = {
         **(run.input_data or {}),
         "review_status": "needs_review" if status == "paused" else (
-            "manual_accepted" if outcome.get("manual_accepted") else "auto_passed"
+            "manual_accepted" if outcome.get("manual_accepted") else "unverified" if unverified else "auto_passed"
         ),
     }
     if status == "completed":
@@ -264,6 +271,30 @@ async def list_documents(
         DocumentResponse.model_validate(document)
         for document in documents
     ]
+
+
+@router.get(
+    "/documents/{document_id}/text",
+    response_model=DocumentTextResponse,
+    tags=["文档"],
+)
+async def preview_document_text(
+        user: CurrentUser,
+        document_id: uuid.UUID,
+        session: DatabaseSession,
+) -> DocumentTextResponse:
+    """Read saved parse text only; never trigger parsing, OCR or model calls."""
+    document = await owned_record(session, Document, document_id, user.id)
+    if document.status != "ready":
+        raise HTTPException(409, "该文档尚未就绪，暂不能预览解析文本")
+    parsed = await session.get(DocumentParse, document_id)
+    if parsed is None:
+        raise HTTPException(409, "该历史文档未保存解析文本，请重新上传后预览")
+    limit = settings.MAX_PARSED_DOCUMENT_CHARS
+    return DocumentTextResponse(
+        id=document.id, filename=document.filename,
+        content=parsed.text[:limit], truncated=len(parsed.text) > limit,
+    )
 
 
 @router.delete(
@@ -905,6 +936,58 @@ async def get_run(
     return to_run_response(run)
 
 
+@router.delete(
+    "/runs/{run_id}",
+    tags=["任务"],
+    summary="删除岗位匹配记录及其派生计划",
+)
+async def delete_match_run(
+        user: CurrentUser,
+        run_id: uuid.UUID,
+        session: DatabaseSession,
+) -> dict[str, Any]:
+    # Locking the parent serializes deletion with resume and child creation.
+    run = (await session.execute(
+        select(AgentRun).where(AgentRun.id == run_id, AgentRun.owner_id == user.id).with_for_update()
+    )).scalar_one_or_none()
+    if run is None:
+        raise HTTPException(404, "记录不存在或不可访问")
+    if run.task_type != "match":
+        raise HTTPException(400, "该入口仅支持删除岗位匹配记录")
+    if run.status not in ("completed", "failed", "paused"):
+        raise HTTPException(409, "任务正在运行，请等待完成后再删除")
+
+    children = (await session.execute(
+        select(AgentRun).where(
+            AgentRun.owner_id == user.id,
+            AgentRun.task_type.in_(("interview", "learning_plan")),
+            AgentRun.input_data["match_run_id"].astext == str(run.id),
+        ).with_for_update()
+    )).scalars().all()
+    if any(child.status not in ("completed", "failed", "paused") for child in children):
+        raise HTTPException(409, "关联的面试或学习计划正在生成，请等待完成后再删除")
+
+    identifiers = [run.id, *(child.id for child in children)]
+    thread_ids = [str(identifier) for identifier in identifiers]
+    # Same PostgreSQL transaction as the business rows. These are the saver
+    # tables used by the installed AsyncPostgresSaver. Some failed tasks may
+    # have no checkpoints, or may predate saver setup.
+    checkpoint_deletes = (
+        ("checkpoint_writes", "DELETE FROM checkpoint_writes WHERE thread_id IN :thread_ids"),
+        ("checkpoint_blobs", "DELETE FROM checkpoint_blobs WHERE thread_id IN :thread_ids"),
+        ("checkpoints", "DELETE FROM checkpoints WHERE thread_id IN :thread_ids"),
+    )
+    for table_name, statement in checkpoint_deletes:
+        if (await session.execute(select(func.to_regclass(table_name)))).scalar_one() is not None:
+            await session.execute(
+                text(statement).bindparams(bindparam("thread_ids", expanding=True)), {"thread_ids": thread_ids},
+            )
+    await session.execute(delete(AnalysisResult).where(AnalysisResult.run_id.in_(identifiers)))
+    await session.execute(delete(AgentRun).where(AgentRun.owner_id == user.id, AgentRun.id.in_(identifiers)))
+    await session.commit()
+    return {"message": "匹配记录已删除", "deleted_run_ids": thread_ids}
+
+
 # ----------------------------------------------------------------------
 # 辅助函数
 # ----------------------------------------------------------------------
@@ -972,7 +1055,11 @@ async def get_match_report(
 ) -> dict[str, Any]:
     """读取已经完成的岗位匹配报告。"""
 
-    run = await owned_record(session, AgentRun, run_id, owner_id)
+    # Hold the parent lock until create_run commits the new child. Deletion
+    # will then see the running child and refuse to remove its source report.
+    run = (await session.execute(
+        select(AgentRun).where(AgentRun.id == run_id, AgentRun.owner_id == owner_id).with_for_update()
+    )).scalar_one_or_none()
 
     if run is None:
         raise HTTPException(

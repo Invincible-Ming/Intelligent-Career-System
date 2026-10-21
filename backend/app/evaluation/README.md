@@ -10,6 +10,10 @@
 不补 0.5/0.6；有效零分参与四指标均值。检索、回答生成和指标评测共用样本超时。
 报告记录引擎与模型，旧版自定义指标的分数不能作为新 RAGAS 实验的对照基线。
 
+自有问答与反思提示词统一维护于 `app/core/prompts.py`，报告记录其版本。
+它们与官方 RAGAS 的评分提示词分开管理：本次只调整被评测的回答生成方式，
+没有改动官方指标规则。对比检索策略时还需固定问答提示词，避免混淆变量。
+
 ✅ **RAGAS 指标评估**：Context Precision、Context Recall、Faithfulness、Answer Relevancy  
 ✅ **A/B 实验对比**：支持多配置并行评测  
 ✅ **参数对比测试**：Top-K、检索模式（Dense/BM25/Hybrid）、Reranker、Reflection

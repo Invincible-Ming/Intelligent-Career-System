@@ -101,7 +101,7 @@ async def cleanup(container_name):
 
 @app.post("/parse")
 async def parse(request: ParseRequest):
-    if request.extension not in (".pdf", ".docx", ".xlsx", ".txt"):
+    if request.extension not in (".pdf", ".docx", ".xlsx", ".txt", ".md"):
         raise HTTPException(422, "Unsupported extension")
     if len(request.data) > (MAX_BYTES * 4 // 3 + 8):
         raise HTTPException(413, "Document too large")

@@ -10,6 +10,7 @@ import json
 import logging
 from pathlib import Path
 
+from app.core.prompts import MODEL_HEALTHCHECK_PROMPT
 from app.evaluation.dataset import TestDataset
 from app.services.bailian import bailian_service
 from app.services.bm25_service import bm25_service
@@ -38,7 +39,7 @@ async def check_services() -> dict[str, bool]:
     # 检查百炼
     try:
         await bailian_service.chat(
-            messages=[{"role": "user", "content": "测试"}],
+            messages=[{"role": "user", "content": MODEL_HEALTHCHECK_PROMPT}],
         )
         results["bailian"] = True
         logger.info("✓ 百炼: 可用")

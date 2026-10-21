@@ -15,6 +15,7 @@ from typing import Any
 
 from app.core.config import settings
 from app.core.limits import BudgetExceeded
+from app.core.prompts import PROMPT_VERSIONS
 from app.evaluation.config import EvaluationConfig, ExperimentConfig
 from app.evaluation.dataset import TestCase, TestDataset
 from app.evaluation.executor import rag_executor
@@ -325,6 +326,8 @@ class EvaluationRunner:
                 "embedding_model": settings.BAILIAN_EMBEDDING_MODEL,
                 "metric_max_llm_calls_per_case": settings.EVALUATION_METRIC_MAX_CALLS,
                 "answer_relevancy_strictness": 3,
+                "answer_prompt_version": PROMPT_VERSIONS["rag_answer"],
+                "reflection_prompt_version": PROMPT_VERSIONS["rag_reflection"],
             },
             "retrieval_scope": {
                 "owner_id": self.owner_id,

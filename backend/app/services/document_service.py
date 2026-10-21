@@ -47,6 +47,7 @@ ALLOWED_EXTENSIONS = {
     ".docx",
     ".xlsx",
     ".txt",
+    ".md",
 }
 
 
@@ -81,7 +82,7 @@ class DocumentService:
 
         if extension not in ALLOWED_EXTENSIONS:
             raise ValueError(
-                "仅支持 PDF、DOCX、XLSX 和 TXT 文件"
+                "仅支持 PDF、DOCX、XLSX、TXT 和 Markdown（.md）文件"
             )
 
         data = await file.read(settings.max_upload_size_bytes + 1)
@@ -103,6 +104,8 @@ class DocumentService:
         existing_doc_result = await session.execute(
             select(Document).join(DocumentParse, DocumentParse.document_id == Document.id).where(
                 Document.file_hash == file_hash,
+                # 相同字节的 TXT/Markdown 具有不同的章节解析方式。
+                func.lower(Document.filename).endswith(extension),
                 Document.owner_id == owner_id,
                 Document.document_type == document_type,
                 Document.status == "ready",

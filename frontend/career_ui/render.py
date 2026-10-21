@@ -1,24 +1,56 @@
 """视图展示组件。
 
-纯展示，不含状态变更。所有函数只依赖 streamlit 与传入数据，
-因此可以单独测试，也便于在页面之间复用。
+报告与文档展示组件；文档预览仅在用户打开时读取后端保存的解析文本。
 """
 from __future__ import annotations
 
+from html import escape
 from typing import Any
 
 import streamlit as st
 
 from career_ui.config import DOCUMENT_TYPE_NAMES
+from career_ui.documents import (
+    document_identity_label,
+    document_name_marker,
+    document_upload_time,
+)
 
 
 def document_label(document: dict[str, Any]) -> str:
     document_type = document.get("document_type", "unknown")
     type_name = DOCUMENT_TYPE_NAMES.get(document_type, document_type)
+    marker = document_name_marker(document)
     return (
-        f"{document.get('filename', '未命名文档')} "
-        f"· {type_name} "
-        f"· {document.get('status', 'unknown')}"
+        f"{document_identity_label(document)} · {type_name}"
+        f" · {document.get('status', 'unknown')}"
+        + (f" · {marker}" if marker else "")
+    )
+
+
+@st.dialog("文档预览", width="large")
+def show_document_preview(document: dict[str, Any]) -> None:
+    from career_ui.endpoints import APIError, get_document_preview
+
+    try:
+        preview = get_document_preview(str(document["id"]))
+    except APIError as exc:
+        st.warning(str(exc))
+        return
+    filename = escape(str(preview.get("filename") or document.get("filename") or "未命名文档"))
+    upload_time = escape(document_upload_time(document))
+    st.html(
+        '<header class="document-preview-header">'
+        f'<h3>{filename}</h3><p>{upload_time}</p>'
+        '</header>'
+    )
+    if preview.get("truncated"):
+        st.info("仅显示前部分内容")
+    # Render untrusted document text literally; it must never become active HTML.
+    content = escape(str(preview.get("content") or "暂无可预览内容"))
+    st.html(
+        '<article class="document-preview-body" tabindex="0" aria-label="文档正文">'
+        f'{content}</article>'
     )
 
 
@@ -33,6 +65,8 @@ def show_string_list(title: str, values: list[str] | None) -> None:
 
 def show_match_report(report: dict[str, Any]) -> None:
     st.subheader("岗位多维匹配报告")
+    if report.get("assessment_date"):
+        st.caption(f"评估日期：{report['assessment_date']}")
 
     score_column, level_column = st.columns(2)
     with score_column:
@@ -60,9 +94,50 @@ def show_match_report(report: dict[str, Any]) -> None:
 
     with right_column:
         show_string_list("缺失/待补足技能", report.get("missing_skills"))
-        show_string_list("潜在风险点", report.get("risks"))
+        risks = report.get("risks") or []
+        business_risks = [
+            item for item in risks
+            if not str(item).startswith(("需人工复核：", "自动校验提示（人工已确认）："))
+        ]
+        show_string_list("潜在风险点", business_risks)
+        if len(business_risks) != len(risks):
+            st.caption("此历史报告含旧版校验记录，已与求职风险分开；可重新评估获取结构化校验结果。")
 
     show_string_list("专家改进建议", report.get("suggestions"))
+
+    verification = report.get("verification")
+    if isinstance(verification, dict):
+        st.markdown("#### 报告校验")
+        status = verification.get("status")
+        summary = verification.get("summary") or "请核对当前报告。"
+        if status == "correction_unverified":
+            summary = "已生成修正版，但自动校验请求已用完，最新修正版尚未完成复核。"
+        if verification.get("nonblocking"):
+            st.info("报告已生成，自动校验未完成，结果暂未经完整复核。")
+        elif status == "passed":
+            st.success(summary)
+        elif status == "manual_accepted":
+            st.info(summary)
+        else:
+            st.warning(summary)
+        if verification.get("nonblocking") and verification.get("correction_applied"):
+            st.caption("已处理下列修正事项。")
+        elif verification.get("correction_applied") and status not in ("passed", "manual_accepted"):
+            st.caption("已生成修正版，最新版本尚未通过校验；下列问题来自修正前的报告。")
+        issues = verification.get("issues") or []
+        corrections = verification.get("corrections") or []
+        if issues or corrections:
+            label = "查看修正前的问题与修正记录" if verification.get("correction_applied") else "查看具体问题与修正记录"
+            with st.expander(label):
+                for issue in issues[:3]:
+                    if not isinstance(issue, dict):
+                        continue
+                    st.markdown(f"**{issue.get('field', '报告内容')}：{issue.get('problem', '')}**")
+                    st.write("报告原句：", issue.get("claim", ""))
+                    source = "简历" if issue.get("source") == "resume" else "岗位要求"
+                    st.write(f"{source}依据：", issue.get("evidence") or "原文未找到支持该断言的依据")
+                    st.write("修正建议：", issue.get("suggested_fix", ""))
+                show_string_list("本次修正记录", corrections[:6])
 
     with st.expander("查看简历结构化抽取明细 (Resume Agent)"):
         st.json(report.get("resume_analysis", {}))
@@ -211,4 +286,3 @@ def show_search_results(
             st.caption(
                 f"文档类型：{DOCUMENT_TYPE_NAMES.get(document_type, document_type)}"
             )
-            st.caption(f"文档 ID：{result.get('document_id', '')}")

@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 from app.core.limits import BudgetExceeded
+from app.core.prompts import RAG_ANSWER_SYSTEM_PROMPT, RAG_REFLECTION_SYSTEM_PROMPT, prompt_data
 from app.evaluation.config import EvaluationConfig
 from app.evaluation.scope import normalize_owner_id
 from app.services.bailian import bailian_service
@@ -187,24 +188,16 @@ class RAGExecutor:
     ) -> str:
         """基于检索上下文生成答案。"""
 
-        context_text = "\n\n".join(
-            f"[{i + 1}] {ctx}"
-            for i, ctx in enumerate(contexts)
-        )
-
-        prompt = f"""请基于以下检索到的上下文回答问题。
-
-上下文：
-{context_text}
-
-问题：{query}
-
-请给出准确、简洁的答案。如果上下文中没有相关信息，请说明。"""
-
         # Let the runner record a failed case instead of scoring an error
         # message as a successful model answer.
         return await bailian_service.chat(
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {"role": "system", "content": RAG_ANSWER_SYSTEM_PROMPT},
+                {"role": "user", "content": prompt_data(
+                    question=query,
+                    contexts=[{"source": i + 1, "text": ctx} for i, ctx in enumerate(contexts)],
+                )},
+            ],
             temperature=0.3,
         )
 
@@ -228,32 +221,27 @@ class RAGExecutor:
 
         for _ in range(max_iterations):
             completed_iterations += 1
-            # 让模型反思
-            reflection_prompt = f"""
-{reflection_config.reflection_prompt}
-
-原问题：{query}
-
-当前答案：{current_answer}
-
-参考上下文：
-{self._format_contexts(contexts)}
-
-请给出改进后的答案，如果当前答案已经足够好，可以保持不变。"""
-
             try:
                 improved_answer = await bailian_service.chat(
                     messages=[
+                        {"role": "system", "content": RAG_REFLECTION_SYSTEM_PROMPT},
                         {
                             "role": "user",
-                            "content": reflection_prompt,
+                            "content": prompt_data(
+                                question=query, current_answer=current_answer,
+                                contexts=[{"source": i + 1, "text": ctx} for i, ctx in enumerate(contexts)],
+                                review_focus=reflection_config.reflection_prompt,
+                            ),
                         }
                     ],
                     temperature=0.2,
                 )
 
-                # 简单的停止条件：如果改进后的答案与原答案高度相似，停止反思
-                if self._is_similar(current_answer, improved_answer):
+                if not improved_answer.strip():
+                    break
+                # A changed ending can contain the factual fix; never discard it
+                # just because the first 100 characters stayed the same.
+                if current_answer.strip() == improved_answer.strip():
                     break
 
                 current_answer = improved_answer
@@ -264,33 +252,5 @@ class RAGExecutor:
                 break
 
         return current_answer, completed_iterations
-
-    def _format_contexts(
-            self,
-            contexts: list[str],
-    ) -> str:
-        """格式化上下文。"""
-
-        return "\n\n".join(
-            f"[{i + 1}] {ctx}"
-            for i, ctx in enumerate(contexts)
-        )
-
-    def _is_similar(
-            self,
-            text1: str,
-            text2: str,
-            threshold: float = 0.9,
-    ) -> bool:
-        """简单的文本相似度判断。"""
-
-        # 简化版：比较长度和前 100 个字符
-        if abs(len(text1) - len(text2)) / max(len(text1), len(text2), 1) > 0.2:
-            return False
-
-        prefix_len = min(100, len(text1), len(text2))
-
-        return text1[:prefix_len] == text2[:prefix_len]
-
 
 rag_executor = RAGExecutor()

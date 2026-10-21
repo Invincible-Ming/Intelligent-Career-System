@@ -84,6 +84,7 @@ class Settings(BaseSettings):
     EVALUATION_METRIC_MAX_CALLS: int = 16
     EVALUATION_METRIC_MAX_OUTPUT_TOKENS: int = 2048
     MATCH_REASONING_EFFORT: Literal["none", "low", "medium", "xhigh"] = "none"
+    MATCH_ENABLE_THINKING: bool = False
     ANALYSIS_CACHE_ENABLED: bool = True
     REDIS_URL: str = "redis://127.0.0.1:6379/0"
     ANALYSIS_CACHE_TTL: int = 86400
@@ -292,6 +293,8 @@ class Settings(BaseSettings):
         # Only pass this option to models with documented provider support.
         if self.BAILIAN_CHAT_MODEL.startswith("qwen3.8-flash"):
             return {"reasoning_effort": self.MATCH_REASONING_EFFORT}
+        if self.BAILIAN_CHAT_MODEL.startswith("qwen3.7-flash"):
+            return {"enable_thinking": self.MATCH_ENABLE_THINKING}
         return {}
 
 

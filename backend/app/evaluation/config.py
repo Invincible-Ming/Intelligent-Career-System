@@ -8,6 +8,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from app.core.prompts import DEFAULT_REFLECTION_FOCUS
+
 
 class SearchConfig(BaseModel):
     """检索配置。"""
@@ -31,10 +33,7 @@ class ReflectionConfig(BaseModel):
 
     enable_reflection: bool = False
     max_iterations: int = Field(default=2, ge=1, le=5)
-    reflection_prompt: str = (
-        "请审查上一次的回答，如果存在事实错误、逻辑矛盾或不够准确的地方，"
-        "请基于检索到的知识进行修正。"
-    )
+    reflection_prompt: str = DEFAULT_REFLECTION_FOCUS
 
 
 class EvaluationConfig(BaseModel):

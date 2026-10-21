@@ -12,7 +12,7 @@ import zipfile
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass, replace
 
-PIPELINE_VERSION = "structure-v3"
+PIPELINE_VERSION = "structure-v4-markdown"
 
 
 @dataclass
@@ -160,6 +160,82 @@ async def parse_blocks(
     return await asyncio.to_thread(parse_non_pdf, data, extension, guard)
 
 
+def parse_markdown(text: str, guard: ParseGuard) -> list[Block]:
+    """Keep Markdown source and heading paths without rendering HTML or fetching URLs.
+
+    Recognize ATX/Setext headings outside fenced code. Paragraphs retain lists,
+    tables and inline markup verbatim; code fences are kept as separate records.
+    """
+    lines = text.replace("\r\n", "\n").replace("\r", "\n").splitlines()
+    blocks: list[Block] = []
+    headings: list[tuple[int, str]] = []
+    buffer: list[str] = []
+    fence: tuple[str, int] | None = None
+
+    def section() -> str:
+        return " / ".join(title for _, title in headings)
+
+    def flush(kind: str = "markdown") -> None:
+        if buffer:
+            content = "\n".join(buffer).strip()
+            if content:
+                if len(blocks) >= 10000:
+                    raise ValueError("Markdown 段落数量超限，请拆分文件")
+                blocks.append(Block(content, section=section(), kind=kind))
+            buffer.clear()
+
+    index = 0
+    while index < len(lines):
+        guard.check()
+        line = lines[index]
+        if fence:
+            buffer.append(line)
+            closing = re.fullmatch(r" {0,3}(`{3,}|~{3,})[ \t]*", line)
+            if closing and closing[1][0] == fence[0] and len(closing[1]) >= fence[1]:
+                flush("record")
+                fence = None
+            index += 1
+            continue
+
+        opening = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
+        if opening and (opening[1][0] != "`" or "`" not in opening[2]):
+            flush()
+            fence = (opening[1][0], len(opening[1]))
+            buffer.append(line)
+            index += 1
+            continue
+
+        heading = re.match(r"^ {0,3}(#{1,6})(?:[ \t]+|$)(.*)$", line)
+        level = 0
+        title = ""
+        consumed = 1
+        if heading:
+            level = len(heading[1])
+            title = re.sub(r"[ \t]+#+[ \t]*$", "", heading[2]).strip()
+        elif line.strip() and index + 1 < len(lines):
+            underline = re.fullmatch(r" {0,3}(=+|-+)[ \t]*", lines[index + 1])
+            if underline and not re.match(r"^\s*(?:>|[-+*]\s|\d+[.)]\s|\|)", line):
+                level = 1 if underline[1][0] == "=" else 2
+                title = line.strip()
+                consumed = 2
+        if level and title:
+            flush()
+            while headings and headings[-1][0] >= level:
+                headings.pop()
+            headings.append((level, title))
+            buffer.append("\n".join(lines[index : index + consumed]))
+            flush()
+        elif not line.strip():
+            flush()
+        else:
+            buffer.append(line)
+        index += consumed
+
+    # An unclosed fence remains code through end-of-file.
+    flush("record" if fence else "markdown")
+    return blocks
+
+
 def parse_non_pdf(data: bytes, extension: str, guard=None) -> list[Block]:
     guard = guard or ParseGuard(200000, lambda: None)
     if extension == ".xlsx":
@@ -232,14 +308,17 @@ def parse_non_pdf(data: bytes, extension: str, guard=None) -> list[Block]:
                     guard.add(text)
                     out.append(Block(text, section=section, kind="record"))
         return out
-    if extension == ".txt":
-        for encoding in ("utf-8-sig", "gb18030", "utf-16"):
+    if extension in (".txt", ".md"):
+        encodings = ("utf-16",) if data.startswith((b"\xff\xfe", b"\xfe\xff")) else ("utf-8-sig", "gb18030")
+        for encoding in encodings:
             try:
                 text = data.decode(encoding)
-                guard.add(text)
-                return [Block(p.strip()) for p in re.split(r"\n\s*\n", text.replace("\r\n", "\n")) if p.strip()]
             except UnicodeError:
                 continue
+            guard.add(text)
+            if extension == ".md":
+                return parse_markdown(text, guard)
+            return [Block(p.strip()) for p in re.split(r"\n\s*\n", text.replace("\r\n", "\n")) if p.strip()]
         raise ValueError("无法识别文本编码")
     raise ValueError(f"不支持的文件格式：{extension}")
 
@@ -275,7 +354,7 @@ def build_chunks(blocks: list[Block], size: int = 800, overlap: int = 100) -> li
         raise ValueError("要求 size >= 64 且 0 <= overlap < size")
     normalized = []
     for block in blocks:
-        if block.kind == "record":
+        if block.kind in ("record", "markdown"):
             normalized.append(block)
             continue
         buffer = []

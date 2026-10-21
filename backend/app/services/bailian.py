@@ -23,6 +23,7 @@ from pydantic import BaseModel, ValidationError
 
 from app.core.config import settings
 from app.core.limits import BudgetExceeded, charge_model_call, model_request_timeout, validate_model_input
+from app.core.prompts import JSON_REPAIR_INSTRUCTIONS, JSON_SCHEMA_INSTRUCTIONS, OCR_PROMPT, prompt_data
 from app.services.embed_cache import embed_cache
 
 SchemaType = TypeVar(
@@ -37,6 +38,15 @@ class ModelServiceError(RuntimeError):
         self.status_code = status_code
         detail = message or (f"code={code}, status={status_code}" if (code or status_code) else None)
         super().__init__(f'模型服务不可用（{detail}）' if detail else '模型服务不可用')
+
+
+class StructuredOutputError(RuntimeError):
+    """Safe diagnostics without retaining the model's response or source documents."""
+
+    def __init__(self, code: str, fields: list[dict[str, Any]] | None = None):
+        self.code = code
+        self.fields = fields or []
+        super().__init__(code)
 
 
 def public_model_error(exc):
@@ -80,6 +90,7 @@ class BailianService:
             max_output_tokens: int | None = None,
             model: str | None = None,
             reasoning_effort: str | None = None,
+            enable_thinking: bool | None = None,
             max_retries: int | None = None,
     ) -> str:
         """调用百炼聊天模型。"""
@@ -100,6 +111,8 @@ class BailianService:
             }
         if reasoning_effort is not None:
             request_params["reasoning_effort"] = reasoning_effort
+        if enable_thinking is not None:
+            request_params["extra_body"] = {"enable_thinking": enable_thinking}
 
         response = await self._chat_retry(
             retry_limit=max_retries,
@@ -111,12 +124,13 @@ class BailianService:
                 "百炼聊天模型没有返回结果"
             )
 
+        if getattr(response.choices[0], "finish_reason", None) == "length":
+            raise StructuredOutputError("output_truncated")
+
         content = response.choices[0].message.content
 
         if not content:
-            raise RuntimeError(
-                "百炼聊天模型返回内容为空"
-            )
+            raise StructuredOutputError("empty_output")
 
         if len(content.encode("utf-8")) > request_params["max_tokens"] * 16:
             raise BudgetExceeded("模型输出超过预算")
@@ -188,7 +202,7 @@ class BailianService:
                 "content": [
                     {
                         "type": "text",
-                        "text": "你是一个专业的文档解析助手。请精准提取这张图片里的所有文本内容。请严格遵循以下规则：1. 保持原有的段落结构；2. 如果图片中包含表格，请务必使用Markdown格式的表格输出；3. 不要输出任何除了提取文本之外的解释性废话。"
+                        "text": OCR_PROMPT
                     },
                     {
                         "type": "image_url",
@@ -223,6 +237,8 @@ class BailianService:
             user_prompt: str,
             response_model: type[SchemaType],
             reasoning_effort: str | None = None,
+            enable_thinking: bool | None = None,
+            validation_context: dict[str, Any] | None = None,
             max_output_tokens: int | None = None,
             schema_attempts: int = 2,
             max_retries: int | None = None,
@@ -245,8 +261,7 @@ class BailianService:
                 "role": "system",
                 "content": (
                     f"{system_prompt}\n\n"
-                    "你必须只返回合法 JSON，"
-                    "不要返回 Markdown 代码块或其他解释。\n"
+                    f"{JSON_SCHEMA_INSTRUCTIONS}\n"
                     f"返回内容必须符合以下 JSON Schema：{schema}"
                 ),
             },
@@ -263,20 +278,28 @@ class BailianService:
                 max_output_tokens=max_output_tokens,
                 max_retries=max_retries,
                 **({"reasoning_effort": reasoning_effort} if reasoning_effort is not None else {}),
+                **({"enable_thinking": enable_thinking} if enable_thinking is not None else {}),
             )
 
             try:
                 # 🌟 调用强化后的 clean_json
                 return response_model.model_validate_json(
-                    clean_json(content)
+                    clean_json(content), context=validation_context,
                 )
             except ValidationError as exc:
                 if attempt == schema_attempts - 1:
-                    raise RuntimeError(
-                        "模型结构化输出校验失败："
-                        f"{exc}"
-                    ) from exc
+                    fields = [
+                        {"field": list(error["loc"]), "type": error["type"]}
+                        for error in exc.errors(include_input=False, include_url=False)[:8]
+                    ]
+                    code = "invalid_json" if any(item["type"] == "json_invalid" for item in fields) else "invalid_schema"
+                    raise StructuredOutputError(code, fields) from exc
 
+                # Do not echo complete input values/secrets from validation errors.
+                errors = [
+                    {"field": list(error["loc"]), "type": error["type"], "message": error["msg"][:240]}
+                    for error in exc.errors(include_input=False, include_url=False)[:8]
+                ]
                 messages.extend(
                     [
                         {
@@ -286,9 +309,7 @@ class BailianService:
                         {
                             "role": "user",
                             "content": (
-                                "上面的 JSON 不符合 Schema。"
-                                "请根据校验错误修正，并且只返回 JSON。\n"
-                                f"校验错误：{exc}"
+                                JSON_REPAIR_INSTRUCTIONS + "\n" + prompt_data(validation_errors=errors)
                             ),
                         },
                     ]

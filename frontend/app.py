@@ -93,12 +93,14 @@ from career_ui.config import (  # noqa: E402
     DOCUMENT_TYPE_NAMES,
     SEARCH_MODE_NAMES,
 )
+from career_ui.documents import document_name_marker, document_upload_time  # noqa: E402
 from career_ui.endpoints import (  # noqa: E402
     MATCH_STATUS_NAMES,
     create_interview_plan,
     create_learning_plan,
     delete_chat_conversation,
     delete_document,
+    delete_match_run,
     fetch_match_context,
     get_conversation_messages,
     get_conversations,
@@ -120,6 +122,7 @@ from career_ui.render import (  # noqa: E402
     show_learning_plan,
     show_match_report,
     show_search_results,
+    show_document_preview,
 )
 from career_ui.session import (  # noqa: E402
     auth_cookie_name,
@@ -140,6 +143,66 @@ def _switch_to_direct_jd_input() -> None:
 
     st.session_state["jd_source_choice"] = "直接输入"
     st.rerun()
+
+
+def _continue_nonblocking_review() -> None:
+    """Finish legacy technical-only pauses without a model call or a claimed human approval."""
+    if not st.session_state.get("match_paused"):
+        return
+    report = st.session_state.get("preliminary_report") or {}
+    review = report.get("verification") or {}
+    if review.get("status") not in ("timeout", "service_error") or review.get("issues") or review.get("unresolved_issues"):
+        return
+    thread_id = st.session_state.get("match_thread_id")
+    if not thread_id or st.session_state.get("unverified_continue_attempted") == thread_id:
+        return
+    st.session_state["unverified_continue_attempted"] = thread_id
+    try:
+        with st.spinner("正在展示匹配报告…"):
+            outcome = request_api("POST", "/api/match/resume", json={"thread_id": thread_id}, timeout=LONG_TIMEOUT)
+        if outcome.get("status") == "completed":
+            st.session_state["match_report"] = match_report_of(outcome)
+            st.session_state["match_paused"] = False
+            st.session_state.pop("preliminary_report", None)
+            st.rerun()
+    except APIError as exc:
+        st.warning(f"暂未能恢复报告：{exc}")
+
+
+def _clear_deleted_match_state(deleted_run_ids: list[str]) -> None:
+    identifiers = set(deleted_run_ids)
+    current_deleted = any(
+        str(st.session_state.get(key) or "") in identifiers
+        for key in ("match_run_id", "match_thread_id")
+    )
+    if current_deleted:
+        for key in ("match_run_id", "match_thread_id", "match_report", "preliminary_report", "match_paused"):
+            st.session_state.pop(key, None)
+    for name in ("interview_plan", "learning_plan"):
+        source = st.session_state.get(f"{name}_source_run_id")
+        plan_run = st.session_state.get(f"{name}_run_id")
+        if source in identifiers or plan_run in identifiers or (current_deleted and source is None):
+            for key in (name, f"{name}_source_run_id", f"{name}_run_id"):
+                st.session_state.pop(key, None)
+
+
+@st.dialog("删除匹配记录", width="small")
+def _confirm_delete_match_run(run_id: str, label: str) -> None:
+    st.write("确认删除这次匹配报告及由它生成的面试、学习计划？")
+    st.caption(label)
+    st.caption("删除后无法恢复，已上传的简历和岗位文档将保留。")
+    confirm, cancel = st.columns(2)
+    if confirm.button("确认删除", type="primary", use_container_width=True):
+        try:
+            response = delete_match_run(run_id)
+        except APIError as exc:
+            st.error(str(exc))
+            return
+        _clear_deleted_match_state(response.get("deleted_run_ids") or [run_id])
+        st.session_state["match_delete_notice"] = "匹配记录已删除"
+        st.rerun(scope="app")
+    if cancel.button("取消", use_container_width=True):
+        st.rerun(scope="app")
 
 
 def _run_match_flow(
@@ -206,6 +269,8 @@ def _run_match_flow(
                     elif node == "verify_agent":
                         if data.get("status") == "passed":
                             status_box.write(f"**[Verify Agent]** {msg}")
+                        elif data.get("nonblocking"):
+                            status_box.info(msg)
                         else:
                             status_box.warning(msg)
                             if data.get("feedback"):
@@ -228,7 +293,7 @@ def _run_match_flow(
                     if report:
                         st.session_state["match_report"] = report
                         status_box.update(
-                            label="岗位多维匹配与事实校验全部完成！",
+                            label="匹配报告已生成，自动校验未完成" if data.get("verification_nonblocking") else "岗位多维匹配与事实校验全部完成！",
                             state="complete",
                             expanded=False,
                         )
@@ -626,9 +691,9 @@ with private_area.container():
             uploader_key = f"knowledge_uploader_{st.session_state.get('uploader_nonce', 0)}"
             uploaded_file = st.file_uploader(
                 "选择文档文件",
-                type=["pdf", "docx", "xlsx", "txt"],
+                type=["pdf", "docx", "xlsx", "txt", "md"],
                 key=uploader_key,
-                help="支持 PDF、DOCX、XLSX 和 TXT 格式",
+                help="支持 PDF、DOCX、XLSX、TXT 和 Markdown（.md）格式",
             )
 
             if st.button(
@@ -645,6 +710,12 @@ with private_area.container():
                     st.session_state["uploader_nonce"] = st.session_state.get("uploader_nonce", 0) + 1
 
                     document = upload_result.get("document") or {}
+                    selection_key = {
+                        "resume": "match_resume_document_id",
+                        "job_description": "match_job_document_id",
+                    }.get(upload_type)
+                    if selection_key and document.get("id"):
+                        st.session_state[selection_key] = str(document["id"])
                     # st.rerun() 会清掉本轮渲染输出，
                     # 提示语必须存进 session_state 才能显示在下一轮。
                     st.session_state["upload_notice"] = (
@@ -734,14 +805,20 @@ with private_area.container():
         if not documents:
             st.info("暂未上传文档")
         else:
+            st.caption(
+                f"共 {len(documents)} 份文档 · 最近上传优先 · 北京时间"
+            )
             for document in documents:
-                first, second, third, fourth = st.columns([4, 2, 2, 1])
+                first, second, third, preview_column, fourth = st.columns([4, 1.3, 1.7, 1.2, 1])
                 filename = document.get("filename", "未命名文档")
                 document_id = document.get("id", "")
 
                 first.markdown(f"**{filename}**")
-                created_at = (str(document.get("created_at") or ""))[:16].replace("T", " ")
-                first.caption(f"入库时间：{created_at}" if created_at else f"ID：{document_id[:8]}…")
+                marker = document_name_marker(document)
+                first.caption(
+                    f"上传时间：{document_upload_time(document)}"
+                    + (f" · {marker}" if marker else "")
+                )
 
                 document_type = document.get("document_type", "")
                 second.write(DOCUMENT_TYPE_NAMES.get(document_type, document_type))
@@ -755,6 +832,11 @@ with private_area.container():
                     third.error("处理失败")
                 else:
                     third.warning(status)
+
+                if preview_column.button(
+                    "查看原文", key=f"preview-document-{document_id}", disabled=status != "ready",
+                ):
+                    show_document_preview(document)
 
                 if fourth.button("删除", key=f"delete-document-{document_id}"):
                     try:
@@ -770,6 +852,9 @@ with private_area.container():
 
     if active_page == "match":
         st.header("简历与岗位多维匹配")
+        delete_notice = st.session_state.pop("match_delete_notice", None)
+        if delete_notice:
+            st.success(delete_notice)
 
         # ==================================================================
         # 任务历史记录与断点恢复控制台
@@ -788,7 +873,9 @@ with private_area.container():
                     run_id = str(run["run_id"])
                     status = run.get("status")
                     with st.container():
-                        col_info, col_state, col_action = st.columns([5, 1.6, 1.4], vertical_alignment="center")
+                        col_info, col_state, col_action, col_delete = st.columns(
+                            [5, 1.3, 1.3, .9], vertical_alignment="center",
+                        )
                         with col_info:
                             st.markdown(f"**{match_run_label(run, all_documents)}**")
                             st.caption(f"任务 ID：{run_id[:8]}…")
@@ -826,6 +913,14 @@ with private_area.container():
                                         st.rerun()
                             else:
                                 st.caption("—")
+                        with col_delete:
+                            can_delete = status in ("completed", "failed", "paused")
+                            if st.button(
+                                "删除", key=f"delete-match-run-{run_id}", use_container_width=True,
+                                disabled=not can_delete,
+                                help=None if can_delete else "任务正在运行，请等待完成后再删除",
+                            ):
+                                _confirm_delete_match_run(run_id, match_run_label(run, all_documents))
                         if status == "failed" and run.get("error_message"):
                             st.caption(f"失败原因：{run['error_message']}")
         else:
@@ -886,30 +981,48 @@ with private_area.container():
                     on_click=_switch_to_direct_jd_input,
                 )
 
-            # 用 form 包裹：JD 文本较长，裸控件在每次 rerun 时会丢输入。
-            with st.form("match_form", border=False):
-                selected_resume = st.selectbox(
-                    "选择候选人简历",
-                    options=resume_documents,
-                    format_func=document_label,
+            # Select by immutable ID; a filename is only display text, never an identity.
+            resume_by_id = {document["id"]: document for document in resume_documents}
+            resume_key = "match_resume_document_id"
+            if st.session_state.get(resume_key) not in resume_by_id:
+                st.session_state.pop(resume_key, None)
+            resume_id = st.selectbox(
+                "选择候选人简历",
+                options=list(resume_by_id),
+                format_func=lambda identifier: document_label(resume_by_id[identifier]),
+                key=resume_key,
+            )
+            selected_resume = resume_by_id.get(resume_id)
+            st.caption("最近上传优先 · 北京时间")
+            if selected_resume and st.button("查看所选简历原文", key="preview-match-resume"):
+                show_document_preview(selected_resume)
+
+            selected_job = None
+            if jd_source == "已上传文档":
+                job_by_id = {document["id"]: document for document in job_documents}
+                job_key = "match_job_document_id"
+                if st.session_state.get(job_key) not in job_by_id:
+                    st.session_state.pop(job_key, None)
+                job_id = st.selectbox(
+                    "选择岗位描述文档",
+                    options=list(job_by_id),
+                    format_func=lambda identifier: document_label(job_by_id[identifier]),
+                    key=job_key,
                 )
+                selected_job = job_by_id.get(job_id)
+                if selected_job and st.button("查看所选岗位原文", key="preview-match-job"):
+                    show_document_preview(selected_job)
 
-                selected_job = None
+            # Keep text submission in the form; selectors stay outside for immediate previews.
+            with st.form("match_form", border=False):
                 jd_text = ""
-
                 if jd_source == "直接输入":
                     jd_text = st.text_area(
                         "输入岗位描述 (JD)",
                         placeholder="粘贴岗位名称、职责要求与技术栈门槛...",
                         height=200,
                         max_chars=security_options()["jd_max_input_chars"],
-                    )
-                else:
-                    # 无 JD 文档的情形已在 form 外处理（提示 + 逃生按钮）。
-                    selected_job = st.selectbox(
-                        "选择岗位描述文档",
-                        options=job_documents,
-                        format_func=document_label,
+                        key="match_jd_text",
                     )
 
                 research_approved = st.checkbox("补充检索公开岗位资料", value=False)
@@ -944,9 +1057,10 @@ with private_area.container():
         # ==================================================================
         # 人机协同 (Human-in-the-loop) 交互卡片
         # ==================================================================
+        _continue_nonblocking_review()
         if st.session_state.get("match_paused"):
             st.divider()
-            st.warning("**自动校验未通过或已中止，请审核报告；可填写修改意见重新评估。**")
+            st.warning("**报告尚未通过自动校验，请查看下方“报告校验”信息；可填写修改意见重新评估。**")
 
             pre_report = st.session_state.get("preliminary_report") or {}
             if pre_report:
@@ -1017,6 +1131,8 @@ with private_area.container():
                                 elif node == "verify_agent":
                                     if status == "passed":
                                         resume_box.write(f"**[Verify Agent]** {msg}")
+                                    elif data.get("nonblocking"):
+                                        resume_box.info(msg)
                                     else:
                                         feedback = data.get("feedback", "")
                                         resume_box.warning(msg)
@@ -1035,7 +1151,7 @@ with private_area.container():
                                     st.session_state["match_report"] = report
                                     st.session_state["match_paused"] = False
                                     resume_box.update(
-                                        label="人工确认已完成" if data.get("manual_accepted") else "匹配报告自动校验完成！",
+                                        label=data.get("message") or "匹配报告已生成",
                                         state="complete",
                                         expanded=False,
                                     )
@@ -1062,8 +1178,11 @@ with private_area.container():
         match_report = st.session_state.get("match_report")
         if match_report and not st.session_state.get("match_paused"):
             st.divider()
+            _, report_actions = st.columns([5, 1])
+            current_run_id = st.session_state.get("match_run_id")
+            if current_run_id and report_actions.button("删除本次匹配", key="delete-current-match"):
+                _confirm_delete_match_run(str(current_run_id), "当前匹配报告")
             show_match_report(match_report)
-            st.caption(f"任务持久化 ID：`{st.session_state.get('match_run_id', '')}`")
 
     # ----------------------------------------------------------------------
     # 4. 面试准备页面
@@ -1126,6 +1245,8 @@ with private_area.container():
                     raise APIError("面试接口未返回有效结果")
 
                 st.session_state["interview_plan"] = interview_result
+                st.session_state["interview_plan_source_run_id"] = interview_run_id
+                st.session_state["interview_plan_run_id"] = str(interview_response.get("run_id") or "")
                 st.success("面试题目生成完成！")
             except APIError as exc:
                 st.error(str(exc))
@@ -1190,6 +1311,8 @@ with private_area.container():
                     raise APIError("学习计划接口未返回有效结果")
 
                 st.session_state["learning_plan"] = learning_result
+                st.session_state["learning_plan_source_run_id"] = learning_run_id
+                st.session_state["learning_plan_run_id"] = str(learning_response.get("run_id") or "")
                 st.success("学习路线规划完成！")
             except APIError as exc:
                 st.error(str(exc))

@@ -11,7 +11,14 @@ from langgraph.checkpoint.memory import InMemorySaver
 
 from app.agents import workflow
 from app.core.config import settings
-from app.core.schemas import JobAnalysis, MatchEvaluation, MatchScores, ResumeAnalysis, VerificationResult
+from app.core.schemas import (
+    JobAnalysis,
+    MatchEvaluation,
+    MatchScores,
+    ResumeAnalysis,
+    VerificationIssue,
+    VerificationResult,
+)
 from app.services.bailian import BailianService
 
 
@@ -38,6 +45,31 @@ def state():
         human_feedback="",
         verification_feedback="",
         retry_count=0,
+    )
+
+
+def review_result(*, is_faithful, reason, corrected_evaluation=None):
+    """既有模拟用例遵循新的结构化校验契约。"""
+    issues = (
+        []
+        if is_faithful
+        else [
+            VerificationIssue(
+                kind="unsupported_claim",
+                field="strengths",
+                claim="Synthetic disputed claim",
+                source="resume",
+                evidence="",
+                problem=reason,
+                suggested_fix="Review synthetic facts",
+            )
+        ]
+    )
+    return VerificationResult(
+        is_faithful=is_faithful,
+        reason=reason,
+        issues=issues,
+        corrected_evaluation=corrected_evaluation,
     )
 
 
@@ -129,13 +161,13 @@ class ConfirmationTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_review_rechecks_correction_and_recalculates_total(self):
         original = state()
-        review = VerificationResult(
+        review = review_result(
             is_faithful=False, reason="Synthetic graduation mismatch", corrected_evaluation=evaluation(20)
         )
         with patch.object(
             workflow.bailian_service,
             "structured_chat",
-            side_effect=[review, VerificationResult(is_faithful=True, reason="Corrected facts checked")],
+            side_effect=[review, review_result(is_faithful=True, reason="Corrected facts checked")],
         ) as model:
             result = await workflow.verify_agent(original, {"configurable": {}})
         self.assertEqual(model.await_count, 2)
@@ -150,12 +182,14 @@ class ConfirmationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(workflow.check_verification(result), workflow.END)
 
     async def test_uncorrectable_review_marks_risk_and_stops_generation_loop(self):
-        review = VerificationResult(is_faithful=False, reason="Synthetic issue")
+        review = review_result(is_faithful=False, reason="Synthetic issue")
         with patch.object(workflow.bailian_service, "structured_chat", return_value=review):
             result = await workflow.verify_agent(state(), {"configurable": {}})
         self.assertFalse(result["is_valid"])
         self.assertTrue(result["is_degraded"])
-        self.assertIn("需人工复核", result["result"]["risks"][-1])
+        self.assertEqual(result["result"]["verification"]["status"], "needs_review")
+        self.assertTrue(result["result"]["verification"]["issues"])
+        self.assertFalse(any("需人工复核" in risk for risk in result["result"]["risks"]))
         self.assertEqual(workflow.check_verification(result), "human_review")
 
     async def test_timeouts_cancel_models_and_route_to_fallback_or_manual_review(self):
@@ -190,9 +224,7 @@ class ConfirmationTests(unittest.IsolatedAsyncioTestCase):
             if schema is MatchEvaluation:
                 return evaluation()
             if schema is VerificationResult:
-                return VerificationResult(
-                    is_faithful=False, reason="Synthetic issue", corrected_evaluation=evaluation(20)
-                )
+                return review_result(is_faithful=False, reason="Synthetic issue", corrected_evaluation=evaluation(20))
             raise AssertionError(schema)
 
         with (
@@ -251,7 +283,7 @@ class ConfirmationTests(unittest.IsolatedAsyncioTestCase):
                 return evaluation()
             if schema is VerificationResult:
                 trace.append("review")
-                return VerificationResult(is_faithful=True, reason="Synthetic facts checked")
+                return review_result(is_faithful=True, reason="Synthetic facts checked")
             raise AssertionError(schema)
 
         with (
@@ -279,8 +311,8 @@ class ConfirmationTests(unittest.IsolatedAsyncioTestCase):
             workflow.bailian_service,
             "structured_chat",
             side_effect=[
-                VerificationResult(is_faithful=False, reason="First issue", corrected_evaluation=evaluation(20)),
-                VerificationResult(is_faithful=False, reason="Second issue", corrected_evaluation=evaluation(40)),
+                review_result(is_faithful=False, reason="First issue", corrected_evaluation=evaluation(20)),
+                review_result(is_faithful=False, reason="Second issue", corrected_evaluation=evaluation(40)),
             ],
         ) as model:
             result = await workflow.verify_agent(state(), {"configurable": {}})
@@ -298,7 +330,7 @@ class ConfirmationTests(unittest.IsolatedAsyncioTestCase):
             nonlocal calls
             calls += 1
             if calls == 1:
-                return VerificationResult(is_faithful=False, reason="Issue", corrected_evaluation=evaluation(20))
+                return review_result(is_faithful=False, reason="Issue", corrected_evaluation=evaluation(20))
             try:
                 await asyncio.sleep(10)
             finally:
@@ -337,7 +369,7 @@ class ConfirmationTests(unittest.IsolatedAsyncioTestCase):
                         return evaluation(20 if len(_reports) > 1 else 80)
                     if schema is VerificationResult:
                         _reviews.append(kwargs["user_prompt"])
-                        return VerificationResult(is_faithful=_passes and len(_reviews) > 1, reason="Synthetic review")
+                        return review_result(is_faithful=_passes and len(_reviews) > 1, reason="Synthetic review")
                     raise AssertionError(schema)
 
                 owner = str(uuid.uuid4())

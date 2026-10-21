@@ -1,6 +1,6 @@
 # 任务沙箱 Runner
 
-用户上传的 PDF、DOCX、XLSX、TXT 不再在 FastAPI 进程内解析。可信 Sandbox Runner 持有 Docker 权限，通过仅本机可访问的 Unix
+用户上传的 PDF、DOCX、XLSX、TXT、Markdown（`.md`）不再在 FastAPI 进程内解析。可信 Sandbox Runner 持有 Docker 权限，通过仅本机可访问的 Unix
 socket 接受已验证归属的文档字节；每份文档启动一次临时容器，结束即删除。容器没有网络、数据库、MinIO 或百炼密钥，也没有任何用户目录挂载。扫描
 PDF 的 OCR 图片通过受控协议交给 FastAPI 调用百炼，模型密钥始终留在后端。
 
@@ -13,6 +13,9 @@ docker build -f deploy/sandbox/Dockerfile -t career-document-sandbox:1 .
 cd backend
 python ../deploy/sandbox/start.py
 ```
+
+升级 Markdown 支持时，须重新执行上面的镜像构建，并重启已运行的 Runner、后端与前端。
+Markdown 在沙箱内读取原文和标题结构，不执行代码、不渲染 HTML、不下载远程资源。
 
 另开终端启动 FastAPI。Runner 必须先启动；后端默认 `SANDBOX_DOCUMENTS_ENABLED=true`，Runner 或 Docker
 不可用时文件上传会明确失败，不会在后端进程回退解析。MCP 工具也通过 Runner 启动；Runner 不可用时对应工具禁用。
