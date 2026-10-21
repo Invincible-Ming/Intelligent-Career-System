@@ -54,6 +54,20 @@ class BudgetTests(unittest.IsolatedAsyncioTestCase):
         # SDK 客户端均为模拟对象；使用合成凭据走真实预算/重试逻辑。
         self.enterContext(patch.object(settings, "DASHSCOPE_API_KEY", "synthetic-test-key"))
 
+    async def test_timeout_before_response_start_returns_504(self):
+        app = FastAPI()
+        app.add_middleware(SecurityLimitsMiddleware)
+
+        @app.get("/slow-start")
+        async def slow_start():
+            await asyncio.Event().wait()
+
+        with patch.object(settings, "API_TOTAL_TIMEOUT", 0.02):
+            async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+                response = await client.get("/slow-start")
+        self.assertEqual(response.status_code, 504)
+        self.assertIn("总耗时", response.json()["detail"])
+
     def test_match_timeout_is_separate_and_model_timeout_respects_deadline(self):
         with patch.object(settings, "MATCH_TOTAL_TIMEOUT", 600), patch.object(settings, "ANALYSIS_TOTAL_TIMEOUT", 180):
             self.assertEqual(operation_timeout("/api/match"), 600)
@@ -538,24 +552,36 @@ class AuthIntegrationTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_timeout_cleans_stream_and_leases(self):
         stopped = asyncio.Event()
+        request_deadlines = []
+        real_timeout = asyncio.timeout
+
+        def record_timeout(delay):
+            deadline = real_timeout(delay)
+            request_deadlines.append(deadline)
+            return deadline
 
         async def stream(**kwargs):
             try:
                 yield "partial"
-                await asyncio.sleep(10)
+                # Expire the real middleware deadline only after SSE has started.
+                # Authentication/DB setup must not race a 250 ms CI timing window.
+                request_deadlines[0].reschedule(asyncio.get_running_loop().time())
+                await asyncio.Event().wait()
             finally:
                 stopped.set()
 
         with (
-            patch.object(settings, "CHAT_TOTAL_TIMEOUT", 0.25),
+            patch.object(settings, "CHAT_TOTAL_TIMEOUT", 10),
+            patch("app.core.limits.asyncio.timeout", side_effect=record_timeout),
             patch.object(chat_api.bailian_service, "stream_messages", stream),
         ):
             response = await self.client.post("/api/chat/completions", headers=self.ah, json={"message": "q"})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertIn("partial", response.text)
         self.assertIn("总耗时", response.text)
         self.assertIn("[DONE]", response.text)
         self.assertTrue(stopped.is_set())
-        await asyncio.sleep(0.05)
+        self.assertTrue(request_deadlines[0].expired())
         async with self.factory() as session:
             self.assertEqual((await session.execute(select(func.count()).select_from(OperationLease))).scalar(), 0)
             rows = (await session.execute(select(Message).where(Message.role == "assistant"))).scalars().all()
