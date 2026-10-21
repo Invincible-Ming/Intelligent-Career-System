@@ -644,6 +644,51 @@ class AuthIntegrationTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(run.result_data, report)
             self.assertEqual(run.analysis_result.match_report, report)
 
+    async def test_resume_persists_unverified_completion_separately_from_passes(self):
+        *_, ownrun, ca, cb = await self.seed()
+        report = {
+            "total_score": 70,
+            "verification": {
+                "status": "service_error", "nonblocking": True, "issues": [],
+                "summary": "Synthetic incomplete review",
+            },
+        }
+        outcome = {
+            "status": "completed", "current_report": report,
+            "is_valid": False, "manual_accepted": False, "verification_nonblocking": True,
+        }
+        with patch.object(api, "resume_match", AsyncMock(return_value=outcome)):
+            response = await self.client.post("/api/match/resume", headers=self.ah, json={"thread_id": str(ownrun)})
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json()["status"], "completed")
+        async with self.factory() as session:
+            run = await session.get(AgentRun, ownrun)
+            self.assertEqual(run.input_data["review_status"], "unverified")
+            self.assertEqual(run.analysis_result.match_report, report)
+            self.assertEqual(run.result_data["verification"]["status"], "service_error")
+
+    async def test_unverified_completion_cannot_bypass_a_known_remaining_claim(self):
+        *_, ownrun, ca, cb = await self.seed()
+        report = {
+            "total_score": 70, "matched_skills": ["Invented skill"],
+            "verification": {
+                "status": "service_error", "nonblocking": True,
+                "issues": [{"field": "matched_skills", "claim": "Invented skill"}],
+            },
+        }
+        outcome = {
+            "status": "completed", "current_report": report,
+            "is_valid": False, "manual_accepted": False, "verification_nonblocking": True,
+        }
+        with patch.object(api, "resume_match", AsyncMock(return_value=outcome)):
+            response = await self.client.post("/api/match/resume", headers=self.ah, json={"thread_id": str(ownrun)})
+        self.assertEqual(response.status_code, 500, response.text)
+        async with self.factory() as session:
+            run = await session.get(AgentRun, ownrun)
+            self.assertEqual(run.status, "failed")
+            self.assertIsNone(run.analysis_result)
+            self.assertNotEqual(run.input_data.get("review_status"), "unverified")
+
     async def test_workflow_stream_timeout_stops_and_marks_run_failed(self):
         stopped = asyncio.Event()
         async with self.factory() as session:

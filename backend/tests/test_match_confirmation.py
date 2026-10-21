@@ -19,7 +19,7 @@ from app.core.schemas import (
     VerificationIssue,
     VerificationResult,
 )
-from app.services.bailian import BailianService
+from app.services.bailian import BailianService, StructuredOutputError
 
 
 def evaluation(education=80):
@@ -49,15 +49,15 @@ def state():
 
 
 def review_result(*, is_faithful, reason, corrected_evaluation=None):
-    """既有模拟用例遵循新的结构化校验契约。"""
+    """Point at a real current score; never invent a claim absent from the fixture report."""
     issues = (
         []
         if is_faithful
         else [
             VerificationIssue(
                 kind="unsupported_claim",
-                field="strengths",
-                claim="Synthetic disputed claim",
+                claim_id="scores:education",
+                field="scores",
                 source="resume",
                 evidence="",
                 problem=reason,
@@ -189,10 +189,12 @@ class ConfirmationTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(result["is_degraded"])
         self.assertEqual(result["result"]["verification"]["status"], "needs_review")
         self.assertTrue(result["result"]["verification"]["issues"])
+        self.assertFalse(result["verification_nonblocking"])
+        self.assertTrue(result["result"]["verification"]["unresolved_issues"])
         self.assertFalse(any("需人工复核" in risk for risk in result["result"]["risks"]))
         self.assertEqual(workflow.check_verification(result), "human_review")
 
-    async def test_timeouts_cancel_models_and_route_to_fallback_or_manual_review(self):
+    async def test_timeouts_cancel_models_and_continue_unverified_report(self):
         async def slow(**_):
             await asyncio.sleep(10)
 
@@ -206,7 +208,14 @@ class ConfirmationTests(unittest.IsolatedAsyncioTestCase):
             match = await asyncio.wait_for(workflow.match_agent(original, {"configurable": {}}), 0.5)
             verify = await asyncio.wait_for(workflow.verify_agent(original, {"configurable": {}}), 0.5)
         self.assertEqual(workflow.route_after_match(match), "fallback_node")
-        self.assertEqual(workflow.check_verification(verify), "human_review")
+        self.assertEqual(workflow.check_verification(verify), workflow.END)
+        self.assertFalse(verify["is_valid"])
+        self.assertTrue(verify["verification_nonblocking"])
+        self.assertFalse(verify["verification_needs_review"])
+        review = verify["result"]["verification"]
+        self.assertEqual(review["status"], "timeout")
+        self.assertEqual(review["failure_code"], "timeout")
+        self.assertTrue(review["nonblocking"])
 
     async def test_real_graph_bounds_corrections_then_manual_accepts_without_model(self):
         graph = workflow.get_match_workflow_builder().compile(
@@ -306,7 +315,7 @@ class ConfirmationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(final["status"], "completed")
         self.assertTrue(final["is_valid"])
 
-    async def test_two_unverified_corrections_require_manual_review(self):
+    async def test_two_applied_corrections_continue_with_unverified_status(self):
         with patch.object(
             workflow.bailian_service,
             "structured_chat",
@@ -320,7 +329,11 @@ class ConfirmationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["retry_count"], 2)
         self.assertEqual(result["result"]["scores"]["education"], 40)
         self.assertFalse(result["is_valid"])
-        self.assertEqual(workflow.check_verification(result), "human_review")
+        self.assertTrue(result["verification_nonblocking"])
+        self.assertFalse(result["verification_needs_review"])
+        self.assertEqual(result["result"]["verification"]["status"], "correction_unverified")
+        self.assertEqual(result["result"]["verification"]["unresolved_issues"], [])
+        self.assertEqual(workflow.check_verification(result), workflow.END)
 
     async def test_verification_rounds_share_one_timeout(self):
         canceled = asyncio.Event()
@@ -346,8 +359,137 @@ class ConfirmationTests(unittest.IsolatedAsyncioTestCase):
         deadline.assert_called_once_with(0.04)
         self.assertTrue(canceled.is_set())
         self.assertFalse(result["is_valid"])
-        self.assertEqual(result["verification_feedback"], "校验超时")
+        self.assertEqual(result["result"]["verification"]["failure_code"], "timeout")
+        self.assertTrue(result["verification_nonblocking"])
+        self.assertFalse(result["verification_needs_review"])
+        self.assertIn("自动校验未完成", result["verification_feedback"])
+        self.assertEqual(workflow.check_verification(result), workflow.END)
+
+    def test_server_references_determine_field_source_and_quotes(self):
+        original = {**state(), "resume_text": "熟悉 Python"}
+        review = VerificationResult(
+            is_faithful=False, reason="Synthetic issue",
+            issues=[VerificationIssue(
+                kind="proficiency_overstatement", claim_id="matched_skills:1",
+                field="已匹配技能", claim="Do not trust this duplicated sentence",
+                evidence_id="resume:1", source="jd", evidence="Do not trust this duplicated quote",
+                problem="Synthetic issue", suggested_fix="Keep original proficiency",
+            )],
+        )
+        workflow._check_verification_evidence(review, original)
+        issue = review.issues[0]
+        self.assertEqual(issue.field, "matched_skills")
+        self.assertEqual(issue.claim, "Python")
+        self.assertEqual(issue.source, "resume")
+        self.assertEqual(issue.evidence, original["resume_text"])
+
+    def test_unknown_report_reference_is_rejected(self):
+        review = VerificationResult(
+            is_faithful=False, reason="Synthetic issue",
+            issues=[VerificationIssue(
+                kind="unsupported_claim", claim_id="risks:99",
+                problem="Synthetic issue", suggested_fix="Remove unsupported claim",
+            )],
+        )
+        with self.assertRaises(workflow.VerificationEvidenceError) as caught:
+            workflow._check_verification_evidence(review, state())
+        self.assertEqual(caught.exception.fields[0]["type"], "unknown_report_id")
+
+    def test_contest_keyword_cannot_be_claimed_absent_from_resume(self):
+        original = {**state(), "resume_text": "Java 华东赛区二等奖"}
+        review = VerificationResult(
+            is_faithful=False, reason="Synthetic issue",
+            issues=[VerificationIssue(
+                kind="unsupported_claim", claim_id="matched_skills:1",
+                problem="简历未提及 Java。", suggested_fix="Recheck original contest evidence",
+            )],
+        )
+        with self.assertRaises(workflow.VerificationEvidenceError) as caught:
+            workflow._check_verification_evidence(review, original)
+        self.assertEqual(caught.exception.fields[0]["type"], "source_keyword_is_present")
+        self.assertEqual(caught.exception.fields[0]["source_ids"], ["resume:1"])
+
+    async def test_service_failure_continues_without_faking_a_pass(self):
+        with patch.object(workflow.bailian_service, "structured_chat", side_effect=RuntimeError("Synthetic service error")) as model:
+            result = await workflow.verify_agent(state(), {"configurable": {}})
+        model.assert_awaited_once()
+        self.assertEqual(workflow.check_verification(result), workflow.END)
+        self.assertFalse(result["is_valid"])
+        self.assertTrue(result["verification_nonblocking"])
+        review = result["result"]["verification"]
+        self.assertEqual(review["status"], "service_error")
+        self.assertEqual(review["failure_code"], "model_service_error")
+        self.assertEqual(review["unresolved_issues"], [])
+
+    async def test_remaining_confirmed_claim_still_blocks_after_service_failure(self):
+        first = VerificationResult(
+            is_faithful=False, reason="Synthetic unsupported skill",
+            issues=[VerificationIssue(
+                kind="unsupported_claim", claim_id="matched_skills:1",
+                problem="Synthetic unsupported skill", suggested_fix="Remove unsupported skill",
+            )],
+            # Change an unrelated score while leaving the known offending skill untouched.
+            corrected_evaluation=evaluation(20),
+        )
+        with patch.object(
+            workflow.bailian_service, "structured_chat",
+            side_effect=[first, RuntimeError("Synthetic service failure")],
+        ) as model:
+            result = await workflow.verify_agent(state(), {"configurable": {}})
+        self.assertEqual(model.await_count, 2)
+        self.assertFalse(result["verification_nonblocking"])
+        self.assertTrue(result["verification_needs_review"])
         self.assertEqual(workflow.check_verification(result), "human_review")
+        unresolved = result["result"]["verification"]["unresolved_issues"]
+        self.assertEqual([item["claim"] for item in unresolved], ["Python"])
+
+    async def test_format_retry_uses_same_request_budget_and_records_diagnostics(self):
+        with patch.object(
+            workflow.bailian_service, "structured_chat",
+            side_effect=[
+                StructuredOutputError("invalid_schema", [{"field": ["reason"], "type": "string_too_long"}]),
+                review_result(is_faithful=True, reason="Synthetic facts checked"),
+            ],
+        ) as model:
+            result = await workflow.verify_agent(state(), {"configurable": {}})
+        self.assertEqual(model.await_count, 2)
+        self.assertTrue(result["is_valid"])
+        self.assertFalse(result["verification_nonblocking"])
+        failures = result["result"]["verification"]["attempt_failures"]
+        self.assertEqual(failures, [{
+            "round": 1, "code": "invalid_schema",
+            "details": [{"field": "reason", "code": "string_too_long"}],
+        }])
+
+    async def test_legacy_technical_pause_continues_without_model_or_human_acceptance(self):
+        builder = workflow.StateGraph(workflow.CareerState)
+        builder.add_node("verify_agent", lambda _: {"is_valid": False})
+        builder.add_node("human_review", lambda _: {})
+        builder.add_edge(workflow.START, "verify_agent")
+        builder.add_conditional_edges("verify_agent", workflow.check_verification, {
+            workflow.END: workflow.END, "human_review": "human_review", "fallback_node": "human_review",
+        })
+        builder.add_edge("human_review", workflow.END)
+        graph = builder.compile(checkpointer=InMemorySaver(), interrupt_before=["human_review"])
+        original = state()
+        original["match_report"]["verification"] = {
+            "status": "service_error", "summary": "Synthetic unavailable review", "rounds": 2, "issues": [],
+        }
+        thread_id = uuid.uuid4().hex
+        config = {"configurable": {"thread_id": thread_id, "owner_id": "synthetic-owner"}}
+        await graph.ainvoke(original, config=config)
+        self.assertEqual((await graph.aget_state(config)).next, ("human_review",))
+        with (
+            patch.object(workflow, "match_workflow", graph),
+            patch.object(workflow.bailian_service, "structured_chat") as model,
+        ):
+            outcome = await workflow.resume_match(thread_id=thread_id, owner_id="synthetic-owner")
+        model.assert_not_called()
+        self.assertEqual(outcome["status"], "completed")
+        self.assertFalse(outcome["is_valid"])
+        self.assertFalse(outcome["manual_accepted"])
+        self.assertTrue(outcome["verification_nonblocking"])
+        self.assertTrue(outcome["current_report"]["verification"]["nonblocking"])
 
     async def test_feedback_regenerates_then_passes_or_pauses_again(self):
         for passes in (True, False):
