@@ -192,10 +192,15 @@ async def test_ima_upload_and_delete_work_without_embedding_or_milvus(ima_config
     document = Document(id=uuid.uuid4(), owner_id=OWNER, filename="简历.txt", document_type="resume",
                         minio_object_key="object", status="ready")
     session = MagicMock()
-    session.execute = AsyncMock(side_effect=[
-        MagicMock(scalars=lambda: MagicMock(first=lambda: None)),
-        MagicMock(scalar_one=lambda: 0),
-    ])
+    # 一次上传会依次执行三条 SQL：整文件去重（scalars().first）、文档数量上限
+    # （scalar_one）、DocumentParse 的 upsert；删除时还要再按行加锁取回文档。
+    # 固定长度的 side_effect 列表会随实现演进报 StopIteration，这里统一返回
+    # 同一个结果对象：无重复、数量为 0、加锁查询命中同一份文档。
+    result = MagicMock()
+    result.scalars.return_value.first.return_value = None
+    result.scalar_one.return_value = 0
+    result.scalar_one_or_none.return_value = document
+    session.execute = AsyncMock(return_value=result)
     session.commit = AsyncMock()
     session.refresh = AsyncMock()
     session.get = AsyncMock(return_value=document)

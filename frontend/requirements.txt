@@ -1,3 +1,7 @@
-streamlit>=1.60,<2.0
+# 固定小版本：backend/tests/test_frontend_*.py 用 Streamlit AppTest 断言具体行为，
+# 1.61 起 query_params 返回 str 而非 list、button_group/selectbox 的 set_value
+# 语义也有变化，放开范围会让 CI 装到 1.66+ 后 4 个前端用例失败。
+# 升级前先跑 backend/tests/test_frontend_*.py，并同步修正断言。
+streamlit==1.60.0
 requests>=2.32,<3.0
 httpx>=0.28,<1.0
