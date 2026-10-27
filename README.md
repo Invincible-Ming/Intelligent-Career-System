@@ -365,7 +365,7 @@ docker run -d --rm --name career-ci-redis -p 127.0.0.1:16379:6379 redis:7.4-alpi
 
 ```bash
 cd backend
-python -m pip install -r requirements.txt pytest==8.4.2
+python -m pip install -r requirements-test.txt
 python -m pytest -q --tb=short
 ```
 
