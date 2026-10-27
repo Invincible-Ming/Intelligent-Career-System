@@ -1,0 +1,34 @@
+.identity { margin:8rpx 0 30rpx; gap:22rpx; }
+.identity .title { font-size:38rpx; margin:0 0 6rpx; word-break:break-all; }
+.avatar { flex:none; width:96rpx; height:96rpx; background:var(--surface); border:1rpx solid var(--line);
+  border-radius:27rpx; color:var(--text); font-size:40rpx; display:flex; align-items:center; justify-content:center; font-weight:600; }
+.wallet { padding:30rpx; }
+.wallet-label { color:var(--muted); font-size:26rpx; }
+.balance { font-size:76rpx; letter-spacing:-2rpx; line-height:1.3; margin:18rpx 0 28rpx; font-weight:650; font-variant-numeric:tabular-nums; }
+.balance text { font-size:25rpx; color:var(--muted); font-weight:400; letter-spacing:0; margin-left:14rpx; }
+.wallet button { width:100%; }
+.wallet .checked-in[disabled] { opacity:1; background:var(--soft); color:var(--muted); font-weight:400; }
+.wallet-note { color:var(--muted); text-align:center; font-size:22rpx; margin-top:18rpx; }
+.reserved-note { margin:-10rpx 0 22rpx; }
+.quota-card .section-title { margin:0; font-size:28rpx; }
+.quota-grid { display:grid; grid-template-columns:1fr 1fr; gap:24rpx; margin:26rpx 0; }
+.quota-minute { border-left:1rpx solid var(--line); padding-left:26rpx; }
+.quota-value { font-size:42rpx; font-weight:600; margin-top:10rpx; font-variant-numeric:tabular-nums; }
+.quota-value text { font-size:24rpx; color:var(--muted); font-weight:400; }
+.quota-note { font-size:22rpx; border-top:1rpx solid var(--line); padding-top:22rpx; }
+.account-menu { padding:0 26rpx; overflow:hidden; }
+button.menu-row { display:flex; align-items:center; justify-content:space-between; width:100%; min-height:112rpx;
+  padding:28rpx 4rpx; background:transparent; border-radius:0; text-align:left; border-bottom:1rpx solid var(--line); font-size:28rpx; }
+button.menu-row:last-child { border-bottom:0; }
+.menu-content { padding:4rpx 4rpx 26rpx; border-bottom:1rpx solid var(--line); }
+.rule-details { color:var(--muted); line-height:1.85; }
+.rule-details:last-child { border-bottom:0; }
+.rule-details .brand-lockup { margin:12rpx 0 16rpx; }
+.about-title { color:var(--text); font-weight:550; margin-bottom:14rpx; }
+.points { font-variant-numeric:tabular-nums; font-weight:550; font-size:28rpx; }
+.points.positive { color:var(--accent); }
+.entry-time { font-size:22rpx; margin-top:8rpx; }
+.ledger-heading { margin-top:8rpx; }
+.ledger-heading button { padding-right:0; }
+.more-button { width:100%; font-size:25rpx; }
+button.logout-button { width:100%; color:var(--danger); background:transparent; margin-top:8rpx; font-size:27rpx; }

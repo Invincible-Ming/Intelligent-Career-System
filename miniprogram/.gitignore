@@ -1,0 +1,6 @@
+node_modules/
+config.local.ts
+.build/
+project.private.config.json
+.DS_Store
+*.log

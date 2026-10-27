@@ -1,0 +1,1 @@
+App<IAppOption>({ globalData: {} })

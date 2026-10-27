@@ -1,0 +1,16 @@
+{
+  "name": "jianmianzhishuo-miniprogram",
+  "version": "1.0.0",
+  "private": true,
+  "description": "简面职说 · 大学生的 AI 求职搭子",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.cjs",
+    "check": "npm run typecheck && npm test"
+  },
+  "devDependencies": {
+    "less": "^4.4.2",
+    "miniprogram-api-typings": "^5.2.3",
+    "typescript": "^5.9.3"
+  }
+}

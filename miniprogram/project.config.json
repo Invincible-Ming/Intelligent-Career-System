@@ -1,0 +1,49 @@
+{
+  "description": "简面职说 · 大学生的 AI 求职搭子",
+  "miniprogramRoot": "miniprogram/",
+  "compileType": "miniprogram",
+  "setting": {
+    "useCompilerPlugins": [
+      "typescript"
+    ],
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    },
+    "coverView": false,
+    "postcss": false,
+    "minified": true,
+    "enhance": false,
+    "showShadowRootInWxmlPanel": false,
+    "packNpmRelationList": [],
+    "ignoreUploadUnusedFiles": true,
+    "compileHotReLoad": false,
+    "skylineRenderEnable": true,
+    "es6": true,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": false,
+    "packNpmManually": false,
+    "minifyWXSS": true,
+    "localPlugins": false,
+    "condition": false,
+    "compileWorklet": false,
+    "disableUseStrict": false,
+    "minifyWXML": true
+  },
+  "simulatorType": "wechat",
+  "simulatorPluginLibVersion": {},
+  "condition": {},
+  "srcMiniprogramRoot": "miniprogram/",
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
+  },
+  "libVersion": "2.32.3",
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "appid": "wxf7bb2ef6dfeeeb89",
+  "projectname": "简面职说"
+}

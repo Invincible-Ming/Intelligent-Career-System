@@ -1,0 +1,10 @@
+.option-title { font-size:29rpx; font-weight:550; margin-bottom:20rpx; }
+.range-heading { margin:36rpx 0 22rpx; font-size:28rpx; }
+.first-range { margin-top:0; }
+.range-value { font-size:29rpx; font-weight:600; font-variant-numeric:tabular-nums; }
+.range-labels { margin:14rpx 0; color:var(--muted); font-size:22rpx; }
+.plan-submit { width:100%; margin-top:40rpx; }
+.plan-note { margin-top:20rpx; font-size:23rpx; text-align:center; }
+.plan-history { font-size:28rpx; font-weight:500; }
+.history-date { margin-top:18rpx; font-weight:400; }
+button.plan-submit{width:100%;max-width:none;margin-left:0;margin-right:0}

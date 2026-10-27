@@ -1,0 +1,24 @@
+<view class="page match-page">
+  <view class="page-header"><view class="title">求职准备</view><view class="subtitle">读懂岗位，也看见自己的优势。</view></view>
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view class="card match-form">
+    <view class="step-heading"><text class="step-number">01</text><view class="section-title">选择你的简历</view></view>
+    <picker wx:if="{{resumes.length}}" range="{{resumes}}" range-key="filename" value="{{resumeIndex}}" bindchange="resumeChange"><view class="picker"><text class="grow">{{resumes[resumeIndex].filename}}</text><view class="chevron down"/></view></picker>
+    <block wx:else><view class="muted small empty-hint">先上传一份简历，再结合岗位分析优势与差距。</view><button class="secondary" bindtap="upload">上传简历</button></block>
+    <view class="step-heading second-step"><text class="step-number">02</text><view class="section-title">补充岗位要求</view></view>
+    <view class="pill-row"><button class="pill {{jdSource===0?'active':''}}" data-index="0" bindtap="sourceChange" hover-class="tap">粘贴文本</button><button class="pill {{jdSource===1?'active':''}}" data-index="1" bindtap="sourceChange" hover-class="tap">选择文件</button></view>
+    <textarea wx:if="{{jdSource===0}}" class="textarea job-input" value="{{jdText}}" bindinput="input" maxlength="{{maxChars}}" placeholder="粘贴岗位名称、工作职责和任职要求…"/>
+    <picker wx:elif="{{jobs.length}}" range="{{jobs}}" range-key="filename" value="{{jobIndex}}" bindchange="jobChange"><view class="picker"><text class="grow">{{jobs[jobIndex].filename}}</text><view class="chevron down"/></view></picker>
+    <button wx:else class="secondary" bindtap="upload">上传岗位描述</button>
+    <view class="row between research-row"><view class="grow"><view class="research-title">补充公开岗位资料</view><view class="muted small">开启后，允许联网查询相关信息</view></view><switch checked="{{research}}" bindchange="researchChange" color="#477461"/></view>
+    <button class="primary match-submit" loading="{{submitting}}" disabled="{{submitting}}" bindtap="start" hover-class="tap">{{submitting?'正在提交':'开始岗位匹配'}}</button>
+    <view class="muted small form-note">提交后可离开页面，结果会保存在历史记录。</view>
+  </view>
+  <view class="retrieval-note"><view class="note-dot"/><view class="grow">当前检索 · {{provider}}</view></view>
+  <view class="section-heading"><view class="section-title">匹配记录</view><button class="quiet small" bindtap="refresh" loading="{{loading}}" disabled="{{loading}}">刷新</button></view>
+  <view wx:if="{{!runs.length&&!loading}}" class="card empty"><view class="empty-title">从第一份报告开始</view><view>完成匹配后，可以继续生成面试题和学习计划。</view></view>
+  <view wx:for="{{runs}}" wx:key="run_id" class="card history-card" data-id="{{item.run_id}}" bindtap="openRun" hover-class="tap">
+    <view class="row between"><view class="grow history-title">{{item.result.job_analysis.job_title||item.result.current_report.job_analysis.job_title||'岗位匹配报告'}}</view><text class="history-status">{{item.label}}</text></view>
+    <view class="row between history-bottom"><text>{{item.timeText}}</text><view class="row history-link"><text>查看报告</text><view class="chevron"/></view></view>
+  </view>
+</view>

@@ -1,0 +1,25 @@
+<view class="page plan-page">
+  <view class="page-header"><view class="eyebrow">基于你的岗位匹配报告</view><view class="title">{{kind==='interview'?'面试准备':'学习计划'}}</view><view class="subtitle">{{kind==='interview'?'练好关键问题，带着底气去面试。':'把能力差距，拆成每周能完成的小目标。'}}</view></view>
+  <view class="card plan-options">
+    <block wx:if="{{kind==='interview'}}">
+      <view class="option-title">面试难度</view><picker range="{{difficulties}}" value="{{difficultyIndex}}" bindchange="difficultyChange"><view class="picker"><text>{{difficulties[difficultyIndex]}}</text><view class="chevron down"/></view></picker>
+      <view class="row between range-heading"><view>题目数量</view><text class="range-value">{{questionCount}} 题</text></view>
+      <slider min="3" max="15" value="{{questionCount}}" bindchange="countChange" activeColor="#59816c" block-size="22"/>
+      <view class="row between range-labels"><text>3 题 · 快速准备</text><text>15 题 · 充分练习</text></view>
+    </block>
+    <block wx:else>
+      <view class="row between range-heading first-range"><view>准备多久</view><text class="range-value">{{weeks}} 周</text></view>
+      <slider min="1" max="24" value="{{weeks}}" bindchange="weeksChange" activeColor="#59816c" block-size="22"/>
+      <view class="row between range-labels"><text>1 周</text><text>24 周</text></view>
+      <view class="row between range-heading"><view>每周投入</view><text class="range-value">{{hours}} 小时</text></view>
+      <slider min="1" max="40" value="{{hours}}" bindchange="hoursChange" activeColor="#59816c" block-size="22"/>
+      <view class="row between range-labels"><text>1 小时</text><text>40 小时</text></view>
+    </block>
+    <view wx:if="{{error}}" class="error">{{error}}</view>
+    <button class="primary plan-submit" bindtap="submit" loading="{{submitting}}" disabled="{{submitting}}" hover-class="tap">{{submitting?'正在提交':kind==='interview'?'生成面试题与回答要点':'生成学习计划'}}</button>
+    <view class="muted small plan-note">生成后自动保存，随时回来查看。</view>
+  </view>
+  <view class="section-heading"><view class="section-title">之前的准备方案</view></view>
+  <view wx:if="{{!history.length}}" class="card empty"><view class="empty-title">为下一步留一份计划</view><view>生成的方案会保存在这里。</view></view>
+  <view wx:for="{{history}}" wx:key="run_id" class="card plan-history" data-id="{{item.run_id}}" bindtap="openRun" hover-class="tap"><view class="row between"><view class="grow">{{item.result.job_title||item.result.target_role||'准备方案'}}</view><view class="chevron"/></view><view class="muted small history-date">{{item.timeText}}</view></view>
+</view>

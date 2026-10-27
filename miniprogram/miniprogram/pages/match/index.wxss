@@ -1,0 +1,21 @@
+.step-heading { display:flex; align-items:center; gap:16rpx; margin:0 0 24rpx; }
+.step-number { color:var(--muted); font-size:23rpx; font-variant-numeric:tabular-nums; }
+.step-heading .section-title { font-size:30rpx; margin:0; }
+.second-step { border-top:1rpx solid var(--line); padding-top:32rpx; margin-top:32rpx; margin-bottom:18rpx; }
+.match-form .pill-row { margin:0 0 22rpx; }
+.job-input { height:280rpx; min-height:280rpx; }
+.secondary { background:var(--soft); width:100%; }
+.research-row { gap:18rpx; margin:30rpx 0; }
+.research-title { font-size:27rpx; margin-bottom:6rpx; }
+.research-row switch { flex:none; transform:scale(.85); transform-origin:right center; }
+.match-submit { width:100%; }
+.form-note { margin:20rpx 0 0; text-align:center; font-size:22rpx; }
+.retrieval-note { display:flex; align-items:center; gap:12rpx; color:var(--muted); font-size:23rpx; margin:4rpx 8rpx 26rpx; }
+.note-dot { width:7rpx; height:7rpx; background:var(--muted); border-radius:50%; flex:none; }
+.empty-hint { margin-bottom:22rpx; }
+.history-card { padding:26rpx; }
+.history-title { font-size:29rpx; font-weight:550; line-height:1.5; word-break:break-word; }
+.history-status { flex:none; color:var(--muted); font-size:23rpx; }
+.history-bottom { margin-top:22rpx; color:var(--muted); font-size:23rpx; }
+.history-link { gap:12rpx; font-size:23rpx; }
+button.match-submit{width:100%;max-width:none;margin:0}

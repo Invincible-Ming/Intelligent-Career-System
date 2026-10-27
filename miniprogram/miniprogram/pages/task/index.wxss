@@ -1,0 +1,6 @@
+.score-card{text-align:center;padding:44rpx 26rpx}.score{font-size:110rpx;font-weight:650;letter-spacing:-5rpx;line-height:1.3;margin:22rpx 0 8rpx}.score text{font-size:28rpx;letter-spacing:0;color:var(--muted);font-weight:400}.score-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28rpx;margin-top:34rpx;padding-top:30rpx;border-top:1rpx solid var(--line)}.score-value{font-size:38rpx;font-weight:550}.card .section-title{margin-top:0}.card .section-title:not(:first-child){margin-top:30rpx}.feedback{margin:24rpx 0}.question-number{font-size:23rpx;color:var(--accent);margin-bottom:18rpx}.progress-track{height:8rpx;border-radius:8rpx;overflow:hidden;background:var(--soft);margin:28rpx 0}.progress-indeterminate{height:100%;width:35%;border-radius:8rpx;background:var(--accent);animation:working 1.8s ease-in-out infinite}@keyframes working{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}
+
+.score-card{padding:34rpx 24rpx}.score{font-size:96rpx;margin:20rpx 0 10rpx}
+.score-grid{gap:24rpx 16rpx}.score-grid .small{font-size:22rpx}.score-value{font-size:34rpx}
+.feedback{height:230rpx;min-height:230rpx}.card{overflow-wrap:break-word}
+.progress-track{margin:22rpx 0}.question-number{color:var(--muted);font-size:22rpx}

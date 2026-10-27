@@ -1,0 +1,6 @@
+.document-page { padding-bottom:calc(170rpx + env(safe-area-inset-bottom)); }
+.document-title { font-size:36rpx; line-height:1.5; word-break:break-all; }
+.document-content { padding:30rpx; font-size:28rpx; }
+.truncation-note { padding:0 8rpx 24rpx; }
+.document-footer { position:fixed; left:0; right:0; bottom:0; padding:20rpx 32rpx calc(20rpx + env(safe-area-inset-bottom)); background:var(--bg); border-top:1rpx solid var(--line); }
+.document-footer button { width:100%; }

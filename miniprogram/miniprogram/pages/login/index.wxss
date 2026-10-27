@@ -1,0 +1,6 @@
+.login-page{min-height:100vh;padding:70rpx 32rpx;display:flex;flex-direction:column;justify-content:center}.login-card{padding:48rpx 36rpx}.brand-lockup{margin:0 auto 26rpx;width:450rpx;height:110rpx}.brand-image{height:188rpx}.login-title{text-align:center;font-size:29rpx;font-weight:600}.subtitle{text-align:center;margin-top:12rpx}.submit{margin-top:36rpx;margin-bottom:14rpx}.login-footer{text-align:center;margin-top:18rpx}
+
+.login-page{padding:40rpx 32rpx;justify-content:center}.login-card{padding:40rpx 30rpx;border-radius:28rpx}
+.login-card .section-title{font-size:34rpx;margin-top:30rpx}.login-card .subtitle{font-size:26rpx;margin-bottom:28rpx}
+.login-card .brand-lockup{max-width:100%}.login-footer{font-size:23rpx}
+button.submit{width:100%;max-width:none;margin-left:0;margin-right:0}

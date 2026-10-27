@@ -1,0 +1,7 @@
+{
+  "pages": ["pages/chat/index", "pages/login/index", "pages/knowledge/index", "pages/match/index", "pages/task/index", "pages/plan/index", "pages/document/index", "pages/account/index"],
+  "window": {"navigationBarTitleText": "简面职说", "navigationBarBackgroundColor": "@navBg", "navigationBarTextStyle": "@navText", "backgroundColor": "@background", "backgroundTextStyle": "@backgroundText"},
+  "tabBar": {"color":"@tabText", "selectedColor":"@accent", "backgroundColor":"@navBg", "borderStyle":"@tabBorder", "list":[{"pagePath":"pages/chat/index","text":"对话","iconPath":"assets/tabbar/chat.png","selectedIconPath":"assets/tabbar/chat-active.png"},{"pagePath":"pages/knowledge/index","text":"资料","iconPath":"assets/tabbar/doc.png","selectedIconPath":"assets/tabbar/doc-active.png"},{"pagePath":"pages/match/index","text":"求职","iconPath":"assets/tabbar/job.png","selectedIconPath":"assets/tabbar/job-active.png"},{"pagePath":"pages/account/index","text":"我的","iconPath":"assets/tabbar/me.png","selectedIconPath":"assets/tabbar/me-active.png"}]},
+  "darkmode": true, "themeLocation": "theme.json", "style":"v2", "sitemapLocation":"sitemap.json", "lazyCodeLoading":"requiredComponents",
+  "networkTimeout": {"request":120000,"uploadFile":120000,"downloadFile":120000}
+}

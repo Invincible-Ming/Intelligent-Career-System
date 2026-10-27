@@ -1,0 +1,8 @@
+<view class="page document-page">
+  <view class="page-header"><view class="eyebrow">文件预览</view><view class="title document-title">{{filename||'正在打开文件'}}</view><view class="subtitle">文本可长按选择与复制</view></view>
+  <view wx:if="{{loading}}" class="card empty"><view class="loading-dot"/>正在载入原文</view>
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view wx:if="{{content}}" class="card document-content"><text class="text-content" selectable>{{content}}</text></view>
+  <view wx:if="{{truncated}}" class="muted small truncation-note">当前为部分预览，完整内容请查看原文件。</view>
+  <view class="document-footer"><button class="primary" bindtap="download" disabled="{{loading}}" hover-class="tap">下载原文件</button></view>
+</view>

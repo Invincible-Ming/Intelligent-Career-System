@@ -1,0 +1,29 @@
+<view class="page account-page">
+  <view class="row identity"><view class="avatar">{{initial}}</view><view class="grow"><view class="title">{{username}}</view><view class="muted small">你的求职准备，都在这里</view></view></view>
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <view class="card wallet">
+    <view class="wallet-label">可用积分</view><view class="balance">{{available}}<text>积分</text></view>
+    <view wx:if="{{wallet.reserved>0}}" class="muted small reserved-note">已为进行中的任务预留 {{wallet.reserved}} 分</view>
+    <button class="{{wallet.checked_in_today?'checked-in':'primary'}}" bindtap="checkIn" disabled="{{checking||wallet.checked_in_today}}" loading="{{checking}}" hover-class="tap">{{wallet.checked_in_today?'今日已签到，明天再来':'签到领取 '+(wallet.rules.daily_checkin_points||10)+' 积分'}}</button>
+    <view class="wallet-note">每一点准备，都算数。</view>
+  </view>
+  <view class="card quota-card">
+    <view class="row between"><view class="section-title">使用情况</view><text class="muted small">今日</text></view>
+    <view class="quota-grid"><view><view class="muted small">今日生成</view><view class="quota-value">{{usage.daily_used}}<text>{{isAdmin?' / 不限':' / '+usage.daily_limit}}</text></view></view><view class="quota-minute"><view class="muted small">本分钟生成</view><view class="quota-value">{{usage.minute_used}}<text>{{isAdmin?' / 不限':' / '+usage.minute_limit}}</text></view></view></view>
+    <view class="muted small quota-note">每日额度于北京时间 08:00 更新</view>
+  </view>
+  <view class="card account-menu">
+    <button class="menu-row" bindtap="toggleLedger" hover-class="tap"><view>积分明细</view><view class="chevron {{ledgerOpen?'down':''}}"/></button>
+    <view wx:if="{{ledgerOpen}}" class="menu-content ledger">
+      <view class="row between ledger-heading"><text class="muted small">最近的积分变动</text><button class="quiet small" bindtap="refresh" loading="{{loading}}">刷新</button></view>
+      <view wx:for="{{entries}}" wx:key="id" class="list-row"><view class="row between"><text>{{item.label}}</text><text class="points {{item.points>0?'positive':''}}">{{item.pointsText}}</text></view><view class="muted entry-time">{{item.timeText}}</view><view wx:if="{{item.kind==='usage'}}" class="muted entry-time">输入 {{item.input_tokens}} · 输出 {{item.output_tokens}} Token {{item.status==='pending'?'· 预留中':item.status==='released'?'· 已释放':''}}</view></view>
+      <view wx:if="{{!entries.length&&!loading}}" class="empty">暂无积分记录</view>
+      <button wx:if="{{hasMore}}" class="quiet more-button" bindtap="more">加载更多明细</button>
+    </view>
+    <button class="menu-row" bindtap="toggleRules" hover-class="tap"><view>积分规则</view><view class="chevron {{rulesOpen?'down':''}}"/></button>
+    <view wx:if="{{rulesOpen}}" class="menu-content rule-details small"><view class="rule-line">初始赠送 {{wallet.rules.initial_points}} 积分。</view><view class="rule-line">每天签到领取 {{wallet.rules.daily_checkin_points}} 积分，北京时间 00:00 更新签到。</view><view class="rule-line">输入与输出合计每 1000 Token 消耗 {{wallet.rules.points_per_1000_tokens}} 积分，按小数累计。</view><view class="rule-line">开始前预留，完成后按实际用量结算。停止生成时，已产生的用量仍会结算。</view><view class="rule-line">日常浏览、文件管理和纯本地检索不消耗模型积分。</view></view>
+    <button class="menu-row" bindtap="toggleAbout" hover-class="tap"><view>关于简面职说</view><view class="chevron {{aboutOpen?'down':''}}"/></button>
+    <view wx:if="{{aboutOpen}}" class="menu-content rule-details"><view class="brand-lockup"><image class="brand-image" src="/assets/brand/logo-light.png" mode="widthFix"/></view><view class="about-title">大学生的 AI 求职搭子</view><view class="muted small">简历怎么写，面试怎么说。从梳理简历、读懂岗位，到准备面试、规划学习，陪你一步步准备好下一次机会。</view></view>
+  </view>
+  <button class="logout-button" bindtap="logout" hover-class="tap">退出登录</button>
+</view>

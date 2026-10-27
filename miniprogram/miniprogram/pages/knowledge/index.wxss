@@ -1,0 +1,52 @@
+.header-row { align-items:center; margin-bottom:12rpx; gap:24rpx; }
+.header-row .title { margin:0; }
+button.upload-button { flex:none; width:174rpx; min-width:174rpx; max-width:174rpx; min-height:44px; margin:0; padding:22rpx 24rpx; font-size:26rpx; }
+.library-page .segmented { margin:0 0 18rpx; }
+.upload-note { color:var(--muted); font-size:23rpx; margin:22rpx 0 16rpx; }
+.file-filters { display:flex; gap:10rpx; width:100%; margin:6rpx 0; }
+.file-filters .filter-button { display:flex; align-items:center; justify-content:center; flex:1; width:0; min-width:0;
+  min-height:44px; border-radius:0; background:transparent; color:var(--muted); margin:0; padding:20rpx 4rpx;
+  font-size:25rpx; border-bottom:3rpx solid transparent; }
+.file-filters .filter-button.selected { color:var(--text); border-bottom-color:var(--text); font-weight:600; }
+.filter-count { margin-left:8rpx; font-size:22rpx; color:var(--muted); font-weight:400; }
+.file-count { font-size:25rpx; }
+.file-count .muted { font-size:23rpx; }
+.library-page .section-heading { margin:8rpx 0; }
+button.refresh-button { padding-right:0; width:90rpx; min-width:90rpx; max-width:90rpx; min-height:44px; margin:0; }
+.file-card { padding:0; overflow:hidden; margin-bottom:20rpx; }
+.file-info { padding:26rpx 26rpx 22rpx; gap:22rpx; align-items:flex-start; }
+.file-type { flex:none; width:76rpx; height:88rpx; margin-top:2rpx; border:1rpx solid var(--line); border-radius:15rpx;
+  background:var(--soft); color:var(--muted); display:flex; align-items:center; justify-content:center;
+  font-size:21rpx; font-weight:600; letter-spacing:.2rpx; }
+.file-name { font-size:28rpx; font-weight:550; line-height:1.5; word-break:break-all; display:-webkit-box;
+  -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.file-meta { display:flex; align-items:center; gap:14rpx; flex-wrap:wrap; margin-top:10rpx; font-size:23rpx; color:var(--muted); }
+.file-status { padding:2rpx 10rpx; border:1rpx solid var(--line); border-radius:8rpx; font-size:21rpx; }
+.file-status.ready { color:var(--accent); }
+.file-status.failed { color:var(--danger); }
+.file-time { color:var(--muted); font-size:22rpx; margin-top:6rpx; }
+.file-actions { display:flex; border-top:1rpx solid var(--line); padding:0 10rpx; }
+button.file-action { flex:1; width:0; min-width:0; min-height:44px; background:transparent; border-radius:0; padding:24rpx 8rpx; font-size:25rpx; }
+button.file-action[disabled] { color:var(--muted); background:transparent; opacity:.48; }
+button.file-action.is-open { color:var(--accent); }
+.file-management { display:flex; flex-wrap:wrap; gap:12rpx; padding:18rpx 22rpx; border-top:1rpx solid var(--line); background:var(--soft); }
+button.management-action { flex:1; width:0; min-width:150rpx; min-height:44px; padding:23rpx 12rpx; border-radius:15rpx; font-size:25rpx; }
+.file-failure { display:flex; align-items:center; justify-content:space-between; padding:0 24rpx; border-top:1rpx solid var(--line); color:var(--muted); font-size:23rpx; }
+.empty-upload { width:auto; margin:28rpx auto 0; padding:20rpx 34rpx; background:var(--soft); display:inline-block; font-size:26rpx; }
+.search-card { margin-top:24rpx; }
+.search-card .section-title { font-size:30rpx; margin:0 0 22rpx; }
+.search-input { height:200rpx; min-height:200rpx; }
+button.search-button { width:100%; max-width:none; margin:22rpx 0 0; }
+.retrieval-card { padding:24rpx 28rpx; }
+.retrieval-picker { min-height:88rpx; gap:12rpx; }
+.retrieval-name { font-size:28rpx; font-weight:550; line-height:1.5; margin:10rpx 0; }
+.switch-label { flex:none; gap:12rpx; color:var(--muted); font-size:24rpx; }
+.result-count { margin-left:10rpx; color:var(--muted); font-size:25rpx; font-weight:400; }
+.result-source { color:var(--muted); font-size:23rpx; word-break:break-all; padding-bottom:18rpx; margin-bottom:18rpx; border-bottom:1rpx solid var(--line); }
+button.result-link { width:100%; max-width:none; margin:22rpx 0 0; text-align:left; padding-left:0; color:var(--text); font-size:25rpx; }
+.result-link text { float:right; }
+@media(max-width:350px) {
+  .file-name { font-size:14px; }
+  .file-meta,.file-time { font-size:12px; }
+  button.file-action,.file-filters .filter-button { font-size:13px; }
+}

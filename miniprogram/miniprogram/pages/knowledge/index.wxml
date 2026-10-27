@@ -1,0 +1,70 @@
+<view class="page library-page">
+  <view class="page-header">
+    <view class="row between header-row">
+      <view class="title">资料库</view>
+      <button class="primary upload-button" bindtap="chooseUpload" loading="{{uploading}}" disabled="{{uploading}}" hover-class="tap">{{uploading?'处理中':'上传文件'}}</button>
+    </view>
+    <view class="subtitle">存好每份资料，用好每一次机会。</view>
+  </view>
+  <view class="segmented">
+    <button class="segment {{tab==='files'?'active':''}}" data-tab="files" bindtap="tabChange" hover-class="tap">我的文件</button>
+    <button class="segment {{tab==='search'?'active':''}}" data-tab="search" bindtap="tabChange" hover-class="tap">知识检索</button>
+  </view>
+  <view wx:if="{{error}}" class="error">{{error}}</view>
+  <block wx:if="{{tab==='files'}}">
+    <view class="upload-note">从微信聊天选择文件 · 单文件最大 {{maxMb}} MB</view>
+    <view class="file-filters">
+      <button wx:for="{{filters}}" wx:key="id" class="filter-button {{filter===item.id?'selected':''}}" data-id="{{item.id}}" bindtap="filterChange" hover-class="tap">{{item.label}}<text class="filter-count">{{item.count}}</text></button>
+    </view>
+    <view class="section-heading">
+      <view class="file-count">{{visibleDocuments.length}} 份文件<text class="muted"> · 最近上传</text></view>
+      <button class="quiet small refresh-button" bindtap="refresh" loading="{{loading}}" disabled="{{loading}}">刷新</button>
+    </view>
+    <view wx:if="{{loading&&!documents.length}}" class="empty"><view class="loading-dot"/>正在整理你的文件</view>
+    <view wx:elif="{{!visibleDocuments.length}}" class="card empty">
+      <view class="empty-symbol">＋</view>
+      <view class="empty-title">{{documents.length?'这里还没有这一类资料':'先存好第一份资料'}}</view>
+      <view>{{documents.length?'切换类型查看其他文件，或上传一份新资料。':'简历、岗位描述、学习资料，都可以放在这里。'}}</view>
+      <button class="empty-upload" bindtap="chooseUpload" hover-class="tap">上传文件</button>
+    </view>
+    <view wx:for="{{visibleDocuments}}" wx:key="id" class="card file-card">
+      <view class="file-info row">
+        <view class="file-type">{{item.extension}}</view>
+        <view class="grow">
+          <view class="file-name">{{item.filename}}</view>
+          <view class="file-meta"><text>{{item.label}}</text><text class="file-status {{item.status}}">{{item.statusLabel}}</text></view>
+          <view wx:if="{{item.timeText}}" class="file-time">{{item.timeText}}</view>
+        </view>
+      </view>
+      <view class="file-actions">
+        <button class="file-action" data-id="{{item.id}}" bindtap="preview" disabled="{{item.status!=='ready'}}" hover-class="tap" aria-label="预览 {{item.filename}}">预览</button>
+        <button class="file-action" data-id="{{item.id}}" data-action="download" bindtap="fileAction" loading="{{busyFileId===item.id&&busyAction==='download'}}" disabled="{{!!busyFileId}}" hover-class="tap" aria-label="下载 {{item.filename}}">下载</button>
+        <button class="file-action {{expandedId===item.id?'is-open':''}}" data-id="{{item.id}}" bindtap="manage" hover-class="tap" aria-label="管理 {{item.filename}}">{{expandedId===item.id?'收起管理':'管理'}}</button>
+      </view>
+      <view wx:if="{{item.status==='failed'&&expandedId!==item.id}}" class="file-failure"><text>解析未完成</text><button class="quiet small" data-id="{{item.id}}" data-action="retry" bindtap="fileAction" disabled="{{!!busyFileId}}">重新处理</button></view>
+      <view wx:if="{{expandedId===item.id}}" class="file-management">
+        <button class="management-action" data-id="{{item.id}}" data-action="rename" bindtap="fileAction" disabled="{{!!busyFileId}}" hover-class="tap">重命名</button>
+        <button wx:if="{{item.status==='failed'}}" class="management-action" data-id="{{item.id}}" data-action="retry" bindtap="fileAction" disabled="{{!!busyFileId}}" hover-class="tap">重新处理</button>
+        <button class="management-action danger" data-id="{{item.id}}" data-action="delete" bindtap="fileAction" disabled="{{!!busyFileId}}" hover-class="tap">删除文件</button>
+      </view>
+    </view>
+  </block>
+  <block wx:else>
+    <view class="card search-card">
+      <view class="section-title">想从资料里找到什么？</view>
+      <textarea class="textarea search-input" value="{{query}}" bindinput="input" placeholder="例如：文档里介绍了哪些面试准备方法？" maxlength="2000"/>
+      <button class="primary search-button" bindtap="search" loading="{{searching}}" disabled="{{searching||!query}}" hover-class="tap">{{searching?'正在检索':'检索资料'}}</button>
+    </view>
+    <view class="card retrieval-card">
+      <view class="muted small">当前检索方式</view>
+      <picker wx:if="{{canChoose}}" range="{{providerLabels}}" value="{{providerIndex}}" bindchange="providerChange">
+        <view class="row between retrieval-picker"><view class="grow retrieval-name">{{providerLabels[providerIndex]}}</view><view class="row switch-label"><text>切换</text><view class="chevron"/></view></view>
+      </picker>
+      <view wx:else class="retrieval-name">{{providerLabels[providerIndex]}}</view>
+      <view class="muted small">{{provider==='ima'?'检索共享知识库，同时查找你的个人本地文件。':'结合语义与关键词召回，再对结果进行相关性排序。'}}</view>
+    </view>
+    <view wx:if="{{searched}}" class="section-heading"><view class="section-title">检索结果 <text class="result-count">{{results.length}}</text></view></view>
+    <view wx:if="{{searched&&!results.length}}" class="card empty"><view class="empty-title">暂时没有找到相关内容</view><view>换一个关键词试试，或先上传相关资料。</view></view>
+    <view wx:for="{{results}}" wx:key="index" class="card result-card"><view class="result-source">{{item.source}}</view><text class="text-content" selectable>{{item.content}}</text><button class="quiet result-link" data-id="{{item.document_id}}" bindtap="preview">查看来源内容 <text>›</text></button></view>
+  </block>
+</view>
