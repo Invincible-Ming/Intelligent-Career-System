@@ -21,6 +21,7 @@ from career_ui.config import API_BASE_URL, LONG_TIMEOUT, SHORT_TIMEOUT
 # 服务端下发的限制参数，登录后由 fetch_security_options() 填充。
 # 键名与后端 /api/auth/options 的响应一致；缺失时回落到保守默认值。
 DEFAULT_SECURITY_OPTIONS: dict[str, Any] = {
+    "knowledge_provider": "milvus",
     "registration_enabled": False,
     "max_upload_size_mb": 20,
     "chat_max_input_chars": 4000,
@@ -75,7 +76,7 @@ def operation_read_timeout(path: str) -> int:
     limits = _security_options
     if "/chat/completions" in path:
         return limits["chat_total_timeout"] + 10
-    if "/documents/upload" in path:
+    if "/documents/upload" in path or (path.startswith("/api/documents/") and path.endswith("/retry")):
         return limits["upload_total_timeout"] + 10
     if "/match" in path:
         return limits["match_total_timeout"] + 10
@@ -89,11 +90,16 @@ def request_api(
     path: str,
     *,
     timeout: int = SHORT_TIMEOUT,
+    raw: bool = False,
+    access_token: str | None = None,
     **kwargs: Any,
 ) -> Any:
     """调用 FastAPI，并统一处理错误。"""
 
-    kwargs["headers"] = {**kwargs.pop("headers", {}), **auth_headers()}
+    # Deferred downloads run outside the Streamlit script thread. Their token
+    # is captured by the owning session; the backend revalidates it on click.
+    headers = {"Authorization": f"Bearer {access_token}"} if access_token is not None else auth_headers()
+    kwargs["headers"] = {**kwargs.pop("headers", {}), **headers}
     url = f"{API_BASE_URL}{path}"
 
     try:
@@ -111,7 +117,7 @@ def request_api(
         raise APIError(f"请求失败：{exc}") from exc
 
     if not response.ok:
-        if response.status_code == 401 and path != "/api/auth/login":
+        if response.status_code == 401 and path != "/api/auth/login" and access_token is None:
             from career_ui.session import reset_login_state
 
             reset_login_state()
@@ -123,6 +129,8 @@ def request_api(
 
         raise APIError(f"HTTP {response.status_code}：{detail}")
 
+    if raw:
+        return response.content
     if not response.content:
         return None
 

@@ -17,11 +17,14 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
+    CheckConstraint,
+    Date,
     DateTime,
     ForeignKey,
     Integer,
@@ -43,6 +46,44 @@ class User(Base):
     is_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    subscription: Mapped[UserSubscription | None] = relationship(
+        foreign_keys="UserSubscription.user_id", lazy="selectin", uselist=False,
+        cascade="all, delete-orphan", passive_deletes=True,
+    )
+    knowledge_preference: Mapped[UserKnowledgePreference | None] = relationship(
+        lazy="selectin", uselist=False, cascade="all, delete-orphan", passive_deletes=True,
+    )
+
+
+class UserKnowledgePreference(Base):
+    __tablename__ = "user_knowledge_preferences"
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True,
+    )
+    provider: Mapped[str] = mapped_column(String(16), nullable=False, default="ima")
+
+
+class UserSubscription(Base):
+    """Server-owned subscription entitlement; payment providers can update this later."""
+    __tablename__ = "user_subscriptions"
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True,
+    )
+    plan: Mapped[str] = mapped_column(String(16), nullable=False)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    granted_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class SubscriptionAudit(Base):
+    __tablename__ = "subscription_audit"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), index=True)
+    actor_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
+    previous_plan: Mapped[str] = mapped_column(String(16))
+    plan: Mapped[str] = mapped_column(String(16))
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class AuthSession(Base):
@@ -51,6 +92,46 @@ class AuthSession(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"),
                                                index=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+
+
+class CreditWallet(Base):
+    """Integer milli-points; the database, never the browser, owns the balance."""
+    __tablename__ = "credit_wallets"
+    __table_args__ = (
+        CheckConstraint("balance_units >= 0", name="credit_balance_nonnegative"),
+        CheckConstraint("reserved_units >= 0 AND reserved_units <= balance_units", name="credit_reserve_valid"),
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True,
+    )
+    balance_units: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+    reserved_units: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+    last_checkin_date: Mapped[date | None] = mapped_column(Date)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class CreditEntry(Base):
+    """One durable receipt per award/model attempt, including an expiring reservation."""
+    __tablename__ = "credit_entries"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True,
+    )
+    idempotency_key: Mapped[str] = mapped_column(String(180), unique=True, nullable=False)
+    kind: Mapped[str] = mapped_column(String(24), nullable=False)
+    status: Mapped[str] = mapped_column(String(16), nullable=False)
+    delta_units: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+    reserved_units: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+    model: Mapped[str | None] = mapped_column(String(160))
+    operation: Mapped[str | None] = mapped_column(String(160))
+    input_tokens: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+    output_tokens: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+    usage_source: Mapped[str | None] = mapped_column(String(24))
+    units_per_token: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    balance_after_units: Mapped[int | None] = mapped_column(BigInteger)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+    settled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class RateLimitBucket(Base):
@@ -146,6 +227,18 @@ class DocumentParse(Base):
     text: Mapped[str] = mapped_column(Text, nullable=False)
     blocks: Mapped[list] = mapped_column(JSONB, nullable=False)
     chunks: Mapped[list] = mapped_column(JSONB, nullable=False)
+
+
+class DocumentSearchIndex(Base):
+    """Durable index queue. Uncommitted/failed vectors are never eligible for retrieval."""
+    __tablename__ = "document_search_indexes"
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), primary_key=True,
+    )
+    signature: Mapped[str] = mapped_column(String(64), nullable=False)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending")
+    error_message: Mapped[str | None] = mapped_column(Text)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
 class AgentRun(Base):

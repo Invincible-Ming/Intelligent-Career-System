@@ -8,7 +8,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -56,12 +56,18 @@ class Settings(BaseSettings):
     AUTH_SESSION_HOURS: int = 12
     AUTH_COOKIE_NAME: str = "career_session"
     AUTH_COOKIE_SECURE: bool = False  # HTTPS 请求自动启用；反向代理部署时显式设为 True。
+    CREDITS_INITIAL_POINTS: int = Field(default=100, ge=0, le=1000000)
+    CREDITS_DAILY_CHECKIN_POINTS: int = Field(default=10, ge=0, le=1000000)
+    # 1000 单位 = 1 积分；默认每 Token 扣 1 单位，避免逐次向上取整多扣分。
+    CREDITS_UNITS_PER_TOKEN: int = Field(default=1, ge=1, le=1000000)
     API_REQUESTS_PER_MINUTE: int = 120
     AUTH_REQUESTS_PER_MINUTE: int = 30
     GENERATION_REQUESTS_PER_MINUTE: int = 10
     GENERATION_REQUESTS_PER_DAY: int = 200
     GLOBAL_GENERATION_REQUESTS_PER_DAY: int = 1000
     MAX_CONCURRENT_OPERATIONS: int = 2
+    # Shared by all backend workers; independent from each user's operation limit.
+    MOBILE_JOB_MAX_WORKERS: int = Field(default=16, ge=1, le=128)
     CHAT_MAX_INPUT_CHARS: int = 4000
     CHAT_CONTEXT_BUDGET: int = 18000
     CHAT_HISTORY_MESSAGES: int = 40
@@ -69,6 +75,9 @@ class Settings(BaseSettings):
     CHAT_SUMMARY_TRIGGER_BYTES: int = 10000
     CHAT_SUMMARY_KEEP_MESSAGES: int = 8
     CHAT_SUMMARY_MAX_OUTPUT_TOKENS: int = 800
+    CHAT_INTENT_LLM_ENABLED: bool = True
+    CHAT_INTENT_MODEL: str = ""  # 空值复用对话模型；只对规则无法判断的请求调用。
+    CHAT_INTENT_TIMEOUT: float = Field(default=3.0, gt=0, le=15)
     CHAT_MAX_OUTPUT_TOKENS: int = 2048
     MODEL_MAX_OUTPUT_TOKENS: int = 4096
     MODEL_INPUT_BUDGET: int = 200000
@@ -83,6 +92,8 @@ class Settings(BaseSettings):
     MATCH_VERIFY_MAX_OUTPUT_TOKENS: int = 3072
     EVALUATION_METRIC_MAX_CALLS: int = 16
     EVALUATION_METRIC_MAX_OUTPUT_TOKENS: int = 2048
+    # 指标请求只对临时网络/上游故障重试；每次尝试仍占用上面的调用预算。
+    EVALUATION_METRIC_MAX_RETRIES: int = Field(default=1, ge=0, le=2)
     MATCH_REASONING_EFFORT: Literal["none", "low", "medium", "xhigh"] = "none"
     MATCH_ENABLE_THINKING: bool = False
     ANALYSIS_CACHE_ENABLED: bool = True
@@ -124,7 +135,20 @@ class Settings(BaseSettings):
     BAILIAN_SUMMARY_MODEL: str = "deepseek-v4-flash-0731"
 
     # 文档解析 OCR 使用的视觉模型；qwen-vl-ocr 系列为文档文字提取专精。
-    BAILIAN_OCR_MODEL: str = "qwen-vl-ocr-latest"
+    BAILIAN_OCR_MODEL: str = "qwen-vl-ocr-2025-11-20"
+
+    # OCR 可独立使用小米，不复用百炼凭证；旧部署默认继续使用百炼。
+    OCR_PROVIDER: Literal["bailian", "mimo"] = "bailian"
+    MIMO_API_KEY: str = Field(default="", repr=False)
+    MIMO_BASE_URL: str = "https://api.xiaomimimo.com/v1"
+    MIMO_OCR_MODEL: str = "mimo-v2.6-flash"
+
+    # RAGAS 的回答、反思和指标评判可独立切换，不影响业务聊天与 Embedding。
+    EVALUATION_LLM_PROVIDER: Literal["bailian", "mimo"] = "bailian"
+    # 留空时，百炼使用 BAILIAN_CHAT_MODEL，小米使用 mimo-v2.6-flash。
+    EVALUATION_LLM_MODEL: str = ""
+    EVALUATION_LLM_REQUEST_TIMEOUT: float = Field(default=90.0, ge=1, le=300)
+    EVALUATION_LLM_MAX_RETRIES: int = Field(default=1, ge=0, le=2)
 
     # Embedding 使用 DashScope SDK。
     # 可选：qwen3.7-text-embedding（256~2560 维）
@@ -155,6 +179,20 @@ class Settings(BaseSettings):
 
     # 检索
     RETRIEVAL_TOP_K: int = 5
+
+    # ima 模式不连接 Milvus、不生成向量；本地文件仍按用户归属保存与解析。
+    KNOWLEDGE_PROVIDER: Literal["milvus", "ima", "subscription", "credits"] = "credits"
+    KNOWLEDGE_INDEX_TIMEOUT: float = 300.0
+    KNOWLEDGE_INDEX_MAX_CALLS: int = 200
+    IMA_BASE_URL: Literal["https://ima.qq.com/openapi/wiki/v1"] = "https://ima.qq.com/openapi/wiki/v1"
+    IMA_CLIENT_ID_FILE: str = str(Path.home() / ".config/ima/client_id")
+    IMA_API_KEY_FILE: str = str(Path.home() / ".config/ima/api_key")
+    # 仅该库对系统用户共享；绝不搜索此凭证可访问的其他私人库或订阅库。
+    IMA_KNOWLEDGE_BASE_ID: str = ""
+    IMA_TIMEOUT: float = 8.0
+    IMA_SEARCH_TIMEOUT: float = 20.0
+    IMA_MAX_SOURCES: int = 3
+    IMA_MAX_CONTENT_CHARS: int = 6000
 
     # MCP：仅允许经过加固的本地镜像；绝不回退到本机 npx。
     MCP_ENABLED: bool = True
@@ -187,6 +225,13 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def validate_settings(self) -> "Settings":
         """校验配置之间的约束。"""
+
+        if self.IMA_TIMEOUT <= 0 or self.IMA_SEARCH_TIMEOUT <= 0:
+            raise ValueError("ima 超时必须为正数")
+        if self.KNOWLEDGE_INDEX_TIMEOUT <= 0 or self.KNOWLEDGE_INDEX_MAX_CALLS < 1:
+            raise ValueError("文件索引耗时和调用次数预算必须为正数")
+        if not 1 <= self.IMA_MAX_SOURCES <= 5 or not 500 <= self.IMA_MAX_CONTENT_CHARS <= 12000:
+            raise ValueError("ima 正文来源数应为 1～5，单份正文预算应为 500～12000 字符")
 
         if not Path(self.SANDBOX_RUNNER_SOCKET).is_absolute():
             raise ValueError("SANDBOX_RUNNER_SOCKET 必须是绝对路径")

@@ -24,6 +24,8 @@ from app.evaluation.runner import EvaluationRunner
 from app.evaluation.scope import EvaluationScope, prepare_evaluation_scope
 from app.security.auth import require_admin
 from app.services.experiment_store import experiment_store
+from app.services.knowledge_index import KnowledgeIndexUnavailable, knowledge_index_service
+from app.services.knowledge_policy import knowledge_provider_for
 
 AdminUser = Annotated[User, Depends(require_admin)]
 logger = logging.getLogger(__name__)
@@ -56,6 +58,18 @@ async def start_experiment(
         background_tasks: BackgroundTasks,
 ) -> ExperimentStatus:
     """启动评测实验（异步后台运行）。"""
+
+    if knowledge_provider_for(user) != "milvus":
+        raise HTTPException(409, "Dense/BM25/Hybrid 消融评测需要 Milvus 模式；ima 不暴露这些检索策略")
+
+    if settings.KNOWLEDGE_PROVIDER in ("subscription", "credits"):
+        from app.core.database import AsyncSessionLocal
+
+        async with AsyncSessionLocal() as session:
+            try:
+                await knowledge_index_service.prepare_search(session, user.id)
+            except KnowledgeIndexUnavailable as exc:
+                raise HTTPException(503, str(exc)) from None
 
     dataset_root = Path(__file__).resolve().parent
     path = Path(request.experiment_config.test_dataset_path)
@@ -225,6 +239,10 @@ async def run_experiment_background(
             status=current,
         )
 
+    from app.services.credits import InsufficientCredits, billing_scope
+
+    billing = billing_scope(owner_id, "evaluation")
+    billing.__enter__()
     try:
         runner = EvaluationRunner(experiment_config, owner_id=owner_id, scope=scope)
 
@@ -244,7 +262,9 @@ async def run_experiment_background(
     except BaseException as exc:
         await update(
             status="failed",
-            error="评测失败或已达到调用与耗时上限",
+            error=str(exc) if isinstance(exc, InsufficientCredits) else "评测失败或已达到调用与耗时上限",
         )
-        if not isinstance(exc, (Exception, BudgetExceeded)):
+        if not isinstance(exc, (Exception, BudgetExceeded, InsufficientCredits)):
             raise
+    finally:
+        billing.__exit__(None, None, None)

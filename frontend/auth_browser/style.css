@@ -1,6 +1,9 @@
 :host {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
     color: var(--st-text-color);
+    --auth-accent: var(--st-primary-color, #31594c);
+    --auth-line: color-mix(in srgb, var(--st-text-color) 18%, transparent);
+    --auth-ring: color-mix(in srgb, var(--auth-accent) 35%, transparent);
 }
 
 * {
@@ -23,28 +26,40 @@ input {
     min-height: 42px;
     padding: 10px 12px;
     margin-bottom: 14px;
-    border: 1px solid #d9deea;
+    border: 1px solid var(--auth-line);
     border-radius: 10px;
     font-size: 16px;
     background: var(--st-secondary-background-color);
     color: inherit;
+    font-family: inherit;
+    transition: border-color .18s ease, box-shadow .18s ease;
+    caret-color: var(--auth-accent);
 }
 
 input:focus {
-    outline: 2px solid #7256da;
-    outline-offset: 1px;
+    outline: none;
+    border-color: var(--auth-accent);
+    box-shadow: 0 0 0 3px var(--auth-ring);
 }
 
 button {
     width: 100%;
     min-height: 44px;
-    background: #7256da;
-    color: white;
+    background: var(--auth-accent);
+    color: light-dark(#ffffff, #172a20);
     border: 0;
     border-radius: 10px;
     font-size: 16px;
     cursor: pointer;
+    font-weight: 500;
+    font-family: inherit;
+    transition: background .18s ease, transform .12s ease;
+    touch-action: manipulation;
 }
+
+button:hover:not(:disabled) { filter: brightness(.92); }
+button:active:not(:disabled) { transform: scale(.985); }
+button:focus-visible { outline: 2px solid var(--auth-accent); outline-offset: 3px; }
 
 button:disabled {
     opacity: .6;
@@ -58,7 +73,39 @@ button:disabled {
 }
 
 .status.error {
-    color: #c73b36;
+    color: light-dark(#ae413a, #f5a49d);
+}
+
+.password-field { position: relative; }
+.password-field input { padding-right: 62px; }
+.password-toggle {
+    position: absolute;
+    right: 5px;
+    top: 4px;
+    width: 48px;
+    min-height: 34px;
+    background: transparent;
+    color: var(--st-text-color);
+    font-size: 12px;
+    border-radius: 7px;
+}
+.password-toggle:hover:not(:disabled) { background: var(--st-secondary-background-color); }
+form[aria-busy="true"] button[type="submit"]::before {
+    content: "";
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 8px;
+    vertical-align: -2px;
+    border: 1.5px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: auth-spin .8s linear infinite;
+}
+@keyframes auth-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before { animation: none !important; transition: none !important; }
+    button:active:not(:disabled) { transform: none; }
 }
 
 [hidden] {

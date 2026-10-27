@@ -148,6 +148,11 @@ class MinioService:
                 return False
             raise
 
+    async def metadata(self, object_key: str) -> dict:
+        """Read original-file metadata without downloading its contents."""
+        info = await asyncio.to_thread(self.client.stat_object, self.bucket, object_key)
+        return {"size_bytes": info.size, "content_type": info.content_type}
+
 
 def sanitize_filename(filename: str) -> str:
     """清理文件名，防止路径穿越和特殊字符问题。"""

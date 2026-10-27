@@ -1,7 +1,11 @@
-"""RAGAS 0.3.9 provider adapters; all paid requests use the existing Bailian service."""
+"""RAGAS 0.3.9 adapters with an independent LLM and existing embedding model."""
 from __future__ import annotations
 
+import asyncio
+import logging
+import math
 import os
+import time
 
 # Set before importing RAGAS; evaluation telemetry is unnecessary for this app.
 os.environ["RAGAS_DO_NOT_TRACK"] = "true"
@@ -20,7 +24,10 @@ from ragas.metrics._answer_relevance import ResponseRelevanceInput
 from ragas.run_config import RunConfig
 
 from app.core.config import settings
-from app.services.bailian import bailian_service
+from app.evaluation.llm import evaluation_llm, transient_model_failure
+from app.services.bailian import ModelServiceError, bailian_service
+
+logger = logging.getLogger(__name__)
 
 
 class MetricCallLimit(RuntimeError):
@@ -39,15 +46,28 @@ class BailianRagasLLM(BaseRagasLLM):
         generations = []
         temperature = self.get_temperature(n) if temperature is None else temperature
         for _ in range(n):
-            if self.calls >= settings.EVALUATION_METRIC_MAX_CALLS:
-                raise MetricCallLimit("当前样本已达到 RAGAS 模型调用上限")
-            self.calls += 1
-            text = await bailian_service.chat(
-                [{"role": "user", "content": prompt.to_string()}],
-                temperature=temperature,
-                max_output_tokens=settings.EVALUATION_METRIC_MAX_OUTPUT_TOKENS,
-                max_retries=0,
-            )
+            for attempt in range(settings.EVALUATION_METRIC_MAX_RETRIES + 1):
+                if self.calls >= settings.EVALUATION_METRIC_MAX_CALLS:
+                    raise MetricCallLimit("当前样本已达到 RAGAS 模型调用上限（含重试）")
+                self.calls += 1
+                logger.info("评判请求 %d/%d%s", self.calls, settings.EVALUATION_METRIC_MAX_CALLS,
+                            "（重试）" if attempt else "")
+                try:
+                    text = await evaluation_llm.chat(
+                        [{"role": "user", "content": prompt.to_string()}],
+                        temperature=temperature,
+                        max_output_tokens=settings.EVALUATION_METRIC_MAX_OUTPUT_TOKENS,
+                        max_retries=0,
+                    )
+                    break
+                except ModelServiceError as exc:
+                    if not transient_model_failure(exc) or attempt >= settings.EVALUATION_METRIC_MAX_RETRIES:
+                        raise
+                    if self.calls >= settings.EVALUATION_METRIC_MAX_CALLS:
+                        raise MetricCallLimit("当前样本已达到 RAGAS 模型调用上限（含重试）") from exc
+                    delay = 2 ** attempt
+                    logger.warning("评判请求发生临时网络或上游故障，%s 秒后重试（本次调用已计入预算）", delay)
+                    await asyncio.sleep(delay)
             generations.append(Generation(text=text))
         return LLMResult(generations=[generations])
 
@@ -102,7 +122,7 @@ class AsyncResponseRelevancy(ResponseRelevancy):
         return self._calculate_score(responses, row)
 
 
-async def evaluate_sample(*, query: str, answer: str, contexts: list[str], reference: str):
+async def evaluate_sample(*, query: str, answer: str, contexts: list[str], reference: str, progress=None):
     llm = BailianRagasLLM()
     sample = SingleTurnSample(
         user_input=query, response=answer, retrieved_contexts=contexts, reference=reference,
@@ -113,6 +133,24 @@ async def evaluate_sample(*, query: str, answer: str, contexts: list[str], refer
         "faithfulness": Faithfulness(llm=llm),
         "answer_relevancy": AsyncResponseRelevancy(llm=llm, strictness=3),
     }
-    # Serial metrics share one call counter; no orphan requests after a metric fails.
-    return {name: float(await metric.single_turn_ascore(sample))
-            for name, metric in metrics.items()}
+    # Serial metrics share one attempt counter, including transport retries.
+    scores = (progress.get("metrics") or {}) if progress is not None else {}
+    if not isinstance(scores, dict) or set(scores) - set(metrics):
+        raise ValueError("评测进度包含未知指标")
+    if any(not isinstance(value, (float, int)) or not math.isfinite(value) or not 0 <= value <= 1
+           for value in scores.values()):
+        raise ValueError("评测进度包含无效分数")
+    for name, metric in metrics.items():
+        if name in scores:
+            logger.info("复用已完成指标：%s", name)
+            continue
+        started = time.monotonic()
+        logger.info("开始评判指标：%s", name)
+        value = float(await metric.single_turn_ascore(sample))
+        if not math.isfinite(value):
+            raise ValueError(f"RAGAS 指标 {name} 无有效分数")
+        scores[name] = max(0.0, min(1.0, value))
+        if progress is not None:
+            progress.save("metrics", scores)
+        logger.info("指标完成：%s，用时 %.1f 秒", name, time.monotonic() - started)
+    return scores

@@ -29,6 +29,7 @@ class RAGASMetrics:
     async def evaluate(
         self, *, query: str, answer: str, contexts: list[str],
         ground_truth: str | None = None, reference_contexts: list[str] | None = None,
+        progress=None,
     ) -> dict[str, float]:
         self.ensure_available()
         if not ground_truth or not ground_truth.strip():
@@ -43,6 +44,7 @@ class RAGASMetrics:
 
         raw = await evaluate_sample(
             query=query, answer=answer, contexts=contexts, reference=ground_truth,
+            progress=progress,
         )
         metrics = {}
         for name, value in raw.items():

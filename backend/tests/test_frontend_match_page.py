@@ -63,6 +63,10 @@ def _http_request(method, url, **kwargs):
         return _response([DOCUMENT])
     if url.endswith("/api/runs"):
         return _response(RUNS)
+    if url.endswith("/api/credits/me"):
+        return _response({"balance": 100, "available": 100, "reserved": 0, "checked_in_today": False,
+                         "rules": {"initial_points": 100, "daily_checkin_points": 10,
+                                   "points_per_1000_tokens": 1}})
     if url.endswith("/api/auth/options"):
         return _response(OPTIONS)
     if url.endswith("/api/auth/me"):
@@ -101,6 +105,10 @@ class MatchPageHistoryTests(unittest.TestCase):
             )
             for expected in ("已完成", "待人工审核", "失败", "进行中"):
                 self.assertIn(expected, labels)
+            self.assertIn("当前匹配方式：直接分析所选简历与岗位正文", labels)
+            captions = "\n".join(item.value for item in app.caption)
+            self.assertIn("匹配评分不经过知识库检索", captions)
+            self.assertIn("勾选“补充检索公开岗位资料”后", captions)
 
     def test_history_list_keeps_run_id_field(self):
         """后端契约：任务列表必须带 run_id，否则页面直接崩。

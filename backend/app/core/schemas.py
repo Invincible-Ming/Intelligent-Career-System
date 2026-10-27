@@ -38,6 +38,16 @@ class DocumentResponse(Schema):
     created_at: datetime | None = None
 
 
+class DocumentDetailResponse(DocumentResponse):
+    size_bytes: int | None = None
+    content_type: str | None = None
+    preview_available: bool = False
+
+
+class RenameDocumentRequest(Schema):
+    filename: str = Field(min_length=1, max_length=200)
+
+
 class UploadDocumentResponse(Schema):
     """上传结果。
 

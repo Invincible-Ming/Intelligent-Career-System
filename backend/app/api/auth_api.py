@@ -24,6 +24,8 @@ from app.security.auth import (
     token_hash,
     verify_password,
 )
+from app.services.credits import credit_rules, wallet_info
+from app.services.knowledge_policy import knowledge_provider_for, subscription_info
 
 router = APIRouter(prefix="/auth", tags=["登录"])
 DatabaseSession = Annotated[AsyncSession, Depends(get_db, scope="request")]
@@ -41,13 +43,17 @@ class Credentials(BaseModel):
         return value.lower()
 
 
-def user_response(user):
-    return {"id": str(user.id), "username": user.username, "is_admin": user.is_admin}
+async def user_response(user, session):
+    return {"id": str(user.id), "username": user.username, "is_admin": user.is_admin,
+            "subscription": subscription_info(user), "knowledge_provider": knowledge_provider_for(user),
+            "credits": await wallet_info(session, user.id)}
 
 
 @router.get("/options")
 async def options():
     return {"registration_enabled": settings.AUTH_REGISTRATION_ENABLED,
+            "knowledge_provider": settings.KNOWLEDGE_PROVIDER,
+            "credit_rules": credit_rules(),
             "auth_cookie_name": settings.AUTH_COOKIE_NAME,
             "chat_max_input_chars": settings.CHAT_MAX_INPUT_CHARS, "chat_context_budget": settings.CHAT_CONTEXT_BUDGET,
             "chat_max_output_tokens": settings.CHAT_MAX_OUTPUT_TOKENS,
@@ -66,14 +72,15 @@ async def register(credentials: Credentials, session: DatabaseSession):
     if not settings.AUTH_REGISTRATION_ENABLED:
         raise HTTPException(403, "当前未开放注册")
     user = User(username=credentials.username,
-                password_hash=await asyncio.to_thread(hash_password, credentials.password), is_admin=False)
+                password_hash=await asyncio.to_thread(hash_password, credentials.password), is_admin=False,
+                subscription=None, knowledge_preference=None)
     session.add(user)
     try:
         await session.commit()
     except IntegrityError:
         await session.rollback()
         raise HTTPException(409, "该用户名不可用") from None
-    return user_response(user)
+    return await user_response(user, session)
 
 
 @router.post("/login", dependencies=[Depends(anonymous_auth_limit)])
@@ -90,12 +97,12 @@ async def login(credentials: Credentials, session: DatabaseSession):
     session.add(AuthSession(token_hash=token_hash(token), user_id=user.id, expires_at=expires))
     await session.commit()
     return {"access_token": token, "token_type": "bearer", "expires_at": expires.isoformat(),
-            "user": user_response(user)}
+            "user": await user_response(user, session)}
 
 
 @router.get("/me")
-async def me(user: CurrentUser):
-    return user_response(user)
+async def me(user: CurrentUser, session: DatabaseSession):
+    return await user_response(user, session)
 
 
 @router.post("/logout")

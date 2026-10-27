@@ -84,12 +84,13 @@ async def parse_document(*, owner_id: uuid.UUID, run_id: uuid.UUID, data: bytes,
                             "文档沙箱处理失败：" + json.dumps(message, ensure_ascii=False)[:300]
                         )
         except httpx.HTTPStatusError as exc:
-            body = exc.response.text[:300]
             if exc.response.status_code == 413:
                 raise ValueError("文档超过沙箱解析大小上限，请拆分或压缩文件") from exc
-            raise RuntimeError(f"文档沙箱处理失败（HTTP {exc.response.status_code}：{body}）") from exc
+            if exc.response.status_code == 422:
+                raise SandboxUnavailable("沙箱拒绝了解析参数，请检查后端与 Runner 的版本及大小限制配置") from exc
+            raise SandboxUnavailable(f"文档沙箱请求失败（HTTP {exc.response.status_code}），请检查 Runner 状态") from exc
         except (httpx.HTTPError, OSError) as exc:
-            raise RuntimeError("文档沙箱不可用，请启动 Docker 与 Sandbox Runner") from exc
+            raise SandboxUnavailable("文档沙箱连接异常，请检查 Docker 与 Sandbox Runner 状态") from exc
         finally:
             if session_id and not completed:
                 async def stop_remote():

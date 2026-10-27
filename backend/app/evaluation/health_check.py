@@ -12,7 +12,7 @@ from pathlib import Path
 
 from app.core.prompts import MODEL_HEALTHCHECK_PROMPT
 from app.evaluation.dataset import TestDataset
-from app.services.bailian import bailian_service
+from app.evaluation.llm import evaluation_llm
 from app.services.bm25_service import bm25_service
 from app.services.milvus_service import milvus_service
 
@@ -36,16 +36,17 @@ async def check_services() -> dict[str, bool]:
         results["milvus"] = False
         logger.error(f"✗ Milvus: 检查失败 - {exc}")
 
-    # 检查百炼
+    # 检查实际评测模型，避免 MiMo 评测仍然消耗百炼聊天额度。
     try:
-        await bailian_service.chat(
+        await evaluation_llm.chat(
             messages=[{"role": "user", "content": MODEL_HEALTHCHECK_PROMPT}],
+            max_output_tokens=32, max_retries=0,
         )
-        results["bailian"] = True
-        logger.info("✓ 百炼: 可用")
+        results["evaluation_llm"] = True
+        logger.info("✓ 评测模型 %s / %s: 可用", evaluation_llm.provider, evaluation_llm.model)
     except Exception as exc:
-        results["bailian"] = False
-        logger.error(f"✗ 百炼: 检查失败 - {exc}")
+        results["evaluation_llm"] = False
+        logger.error("✗ 评测模型: 检查失败 - %s", type(exc).__name__)
 
     # 检查 BM25
     try:
@@ -189,6 +190,7 @@ async def main(owner_id: str):
 
     # 3. 测试评测流程
     flow_ok = await test_evaluation_flow(owner_id)
+    await evaluation_llm.close()
 
     if not flow_ok:
         logger.error("\n❌ 评测流程测试失败")

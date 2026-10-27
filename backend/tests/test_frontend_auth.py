@@ -32,6 +32,10 @@ def response(value, status=200):
 
 def api_request(method, url, **kwargs):
     calls.append((method, url, kwargs.get("headers", {})))
+    if url.endswith("/api/credits/me"):
+        return response({"balance": 100, "available": 100, "reserved": 0, "checked_in_today": False,
+                         "rules": {"initial_points": 100, "daily_checkin_points": 10,
+                                   "points_per_1000_tokens": 1}})
     if url.endswith("/api/auth/options"):
         return response(options)
     if url.endswith("/api/auth/login"):
@@ -98,6 +102,29 @@ class FrontendAuthTests(unittest.TestCase):
             app = AppTest.from_file(str(path), default_timeout=15).run()
             self.assertEqual([x.label for x in app.tabs], ["登录", "注册"])
 
+    def test_about_sits_after_logout_and_closes_the_account_menu(self):
+        """关于按钮排在退出登录之后；点击时先收起浮层，再弹对话框。"""
+        calls.clear()
+        token = "test-session-token" + "x" * 32
+        with (
+            patch("requests.request", side_effect=api_request),
+            patch.object(type(st.context), "cookies", new_callable=PropertyMock,
+                         return_value={"career_session": token}),
+            patch("streamlit.components.v2.component", return_value=lambda **kwargs: None),
+        ):
+            app = AppTest.from_file(str(Path(__file__).resolve().parents[2] / "frontend" / "app.py"),
+                                    default_timeout=15).run()
+            self.assertFalse(app.exception)
+            labels = [button.label for button in app.button]
+            self.assertIn("关于简面职说", labels)
+            self.assertLess(labels.index("退出登录"), labels.index("关于简面职说"))
+
+            app.button(key="account_about").click().run()
+            self.assertFalse(app.exception)
+            # 计数器 +1 换掉 popover 的 key，浮层因此收起；待办标记本轮即被消费掉。
+            self.assertEqual(app.session_state["account_menu_generation"], 1)
+            assert_session_key_absent(app, "about_pending")
+
     def test_invalid_cookie_cannot_render_private_content(self):
         calls.clear()
 
@@ -119,6 +146,35 @@ class FrontendAuthTests(unittest.TestCase):
             self.assertTrue(app.session_state["clear_browser_session"])
             assert_session_key_absent(app, "access_token")
             self.assertTrue(all("/api/auth/" in url for _, url, _ in calls))
+
+    def test_rules_credits_destination_waits_for_login_then_opens_wallet(self):
+        cookies = {}
+        calls.clear()
+
+        def linked_api(method, url, **kwargs):
+            if url.endswith("/api/credits/entries"):
+                return response({"items": [], "has_more": False})
+            return api_request(method, url, **kwargs)
+
+        with patch("requests.request", side_effect=linked_api), patch.object(
+            type(st.context), "cookies", new_callable=PropertyMock, return_value=cookies,
+        ), patch("streamlit.components.v2.component", return_value=lambda **kwargs: None):
+            path = Path(__file__).resolve().parents[2] / "frontend" / "app.py"
+            app = AppTest.from_file(str(path), default_timeout=15)
+            app.query_params["page"] = "credits"
+            app.run()
+            self.assertFalse(app.exception)
+            self.assertEqual(app.query_params["page"], ["credits"])
+            self.assertTrue(all("/api/auth/" in url for _, url, _ in calls))
+            cookies["career_session"] = "synthetic-credit-route-token" + "x" * 32
+            # Browser login reloads this URL, preserving the intended page.
+            app = AppTest.from_file(str(path), default_timeout=15)
+            app.query_params["page"] = "credits"
+            app.run()
+            self.assertFalse(app.exception)
+            self.assertEqual(app.session_state.active_page, "credits")
+            self.assertNotIn("page", app.query_params)
+            self.assertEqual(app.metric[0].value, "100")
 
     def test_match_progress_and_structured_report_are_rendered_before_review(self):
         report = {
@@ -198,3 +254,31 @@ class FrontendAuthTests(unittest.TestCase):
             self.assertTrue(any(metric.label == "综合加权匹配分" for metric in app.metric))
             self.assertTrue(any("Add synthetic tests" in row.value for row in app.markdown))
             self.assertFalse(any("思考中" in row.value for row in app.markdown))
+
+
+class BrowserAuthURLTests(unittest.TestCase):
+    def urls(self, frontend, configured=None):
+        from career_ui.session import browser_auth_urls
+        environment = {} if configured is None else {"BROWSER_API_BASE_URL": configured}
+        with (
+            patch.dict("os.environ", environment, clear=True),
+            patch.object(type(st.context), "url", new_callable=PropertyMock, return_value=frontend),
+            patch("career_ui.session.API_BASE_URL", "http://localhost:8000"),
+        ):
+            return browser_auth_urls()
+
+    def test_public_tunnel_uses_same_origin_without_localhost(self):
+        self.assertEqual(self.urls("https://career-demo.trycloudflare.com/?page=chat"),
+                         ("https://career-demo.trycloudflare.com", "https://career-demo.trycloudflare.com/"))
+
+    def test_local_development_keeps_backend_port_and_host(self):
+        self.assertEqual(self.urls("http://127.0.0.1:8501/"),
+                         ("http://127.0.0.1:8000", "http://127.0.0.1:8501/"))
+
+    def test_explicit_same_origin_supports_local_gateway(self):
+        self.assertEqual(self.urls("http://localhost:8080/", "same-origin"),
+                         ("http://localhost:8080", "http://localhost:8080/"))
+
+    def test_explicit_browser_api_address_is_preserved(self):
+        self.assertEqual(self.urls("https://career.example/", "https://career.example/backend/"),
+                         ("https://career.example/backend", "https://career.example/"))

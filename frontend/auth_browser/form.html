@@ -1,10 +1,13 @@
 <form method="post">
     <label for="auth_username">用户名</label>
-    <input id="auth_username" name="username" autocomplete="username" minlength="3" maxlength="32"
+    <input id="auth_username" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" minlength="3" maxlength="32"
            pattern="[a-zA-Z0-9_]+" required>
     <label for="auth_password">密码</label>
-    <input id="auth_password" name="password" type="password" autocomplete="current-password"
-           minlength="12" maxlength="128" required>
+    <div class="password-field">
+        <input id="auth_password" name="password" type="password" autocomplete="current-password"
+               minlength="12" maxlength="128" required>
+        <button class="password-toggle" type="button" aria-label="显示密码" aria-pressed="false">显示</button>
+    </div>
     <button type="submit">登录</button>
 </form>
 <p class="status" role="status" aria-live="polite" hidden></p>

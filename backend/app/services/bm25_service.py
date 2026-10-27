@@ -136,6 +136,19 @@ class BM25Service:
 
             await self._swap_in(snapshot)
 
+    async def replace_owner(self, owner_id: str, documents: list[dict]) -> None:
+        """Refresh one user's process-local snapshot without disturbing other users."""
+        async with self._write_lock:
+            async with self.lock:
+                snapshot = [item for item in self.chunks if item.owner_id != owner_id]
+            for document in documents:
+                for index, content in enumerate(document["chunks"]):
+                    if content.strip():
+                        snapshot.append(BM25Chunk(chunk_id=f"{document['document_id']}-{index}",
+                                                  document_id=document["document_id"], owner_id=owner_id,
+                                                  document_type=document["document_type"], content=content.strip()))
+            await self._swap_in(snapshot)
+
     async def delete_document(
             self,
             document_id: str,

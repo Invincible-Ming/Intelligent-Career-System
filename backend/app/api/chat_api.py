@@ -8,8 +8,8 @@ import uuid
 from typing import Annotated
 
 import anyio
-from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,17 +22,34 @@ from app.core.prompts import CHAT_SYSTEM_PROMPT as SYSTEM_PROMPT
 from app.core.prompts import SUMMARY_SYSTEM_PROMPT, current_assessment_date, prompt_data, temporal_context
 from app.security.auth import CurrentUser
 from app.services.bailian import ModelServiceError, bailian_service, public_model_error
+from app.services.chat_intent import IntentAnalysis, analyze_intent, fixed_reply, intent_guidance, previous_intent
 from app.services.conversation_service import conversation_service
 
 router = APIRouter(prefix='/chat', tags=['对话'])
 logger = logging.getLogger(__name__)
 DatabaseSession = Annotated[AsyncSession, Depends(get_db, scope="request")]
+
+
+class ClosingChatResponse(StreamingResponse):
+    """Release the conversation even if a disconnected stream never starts."""
+    def __init__(self, *args, on_close, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.on_close = on_close
+
+    async def __call__(self, scope, receive, send):
+        try:
+            await super().__call__(scope, receive, send)
+        finally:
+            with anyio.CancelScope(shield=True):
+                async with asyncio.timeout(3):
+                    await self.on_close()
 def _clean_message_rows(rows):
     """保留可进入模型上下文的完整 user/assistant 消息。"""
     return [
         row for row in rows
         if row.role in ('user', 'assistant')
            and not (row.meta_data or {}).get('incomplete')
+           and not (row.meta_data or {}).get('context_excluded')
     ]
 
 
@@ -123,6 +140,7 @@ async def _maybe_compact_context(*, session, owner_id, conversation, history_row
 class ChatRequest(BaseModel):
     model_config = ConfigDict(extra='forbid')
     conversation_id: uuid.UUID | None = None
+    retry_message_id: uuid.UUID | None = None
     message: str = Field(min_length=1, max_length=settings.CHAT_MAX_INPUT_CHARS)
     temperature: float = Field(default=.7, ge=0, le=2)
     stream: bool = True
@@ -135,8 +153,46 @@ class ChatRequest(BaseModel):
         return value.strip()
 
 
+class ConversationRequest(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    title: str = Field(default='新对话', min_length=1, max_length=100)
+
+
+@router.post('/conversations', status_code=201)
+async def create_chat_conversation(request: ConversationRequest, user: CurrentUser, session: DatabaseSession):
+    conversation = await conversation_service.create_conversation(
+        session=session, owner_id=user.id, title=request.title.strip() or '新对话',
+    )
+    return {'id': str(conversation.id)}
+
+
 @router.post('/completions')
-async def chat_completions(request: ChatRequest, user: CurrentUser, session: DatabaseSession):
+async def chat_completions(request: ChatRequest, user: CurrentUser, session: DatabaseSession, http_request: Request):
+    # FastAPI has consumed the JSON body here. Watch for disconnects during
+    # classification/summary too; StreamingResponse only watches after headers.
+    work = asyncio.create_task(_prepare_chat_response(request, user, session))
+
+    async def disconnected():
+        while not await http_request.is_disconnected():
+            await asyncio.sleep(.2)
+
+    watcher = asyncio.create_task(disconnected())
+    try:
+        done, _ = await asyncio.wait((work, watcher), return_when=asyncio.FIRST_COMPLETED)
+        if work in done:
+            return work.result()
+        return Response(status_code=499)
+    finally:
+        with anyio.CancelScope(shield=True):
+            for task in (work, watcher):
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(work, watcher, return_exceptions=True)
+
+
+async def _prepare_chat_response(request: ChatRequest, user, session):
+    if request.retry_message_id and not request.conversation_id:
+        raise HTTPException(422, '重试必须指定原对话')
     if request.conversation_id:
         conversation = await conversation_service.get_conversation(session=session, owner_id=user.id,
                                                                    conversation_id=request.conversation_id)
@@ -161,21 +217,71 @@ async def chat_completions(request: ChatRequest, user: CurrentUser, session: Dat
     if not locked:
         await lock_connection.close()
         raise HTTPException(409, '该对话正在生成回复，请等待完成')
+    released = False
+
+    async def release_once():
+        nonlocal released
+        if not released:
+            released = True
+            await release_lock(lock_connection, key)
+
     try:
-        await conversation_service.add_message(session=session, owner_id=user.id, conversation_id=identifier,
-                                               role='user', content=request.message)
         history = await conversation_service.get_messages(session=session, owner_id=user.id, conversation_id=identifier,
-                                                          limit=settings.CHAT_HISTORY_MESSAGES + 1)
+                                                          limit=settings.CHAT_HISTORY_MESSAGES)
+        current = None
+        if request.retry_message_id:
+            latest_user = next((row for row in reversed(history) if row.role == 'user'), None)
+            if not latest_user or latest_user.id != request.retry_message_id:
+                raise HTTPException(409, '对话已更新，请重新载入历史后再试')
+            if latest_user.content != request.message:
+                raise HTTPException(422, '重试内容必须与原消息一致')
+            tail = history[history.index(latest_user) + 1:]
+            if any(row.role == 'assistant' and not (row.meta_data or {}).get('incomplete') for row in tail):
+                raise HTTPException(409, '这条消息已有完整回复，请重新载入历史')
+            current = latest_user
+        analysis = await analyze_intent(request.message, previous=previous_intent(history))
+        metadata = {'intent_analysis': analysis.model_dump(mode='json')}
+        if analysis.context_excluded:
+            metadata['context_excluded'] = True
+        if current is None:
+            current = await conversation_service.add_message(
+                session=session, owner_id=user.id, conversation_id=identifier,
+                role='user', content=request.message, metadata=metadata,
+            )
+        else:
+            current.meta_data = metadata
+            await session.commit()
+        logger.info('对话意图：intent=%s action=%s source=%s degraded=%s',
+                    analysis.primary_intent, analysis.action, analysis.source, analysis.degraded)
+        safe_content = fixed_reply(analysis)
+        if safe_content:
+            # Resolve scope refusals, extraction/cross-owner requests and crisis
+            # signals before answer generation, tools or history summarization.
+            assistant = await conversation_service.add_message(
+                session=session, owner_id=user.id, conversation_id=identifier,
+                role='assistant', content=safe_content, metadata=metadata,
+            )
+            await release_once()
+            if request.stream:
+                return StreamingResponse(
+                    fixed_chat_stream(identifier, assistant.id, safe_content, analysis, current.id), media_type='text/event-stream',
+                    headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'},
+                )
+            return {'conversation_id': str(identifier), 'message_id': str(assistant.id), 'content': safe_content,
+                    'role': 'assistant', 'intent_analysis': analysis.model_dump(mode='json')}
+        history = [row for row in history if row.id != current.id] + [current]
         context_summary, context_rows = await _maybe_compact_context(
             session=session,
             owner_id=user.id,
             conversation=conversation,
             history_rows=history,
         )
+        tools = get_chat_agent_tools(owner_id=str(user.id)) if analysis.allow_tools else []
         context_system_prompt = (
             temporal_context(current_assessment_date()) + '\n' + SYSTEM_PROMPT
+            + intent_guidance(analysis)
             + '\n【本轮可用工具名称】'
-            + prompt_data(available_tools=[tool.name for tool in get_chat_agent_tools()])
+            + prompt_data(available_tools=[tool.name for tool in tools])
         )
         if context_summary:
             context_system_prompt += (
@@ -185,18 +291,23 @@ async def chat_completions(request: ChatRequest, user: CurrentUser, session: Dat
                     + prompt_data(history_summary=context_summary)
             )
         messages = bound_history(
-            conversation_service.messages_to_dict(context_rows),
+            # Current text is still the explicit user question in restricted mode. Excluded attack text
+            # is never copied into a later turn or a rolling summary through persisted history.
+            conversation_service.messages_to_dict([row for row in context_rows if row.id != current.id])
+            + [{'role': 'user', 'content': request.message}],
             context_system_prompt,
         )
         if request.stream:
-            return StreamingResponse(stream_chat_with_persistence(owner_id=user.id, conversation_id=identifier,
+            return ClosingChatResponse(stream_chat_with_persistence(owner_id=user.id, conversation_id=identifier,
                                                                   messages=messages, temperature=request.temperature,
-                                                                  lock_session=lock_connection, lock_key=key),
+                                                                  lock_session=lock_connection, lock_key=key,
+                                                                  intent_analysis=analysis, user_message_id=current.id,
+                                                                  release_once=release_once),
+                                     on_close=release_once,
                                      media_type='text/event-stream',
                                      headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'})
-        tools = get_chat_agent_tools()
         if tools:
-            agent = get_chat_mcp_agent(temperature=request.temperature)
+            agent = get_chat_mcp_agent(temperature=request.temperature, owner_id=str(user.id))
             result = await agent.ainvoke({'messages': messages},
                                          config={'callbacks': [ModelBudgetCallback()],
                                                  'recursion_limit': 24})
@@ -210,13 +321,13 @@ async def chat_completions(request: ChatRequest, user: CurrentUser, session: Dat
                                                  max_output_tokens=settings.CHAT_MAX_OUTPUT_TOKENS)
         assistant = await conversation_service.add_message(session=session, owner_id=user.id,
                                                            conversation_id=identifier,
-                                                           role='assistant', content=content)
-        await release_lock(lock_connection, key)
+                                                           role='assistant', content=content, metadata=metadata)
+        await release_once()
         return {'conversation_id': str(identifier), 'message_id': str(assistant.id), 'content': content,
-                'role': 'assistant'}
+                'role': 'assistant', 'intent_analysis': analysis.model_dump(mode='json')}
     except BaseException as exc:
         with anyio.CancelScope(shield=True):
-            await release_lock(lock_connection, key)
+            await release_once()
         if isinstance(exc, ModelServiceError):
             raise HTTPException(503, public_model_error(exc)["message"]) from None
         raise
@@ -233,13 +344,34 @@ async def release_lock(connection, key):
         await connection.close()
 
 
-async def stream_chat_with_persistence(*, owner_id, conversation_id, messages, temperature, lock_session, lock_key):
+def intent_event(conversation_id, analysis, user_message_id=None):
+    payload = {'conversation_id': str(conversation_id), 'intent_analysis': analysis.model_dump(mode='json')}
+    if user_message_id:
+        payload['user_message_id'] = str(user_message_id)
+    return 'data: ' + json.dumps(payload, ensure_ascii=False) + '\n\n'
+
+
+async def fixed_chat_stream(conversation_id, message_id, content, analysis, user_message_id=None):
+    yield intent_event(conversation_id, analysis, user_message_id)
+    yield 'data: ' + json.dumps({'conversation_id': str(conversation_id),
+                                'choices': [{'delta': {'content': content}, 'finish_reason': None}]},
+                               ensure_ascii=False) + '\n\n'
+    yield 'data: ' + json.dumps({'conversation_id': str(conversation_id), 'message_id': str(message_id),
+                                'choices': [{'delta': {}, 'finish_reason': 'stop'}]}) + '\n\n'
+    yield 'data: [DONE]\n\n'
+
+
+async def stream_chat_with_persistence(*, owner_id, conversation_id, messages, temperature, lock_session, lock_key,
+                                       intent_analysis: IntentAnalysis | None = None, user_message_id=None, release_once=None):
     full_content = ''
     completed = False
-    tools = get_chat_agent_tools()
+    metadata = {'intent_analysis': intent_analysis.model_dump(mode='json')} if intent_analysis else {}
     try:
+        tools = get_chat_agent_tools(owner_id=str(owner_id)) if not intent_analysis or intent_analysis.allow_tools else []
+        if intent_analysis:
+            yield intent_event(conversation_id, intent_analysis, user_message_id)
         if tools:
-            agent = get_chat_mcp_agent(temperature=temperature)
+            agent = get_chat_mcp_agent(temperature=temperature, owner_id=str(owner_id))
             config = {'callbacks': [ModelBudgetCallback()], 'recursion_limit': 24}
             async for chunk in agent.astream({'messages': messages}, config=config, stream_mode='updates'):
                 for update in chunk.values():
@@ -273,7 +405,7 @@ async def stream_chat_with_persistence(*, owner_id, conversation_id, messages, t
         async with AsyncSessionLocal() as session:
             assistant = await conversation_service.add_message(session=session, owner_id=owner_id,
                                                                conversation_id=conversation_id,
-                                                               role='assistant', content=full_content)
+                                                               role='assistant', content=full_content, metadata=metadata)
         completed = True
         yield 'data: ' + json.dumps({'conversation_id': str(conversation_id), 'message_id': str(assistant.id),
                                      'choices': [{'delta': {}, 'finish_reason': 'stop'}]}) + '\n\n'
@@ -293,9 +425,12 @@ async def stream_chat_with_persistence(*, owner_id, conversation_id, messages, t
                                 await conversation_service.add_message(session=session, owner_id=owner_id,
                                                                        conversation_id=conversation_id,
                                                                        role='assistant', content=full_content,
-                                                                       metadata={'incomplete': True})
+                                                                       metadata={**metadata, 'incomplete': True})
                     finally:
-                        await release_lock(lock_session, lock_key)
+                        if release_once:
+                            await release_once()
+                        else:
+                            await release_lock(lock_session, lock_key)
             except (Exception, asyncio.CancelledError) as exc:
                 logger.debug("对话流清理未完成（%s）", type(exc).__name__)
 
@@ -318,10 +453,12 @@ async def get_conversation_messages(conversation_id: uuid.UUID, user: CurrentUse
     rows = await conversation_service.get_messages(session=session, owner_id=user.id, conversation_id=conversation_id,
                                                    limit=limit, offset=offset)
     return [{'id': str(msg.id), 'role': msg.role, 'content': msg.content, 'created_at': msg.created_at.isoformat(),
-             'incomplete': bool((msg.meta_data or {}).get('incomplete'))} for msg in rows]
+             'incomplete': bool((msg.meta_data or {}).get('incomplete')),
+             'intent_analysis': (msg.meta_data or {}).get('intent_analysis')} for msg in rows]
 
 
 @router.patch('/conversations/{conversation_id}')
+@router.post('/conversations/{conversation_id}/update')
 async def update_conversation(conversation_id: uuid.UUID, user: CurrentUser, session: DatabaseSession,
                               title: str | None = Query(default=None, min_length=1, max_length=100),
                               pinned: bool | None = Query(default=None)):

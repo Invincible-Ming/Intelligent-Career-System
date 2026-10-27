@@ -17,13 +17,74 @@ from career_ui.documents import (
 )
 
 
+def page_header(title: str, description: str, *, eyebrow: str = "求职工作台") -> None:
+    """Consistent page hierarchy; all dynamic labels remain plain text."""
+    st.html(
+        '<header class="page-heading">'
+        f'<div class="page-eyebrow">{escape(eyebrow)}</div>'
+        f'<h1>{escape(title)}</h1><p>{escape(description)}</p></header>'
+    )
+
+
+def empty_state(title: str, description: str) -> None:
+    st.html(
+        '<div class="empty-state">'
+        '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">'
+        '<path d="M7 3.75h7l3.75 3.75v12.75H6.25V3.75H7Z" stroke="currentColor" stroke-width="1.3"/>'
+        '<path d="M13.5 4v4h4M9 12h6M9 15.5h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>'
+        f'</svg><h3>{escape(title)}</h3><p>{escape(description)}</p></div>'
+    )
+
+
+def match_stepper(stage: int) -> str:
+    labels = ("选择资料", "分析匹配", "查看报告")
+    return '<ol class="match-steps" aria-label="岗位匹配流程">' + ''.join(
+        f'<li class="{"current" if number == stage else "done" if number < stage else ""}"'
+        + (' aria-current="step"' if number == stage else '')
+        + f'><span>{"✓" if number < stage else number}</span>{label}</li>'
+        for number, label in enumerate(labels, 1)
+    ) + '</ol>'
+
+
+def account_identity(user: dict[str, Any]) -> None:
+    username = str(user["username"])
+    role = "管理员账户" if user.get("is_admin") else "个人账户"
+    st.html(
+        '<div class="account-identity">'
+        f'<span class="account-avatar" aria-hidden="true">{escape(username[:1].upper())}</span>'
+        f'<div><strong title="{escape(username, quote=True)}">{escape(username)}</strong><span>{role}</span></div></div>'
+    )
+
+
+def account_usage(usage: dict[str, Any] | None) -> None:
+    if not usage:
+        st.caption("调用次数暂时无法加载")
+        return
+    if usage.get("is_admin"):
+        st.html('<div class="account-admin-note">调用次数不限<span>模型用量仍按积分结算</span></div>')
+        return
+    daily = usage["generation_daily"]
+    minute = usage["generation_minute"]
+    used, limit = int(daily["used"]), int(daily["limit"])
+    percentage = min(used / limit, 1.0) * 100 if limit else 0.0
+    st.html('<div class="account-usage-row"><span>今日生成</span>'
+            f'<strong>{used}<small> / {limit}</small></strong></div>'
+            '<div class="account-usage-track" role="progressbar" aria-label="今日生成次数" '
+            f'aria-valuemin="0" aria-valuemax="100" aria-valuenow="{percentage}" '
+            f'aria-valuetext="已使用 {used} 次，共 {limit} 次">'
+            f'<span style="width:{percentage}%"></span></div>'
+            '<div class="account-usage-note">'
+            f'<span>剩余 {int(daily["remaining"])} 次</span><span>08:00 更新 · 北京时间</span></div>'
+            '<div class="account-usage-row minute"><span>本分钟</span>'
+            f'<strong>{int(minute["used"])}<small> / {int(minute["limit"])}</small></strong></div>')
+
+
 def document_label(document: dict[str, Any]) -> str:
     document_type = document.get("document_type", "unknown")
     type_name = DOCUMENT_TYPE_NAMES.get(document_type, document_type)
     marker = document_name_marker(document)
     return (
         f"{document_identity_label(document)} · {type_name}"
-        f" · {document.get('status', 'unknown')}"
         + (f" · {marker}" if marker else "")
     )
 
@@ -63,51 +124,26 @@ def show_string_list(title: str, values: list[str] | None) -> None:
         st.markdown(f"- {value}")
 
 
-def show_match_report(report: dict[str, Any]) -> None:
-    st.subheader("岗位多维匹配报告")
+def show_match_report(report: dict[str, Any], *, actions=None, menu=None) -> None:
+    if menu:
+        heading, options = st.columns([8, 1], vertical_alignment="center")
+        heading.subheader("匹配结论")
+        with options:
+            menu()
+    else:
+        st.subheader("匹配结论")
     if report.get("assessment_date"):
         st.caption(f"评估日期：{report['assessment_date']}")
 
-    score_column, level_column = st.columns(2)
-    with score_column:
-        st.metric("综合加权匹配分", f"{float(report.get('total_score', 0)):.1f} 分")
-    with level_column:
-        st.metric("匹配等级", report.get("match_level", "未知"))
-
-    scores = report.get("scores", {})
-    st.markdown("#### 维度分项明细")
-
-    score_items = [
-        ("技能匹配", "skill"),
-        ("经历匹配", "experience"),
-        ("职责匹配", "responsibility"),
-        ("教育背景", "education"),
-        ("加分项", "bonus"),
-    ]
-    for column, (label, key) in zip(st.columns(5), score_items, strict=True):
-        column.metric(label, f"{float(scores.get(key, 0)):.0f} 分")
-
-    left_column, right_column = st.columns(2)
-    with left_column:
-        show_string_list("已匹配技能", report.get("matched_skills"))
-        show_string_list("候选人核心优势", report.get("strengths"))
-
-    with right_column:
-        show_string_list("缺失/待补足技能", report.get("missing_skills"))
-        risks = report.get("risks") or []
-        business_risks = [
-            item for item in risks
-            if not str(item).startswith(("需人工复核：", "自动校验提示（人工已确认）："))
-        ]
-        show_string_list("潜在风险点", business_risks)
-        if len(business_risks) != len(risks):
-            st.caption("此历史报告含旧版校验记录，已与求职风险分开；可重新评估获取结构化校验结果。")
-
-    show_string_list("专家改进建议", report.get("suggestions"))
+    with st.container(key="match_report_summary"):
+        score_column, level_column = st.columns(2)
+        with score_column:
+            st.metric("综合加权匹配分", f"{float(report.get('total_score', 0)):.1f} 分")
+        with level_column:
+            st.metric("匹配等级", report.get("match_level", "未知"))
 
     verification = report.get("verification")
     if isinstance(verification, dict):
-        st.markdown("#### 报告校验")
         status = verification.get("status")
         summary = verification.get("summary") or "请核对当前报告。"
         if status == "correction_unverified":
@@ -115,9 +151,9 @@ def show_match_report(report: dict[str, Any]) -> None:
         if verification.get("nonblocking"):
             st.info("报告已生成，自动校验未完成，结果暂未经完整复核。")
         elif status == "passed":
-            st.success(summary)
+            st.caption(f"校验完成 · {summary}")
         elif status == "manual_accepted":
-            st.info(summary)
+            st.caption(f"人工确认 · {summary}")
         else:
             st.warning(summary)
         if verification.get("nonblocking") and verification.get("correction_applied"):
@@ -139,10 +175,53 @@ def show_match_report(report: dict[str, Any]) -> None:
                     st.write("修正建议：", issue.get("suggested_fix", ""))
                 show_string_list("本次修正记录", corrections[:6])
 
-    with st.expander("查看简历结构化抽取明细 (Resume Agent)"):
+    strengths, gaps = st.columns(2)
+    with strengths:
+        show_string_list("已经具备", (report.get("strengths") or report.get("matched_skills") or [])[:3])
+    with gaps:
+        show_string_list("优先补齐", (report.get("missing_skills") or [])[:3])
+    risks = [value for value in (report.get("risks") or [])
+             if not str(value).startswith(("需人工复核：", "自动校验提示（人工已确认）："))]
+    if risks:
+        show_string_list("需要核对", risks[:2])
+    show_string_list("下一步建议", (report.get("suggestions") or [])[:3])
+    if actions:
+        actions()
+    with st.expander("完整分析与维度评分"):
+        scores = report.get("scores", {})
+        st.markdown("#### 维度分项明细")
+
+        score_items = [
+            ("技能匹配", "skill"),
+            ("经历匹配", "experience"),
+            ("职责匹配", "responsibility"),
+            ("教育背景", "education"),
+            ("加分项", "bonus"),
+        ]
+        for column, (label, key) in zip(st.columns(5), score_items, strict=True):
+            column.metric(label, f"{float(scores.get(key, 0)):.0f} 分")
+
+        left_column, right_column = st.columns(2)
+        with left_column:
+            show_string_list("已匹配技能", report.get("matched_skills"))
+            show_string_list("候选人核心优势", report.get("strengths"))
+
+        with right_column:
+            show_string_list("缺失/待补足技能", report.get("missing_skills"))
+            risks = report.get("risks") or []
+            business_risks = [
+                item for item in risks
+                if not str(item).startswith(("需人工复核：", "自动校验提示（人工已确认）："))
+            ]
+            show_string_list("潜在风险点", business_risks)
+            if len(business_risks) != len(risks):
+                st.caption("此历史报告含旧版校验记录，已与求职风险分开；可重新评估获取结构化校验结果。")
+
+
+    with st.expander("简历分析依据"):
         st.json(report.get("resume_analysis", {}))
 
-    with st.expander("查看岗位要求拆解明细 (JD Agent)"):
+    with st.expander("岗位要求依据"):
         st.json(report.get("job_analysis", {}))
 
 
@@ -240,6 +319,10 @@ def get_search_score_display(
     """把不同检索模式下的分数映射到统一的展示元组。"""
 
     source = result.get("source", search_mode)
+    if source == "ima":
+        return ("检索顺序权重", "ima 知识库", float(result.get("score", 0.0)))
+    if source == "local_keyword":
+        return ("关键词覆盖率", "本地文件全文检索", float(result.get("score", 0.0)))
     if source == "hybrid_reranked":
         return (
             "BGE 重排分",
@@ -273,6 +356,9 @@ def show_search_results(
             f"结果 {index}｜{score_name} {main_score:.8f}", expanded=index == 1
         ):
             st.caption(f"召回来源：{source_name}")
+            if result.get("source") == "ima":
+                evidence = (result.get("chunk_metadata") or {}).get("evidence")
+                st.caption("搜索摘要" if evidence == "search_excerpt" else "原文节选")
             st.write(result.get("content", ""))
 
             rrf_score = result.get("rrf_score")

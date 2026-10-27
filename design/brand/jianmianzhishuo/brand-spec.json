@@ -1,0 +1,54 @@
+{
+  "status": "logo_design_v1",
+  "date": "2026-10-27",
+  "name": "简面职说",
+  "audience": "大学生、实习与初次求职人群",
+  "descriptor": "大学生的 AI 求职搭子",
+  "tagline": "简历怎么写，面试怎么说。",
+  "concept": "会聊天的简历页：圆角文档与对话气泡融合，绿色折角象征简历与成长，两条内容线带有微笑感。",
+  "palette": {
+    "charcoal": "#18191B",
+    "mark": "#202124",
+    "off_white": "#F7F7F8",
+    "sage": "#A3C8B3"
+  },
+  "assets": {
+    "transparent_mark": "logo-mark.png",
+    "transparent_horizontal_logo": "logo-horizontal.png",
+    "square_app_icon": "app-icon.png",
+    "brand_presentation": "brand-board.png"
+  },
+  "usage": {
+    "app_icon": "方形图标供小程序等应用入口使用，平台可自行进行圆形或圆角裁切。",
+    "horizontal_logo": "透明横向组合标识，适合浅色网页、文档与演示资料。",
+    "mark": "透明独立图形，可放在浅色背景上。",
+    "presentation": "展示字标、深色版本、圆形裁切与配色的预览图，不应作为应用图标上传。"
+  },
+  "format_note": "本轮素材为 PNG；独立图形与横向组合标识带真实 Alpha 通道，不是 SVG 矢量源文件。",
+  "implementation_note": "设计素材已保存至项目目录；本轮未替换现有运行页面的名称或标识。",
+  "generation": {
+    "mode": "built-in image_gen",
+    "prompts": {
+      "master": "Use case: logo-brand. Create a new original master logo symbol for a friendly Chinese AI career-preparation assistant for university students. Brand name is 简面职说, meaning resume + interview + career + conversation. This image contains ONLY the icon mark, not the name. The design concept is 'a resume page that can talk': fuse a softly rounded upright document silhouette, one distinctive folded upper-right corner and a short chat-bubble tail into ONE coherent compact friendly symbol. Inside, use just two clean rounded negative-space text strokes; let the lower one have a subtle lifted end suggesting a smile and encouragement, without becoming a cartoon face. Make the paper fold a restrained muted-sage accent #A3C8B3; all other positive shapes are solid deep charcoal #202124; internal cutouts must be transparent. The result must be a memorable abstract brand mark rather than a generic outline document icon. Bold, balanced silhouette with deliberate smooth geometry and broad negative spaces that work at 24 pixels. Clean flat vector-like contours, exceptionally crisp edges, playful but composed, suitable for an elegant minimal product UI. Near-square composition, icon optically centered and occupying about 64 percent of the canvas, generous equal safe-area padding for circular crops. GENUINELY TRANSPARENT BACKGROUND with real alpha. Single icon only. No words, no letters, no numerals, no watermark, no app tile or outer frame, no extra images, no arrow, no robot, no brain, no briefcase, no handshake, no sparkles, no gradients, no glow, no texture, no 3D, no shadows, no existing brand references.",
+      "app_icon": "Use case: logo-brand. Edit the supplied definitive master symbol into ONE usable square app icon for 简面职说, a university student's AI job-seeking companion. Preserve EXACTLY its existing rounded document/chat-bubble silhouette, upper-right paper fold, short lower-left speech tail and two internal strokes including the smiling lower stroke. Recolor the main charcoal body to flat warm off-white #F7F7F8. Keep the small folded corner muted sage #A3C8B3. All negative-space cutouts become the solid charcoal background #18191B. The entire square canvas is opaque, filled edge to edge with perfectly flat #18191B, without an outer rounded mask or frame. Place the exact symbol optically centered with equal spacious safe padding, around 60 percent of canvas width, entirely safe within a circle crop. Crisp flat vector-like geometry. Absolutely no gradient, shadow, gloss, material texture, 3D or extra shapes. Single square icon, no words, no typography, no watermark. Do not alter the master identity.",
+      "horizontal_logo": "Use case: logo-brand. Create a usable horizontal logo lockup on a genuinely TRANSPARENT background for the Chinese AI job-preparation companion 简面职说. The attached image is the definitive symbol. Preserve that exact symbol: charcoal #202124 rounded document/chat-bubble body, small muted sage #A3C8B3 folded upper-right paper corner, lower-left speech tail, and two negative-space strokes with a smiling lower stroke. Arrange the symbol on the LEFT and the exact four-character Chinese wordmark 简面职说 on the RIGHT on one balanced horizontal baseline. Exact text: 简面职说, four characters in order 简 面 职 说. Use a refined softly rounded contemporary Chinese sans-serif, medium-semibold weight, legible and approachable for university students, clean professional spacing, not a childish bubble font, not handwriting or calligraphy. Text is solid charcoal #202124. Text and icon should have equal optical presence with an ample but not excessive gap. Wide horizontal canvas, ideally 3:1 proportions, generous clean transparent padding. Deliver just this one logo lockup. No descriptor, no slogan, no English, no numerals, no watermark, no presentation board, no background panel, no photography, no gradient, no texture, no shadow, no 3D. Genuine alpha transparency inside and outside the symbol.",
+      "presentation": "Use case: logo-brand. Build one beautiful landscape identity presentation for the Chinese university-student AI career companion 简面职说. THREE references are supplied: image 1 is the definitive transparent master icon, image 2 the definitive charcoal square app icon, image 3 the definitive transparent horizontal wordmark lockup. Reuse these exact assets, preserving the icon geometry, the sage paper fold, rounded smiling text-stroke cutouts, and the exact four Chinese characters in image 3. Do not redesign or substitute the letters. Wide landscape editorial brand board about 3:2. Calm off-white background #F7F7F8, crisp flat design and generous white space with fine charcoal-grey separator lines. Main upper-left area: place the exact image 3 horizontal logo lockup at a large comfortable size, with the smaller precise descriptor underneath: 大学生的 AI 求职搭子. Upper-right area: display image 2 as a large rounded-square app-icon preview. Lower-left area: exact slogan 简历怎么写，面试怎么说。 in a clean friendly modern Chinese sans-serif. Lower-right: a small circular avatar version of image 2 and three modest color swatches, charcoal #18191B, off-white #F7F7F8, muted sage #A3C8B3. Along the bottom, a restrained charcoal strip with a smaller reversed horizontal logo lockup: same icon recolored off-white with sage fold, plus exact wordmark 简面职说 in off-white, to demonstrate dark mode. Youthful and approachable but visually precise, not juvenile, no stickers or doodles. Keep sage as a tiny accent, not a large background. Only these text strings may appear: 简面职说; 大学生的 AI 求职搭子; 简历怎么写，面试怎么说。. No other labels or English copy. Absolutely no watermark, device mockups, photographs, 3D, shadows, glow or decorative gradients. All text must be correctly spelled and fully legible."
+    }
+  },
+  "web_integration": {
+    "runtime_assets": "frontend/assets/brand",
+    "name": "简面职说",
+    "descriptor": "大学生的 AI 求职搭子",
+    "tagline": "简历怎么写，面试怎么说。",
+    "theme_handling": "Same transparent wordmark with CSS invert(1) hue-rotate(180deg) in dark mode; exact silhouette preserved. No separately generated dark bitmap is used.",
+    "app_icon": "Charcoal square with light symbol; favicon and mini-program use.",
+    "placements": [
+      "Login/register",
+      "App header",
+      "New conversation greeting",
+      "Account > About",
+      "Public credits rules",
+      "Browser title and favicon"
+    ]
+  }
+}

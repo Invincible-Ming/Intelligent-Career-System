@@ -1,0 +1,2240 @@
+{
+  "name": "混合检索评测80题｜LangChain概述",
+  "description": "基于已上传《尚硅谷-01-LangChain概述.pdf》的本地解析快照生成，共80题，覆盖框架定位、模块、编排、Harness、环境管理、RAG、重排序与Agent。每题含标准答案、原文证据及页码；答案仅以课件为依据，避开缺失图示、模型窗口数字、性能宣传和存在明显矛盾的版本表格。请使用拥有该资料且索引就绪的账号执行。reference_contexts供复核，当前评分器以ground_truth作为参考答案。此数据集只覆盖该章节，不代表全部知识库；题型为单轮问题，部分需要综合多个片段。",
+  "test_cases": [
+    {
+      "query": "课件将 LangChain 的核心定位概括为哪三点？",
+      "ground_truth": "三点是：打通大模型与外部资源，通过统一接口对接数据库、检索引擎、API、文件系统等；封装工具调用、记忆等底层复杂逻辑，降低开发难度；依托 LangGraph 等生态支撑从单智能体到多智能体的协作。",
+      "reference_contexts": [
+        "章节：第01章：LangChain 1.2 概述 / 1.3 LangChain框架的定位\n1.3 LangChain框架的定位\n\nLangChain 作为大模型与应用间的中间层，可统一调用各类大模型、管理提示词与上下文，还能\n\n集成外部工具和数据源，快速搭建具备推理、行动能力的智能体。\n\n核心定位三点：\n\n1. 打通大模型与外部资源：统一接口对接数据库、检索引擎、API、文件系统等；\n\n2. 封装底层复杂逻辑：抽象工具调用、记忆等能力，降低智能体开发难度；\n\n3. 支撑多智能体协作：依托 LangGraph 等生态，从单智能体拓展至多智能体协作，可构建工业\n\n级智能体。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-001",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 3,
+            "content_hash": "7541ad7e5e53796531cb09873bfa53c25bf40d3e1ae4fd3608525fed971ee6f2",
+            "page_start": 2,
+            "page_end": 2,
+            "section": "第01章：LangChain 1.2 概述 / 1.3 LangChain框架的定位"
+          }
+        ]
+      }
+    },
+    {
+      "query": "我的模型要同时接数据库、搜索引擎、接口和文件，LangChain 在这中间起什么作用？",
+      "ground_truth": "LangChain 位于大模型与应用之间，作为连接外部资源的中间层，为数据库、检索引擎、API 和文件系统等提供统一对接方式，同时管理提示词与上下文。",
+      "reference_contexts": [
+        "章节：第01章：LangChain 1.2 概述 / 1.3 LangChain框架的定位\n1.3 LangChain框架的定位\n\nLangChain 作为大模型与应用间的中间层，可统一调用各类大模型、管理提示词与上下文，还能\n\n集成外部工具和数据源，快速搭建具备推理、行动能力的智能体。\n\n核心定位三点：\n\n1. 打通大模型与外部资源：统一接口对接数据库、检索引擎、API、文件系统等；\n\n2. 封装底层复杂逻辑：抽象工具调用、记忆等能力，降低智能体开发难度；\n\n3. 支撑多智能体协作：依托 LangGraph 等生态，从单智能体拓展至多智能体协作，可构建工业\n\n级智能体。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-002",
+        "question_type": "scenario",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 3,
+            "content_hash": "7541ad7e5e53796531cb09873bfa53c25bf40d3e1ae4fd3608525fed971ee6f2",
+            "page_start": 2,
+            "page_end": 2,
+            "section": "第01章：LangChain 1.2 概述 / 1.3 LangChain框架的定位"
+          }
+        ]
+      }
+    },
+    {
+      "query": "不想自己反复实现工具调用和记忆管理，课件认为框架能帮我省掉什么工作？",
+      "ground_truth": "LangChain 会抽象并封装工具调用、记忆等底层复杂逻辑，从而降低智能体开发难度，开发者不必从零实现这些基础能力。",
+      "reference_contexts": [
+        "章节：第01章：LangChain 1.2 概述 / 1.3 LangChain框架的定位\n1.3 LangChain框架的定位\n\nLangChain 作为大模型与应用间的中间层，可统一调用各类大模型、管理提示词与上下文，还能\n\n集成外部工具和数据源，快速搭建具备推理、行动能力的智能体。\n\n核心定位三点：\n\n1. 打通大模型与外部资源：统一接口对接数据库、检索引擎、API、文件系统等；\n\n2. 封装底层复杂逻辑：抽象工具调用、记忆等能力，降低智能体开发难度；\n\n3. 支撑多智能体协作：依托 LangGraph 等生态，从单智能体拓展至多智能体协作，可构建工业\n\n级智能体。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-003",
+        "question_type": "paraphrase",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 3,
+            "content_hash": "7541ad7e5e53796531cb09873bfa53c25bf40d3e1ae4fd3608525fed971ee6f2",
+            "page_start": 2,
+            "page_end": 2,
+            "section": "第01章：LangChain 1.2 概述 / 1.3 LangChain框架的定位"
+          }
+        ]
+      }
+    },
+    {
+      "query": "如果模型不知道最新资料，还会凭空编答案，课件建议采用哪类应用方案？",
+      "ground_truth": "采用检索增强生成（RAG）：检索外部文档或数据库中的知识，让模型依据最新、相关的资料回答，以应对知识滞后和幻觉问题。",
+      "reference_contexts": [
+        "章节：第01章：LangChain 1.2 概述 / 1.4 LangChain的应用场景\n1.4 LangChain的应用场景\n\n1. 检索增强生成 (RAG)\n\n痛点： 解决大模型知识滞后（无实时数据）和幻觉问题。\n\n功能： 检索外部知识库（文档/数据库）并向量化，让模型基于最新、最相关的资料回答。\n\n2. Agent 智能体构建\n\n痛点： 解决 LLM 无法直接执行复杂任务的问题。\n\n功能： 将模型作为“推理引擎”，自主规划路径并动态调用外部工具（如订票、查报告、写 SQL），\n\n实现复杂任务。\n\n3. 对话系统与聊天机器人\n\n痛点： 解决多轮对话中的“记忆”流失问题。\n\n功能： 集成记忆管理系统，记住用户偏好和历史交互，并结合私有数据（如教育教材、订单库）提\n\n供专业服务。\n\n4. 多模态应用开发\n\n痛点： 跨越单一文本交互的限制。\n\n功能： 融合图像识别、语音转文字等技术，让模型具备处理音视频和图片的综合推理能力。\n\n5. 自动化写作与格式化生成\n\n痛点： 解决生成内容格式不标准、质量不稳定的问题。\n\n功能： 配合提示词模板（Templates）与输出解析器（Parsers），自动产出规范的报告、合同或\n\n邮件。\n\n6. 数据连接与结构化处理\n\n痛点： 解决非结构化数据难以被模型直接利用的问题。\n\n功能： 强大的数据连接能力使大模型能够与各种数据源和结构化数据交互。比如，从 PDF、Excel\n\n中提取关键信息，或实现自然语言与 SQL 的自动转换。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-004",
+        "question_type": "scenario",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 4,
+            "content_hash": "cd3b17a30f160456e59d26b5ead5ce1922e33eaf193a9109149bb8e8a60426ef",
+            "page_start": 2,
+            "page_end": 3,
+            "section": "第01章：LangChain 1.2 概述 / 1.4 LangChain的应用场景"
+          }
+        ]
+      }
+    },
+    {
+      "query": "模型只会给建议，却不能完成订票、查报告或写 SQL 这样的任务，课件给出了什么思路？",
+      "ground_truth": "构建 Agent，把模型作为推理引擎，让它规划任务路径并动态调用外部工具，以完成订票、查报告、写 SQL 等复杂任务。",
+      "reference_contexts": [
+        "章节：第01章：LangChain 1.2 概述 / 1.4 LangChain的应用场景\n1.4 LangChain的应用场景\n\n1. 检索增强生成 (RAG)\n\n痛点： 解决大模型知识滞后（无实时数据）和幻觉问题。\n\n功能： 检索外部知识库（文档/数据库）并向量化，让模型基于最新、最相关的资料回答。\n\n2. Agent 智能体构建\n\n痛点： 解决 LLM 无法直接执行复杂任务的问题。\n\n功能： 将模型作为“推理引擎”，自主规划路径并动态调用外部工具（如订票、查报告、写 SQL），\n\n实现复杂任务。\n\n3. 对话系统与聊天机器人\n\n痛点： 解决多轮对话中的“记忆”流失问题。\n\n功能： 集成记忆管理系统，记住用户偏好和历史交互，并结合私有数据（如教育教材、订单库）提\n\n供专业服务。\n\n4. 多模态应用开发\n\n痛点： 跨越单一文本交互的限制。\n\n功能： 融合图像识别、语音转文字等技术，让模型具备处理音视频和图片的综合推理能力。\n\n5. 自动化写作与格式化生成\n\n痛点： 解决生成内容格式不标准、质量不稳定的问题。\n\n功能： 配合提示词模板（Templates）与输出解析器（Parsers），自动产出规范的报告、合同或\n\n邮件。\n\n6. 数据连接与结构化处理\n\n痛点： 解决非结构化数据难以被模型直接利用的问题。\n\n功能： 强大的数据连接能力使大模型能够与各种数据源和结构化数据交互。比如，从 PDF、Excel\n\n中提取关键信息，或实现自然语言与 SQL 的自动转换。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-005",
+        "question_type": "scenario",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 4,
+            "content_hash": "cd3b17a30f160456e59d26b5ead5ce1922e33eaf193a9109149bb8e8a60426ef",
+            "page_start": 2,
+            "page_end": 3,
+            "section": "第01章：LangChain 1.2 概述 / 1.4 LangChain的应用场景"
+          }
+        ]
+      }
+    },
+    {
+      "query": "课件中的聊天机器人为什么既要记忆管理，也可能需要接入私有数据？",
+      "ground_truth": "记忆管理用于保留用户偏好和历史交互，缓解多轮对话的记忆流失；结合教育教材、订单库等私有数据，则可提供特定领域的专业服务。",
+      "reference_contexts": [
+        "章节：第01章：LangChain 1.2 概述 / 1.4 LangChain的应用场景\n1.4 LangChain的应用场景\n\n1. 检索增强生成 (RAG)\n\n痛点： 解决大模型知识滞后（无实时数据）和幻觉问题。\n\n功能： 检索外部知识库（文档/数据库）并向量化，让模型基于最新、最相关的资料回答。\n\n2. Agent 智能体构建\n\n痛点： 解决 LLM 无法直接执行复杂任务的问题。\n\n功能： 将模型作为“推理引擎”，自主规划路径并动态调用外部工具（如订票、查报告、写 SQL），\n\n实现复杂任务。\n\n3. 对话系统与聊天机器人\n\n痛点： 解决多轮对话中的“记忆”流失问题。\n\n功能： 集成记忆管理系统，记住用户偏好和历史交互，并结合私有数据（如教育教材、订单库）提\n\n供专业服务。\n\n4. 多模态应用开发\n\n痛点： 跨越单一文本交互的限制。\n\n功能： 融合图像识别、语音转文字等技术，让模型具备处理音视频和图片的综合推理能力。\n\n5. 自动化写作与格式化生成\n\n痛点： 解决生成内容格式不标准、质量不稳定的问题。\n\n功能： 配合提示词模板（Templates）与输出解析器（Parsers），自动产出规范的报告、合同或\n\n邮件。\n\n6. 数据连接与结构化处理\n\n痛点： 解决非结构化数据难以被模型直接利用的问题。\n\n功能： 强大的数据连接能力使大模型能够与各种数据源和结构化数据交互。比如，从 PDF、Excel\n\n中提取关键信息，或实现自然语言与 SQL 的自动转换。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-006",
+        "question_type": "reasoning",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 4,
+            "content_hash": "cd3b17a30f160456e59d26b5ead5ce1922e33eaf193a9109149bb8e8a60426ef",
+            "page_start": 2,
+            "page_end": 3,
+            "section": "第01章：LangChain 1.2 概述 / 1.4 LangChain的应用场景"
+          }
+        ]
+      }
+    },
+    {
+      "query": "如果应用需要同时理解图片、音频和视频，而不只处理文字，课件对应的是哪类场景？",
+      "ground_truth": "对应多模态应用开发。课件列举图像识别、语音转文字等技术，用于跨越单一文本交互的限制，支持处理音视频和图片的综合推理。",
+      "reference_contexts": [
+        "章节：第01章：LangChain 1.2 概述 / 1.4 LangChain的应用场景\n1.4 LangChain的应用场景\n\n1. 检索增强生成 (RAG)\n\n痛点： 解决大模型知识滞后（无实时数据）和幻觉问题。\n\n功能： 检索外部知识库（文档/数据库）并向量化，让模型基于最新、最相关的资料回答。\n\n2. Agent 智能体构建\n\n痛点： 解决 LLM 无法直接执行复杂任务的问题。\n\n功能： 将模型作为“推理引擎”，自主规划路径并动态调用外部工具（如订票、查报告、写 SQL），\n\n实现复杂任务。\n\n3. 对话系统与聊天机器人\n\n痛点： 解决多轮对话中的“记忆”流失问题。\n\n功能： 集成记忆管理系统，记住用户偏好和历史交互，并结合私有数据（如教育教材、订单库）提\n\n供专业服务。\n\n4. 多模态应用开发\n\n痛点： 跨越单一文本交互的限制。\n\n功能： 融合图像识别、语音转文字等技术，让模型具备处理音视频和图片的综合推理能力。\n\n5. 自动化写作与格式化生成\n\n痛点： 解决生成内容格式不标准、质量不稳定的问题。\n\n功能： 配合提示词模板（Templates）与输出解析器（Parsers），自动产出规范的报告、合同或\n\n邮件。\n\n6. 数据连接与结构化处理\n\n痛点： 解决非结构化数据难以被模型直接利用的问题。\n\n功能： 强大的数据连接能力使大模型能够与各种数据源和结构化数据交互。比如，从 PDF、Excel\n\n中提取关键信息，或实现自然语言与 SQL 的自动转换。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-007",
+        "question_type": "scenario",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 4,
+            "content_hash": "cd3b17a30f160456e59d26b5ead5ce1922e33eaf193a9109149bb8e8a60426ef",
+            "page_start": 2,
+            "page_end": 3,
+            "section": "第01章：LangChain 1.2 概述 / 1.4 LangChain的应用场景"
+          }
+        ]
+      }
+    },
+    {
+      "query": "我要生成格式统一的报告、合同和邮件，课件建议配合使用哪两类组件？",
+      "ground_truth": "配合提示词模板（Templates）和输出解析器（Parsers），使生成内容符合规范，缓解格式不标准、质量不稳定的问题。",
+      "reference_contexts": [
+        "章节：第01章：LangChain 1.2 概述 / 1.4 LangChain的应用场景\n1.4 LangChain的应用场景\n\n1. 检索增强生成 (RAG)\n\n痛点： 解决大模型知识滞后（无实时数据）和幻觉问题。\n\n功能： 检索外部知识库（文档/数据库）并向量化，让模型基于最新、最相关的资料回答。\n\n2. Agent 智能体构建\n\n痛点： 解决 LLM 无法直接执行复杂任务的问题。\n\n功能： 将模型作为“推理引擎”，自主规划路径并动态调用外部工具（如订票、查报告、写 SQL），\n\n实现复杂任务。\n\n3. 对话系统与聊天机器人\n\n痛点： 解决多轮对话中的“记忆”流失问题。\n\n功能： 集成记忆管理系统，记住用户偏好和历史交互，并结合私有数据（如教育教材、订单库）提\n\n供专业服务。\n\n4. 多模态应用开发\n\n痛点： 跨越单一文本交互的限制。\n\n功能： 融合图像识别、语音转文字等技术，让模型具备处理音视频和图片的综合推理能力。\n\n5. 自动化写作与格式化生成\n\n痛点： 解决生成内容格式不标准、质量不稳定的问题。\n\n功能： 配合提示词模板（Templates）与输出解析器（Parsers），自动产出规范的报告、合同或\n\n邮件。\n\n6. 数据连接与结构化处理\n\n痛点： 解决非结构化数据难以被模型直接利用的问题。\n\n功能： 强大的数据连接能力使大模型能够与各种数据源和结构化数据交互。比如，从 PDF、Excel\n\n中提取关键信息，或实现自然语言与 SQL 的自动转换。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-008",
+        "question_type": "scenario",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 4,
+            "content_hash": "cd3b17a30f160456e59d26b5ead5ce1922e33eaf193a9109149bb8e8a60426ef",
+            "page_start": 2,
+            "page_end": 3,
+            "section": "第01章：LangChain 1.2 概述 / 1.4 LangChain的应用场景"
+          }
+        ]
+      }
+    },
+    {
+      "query": "从 PDF、Excel 里提取关键信息，以及把自然语言转换为 SQL，在课件中属于什么应用场景？",
+      "ground_truth": "属于数据连接与结构化处理场景，利用数据连接能力，让大模型与不同数据源和结构化数据交互，并处理原本难以直接利用的非结构化信息。",
+      "reference_contexts": [
+        "章节：第01章：LangChain 1.2 概述 / 1.4 LangChain的应用场景\n1.4 LangChain的应用场景\n\n1. 检索增强生成 (RAG)\n\n痛点： 解决大模型知识滞后（无实时数据）和幻觉问题。\n\n功能： 检索外部知识库（文档/数据库）并向量化，让模型基于最新、最相关的资料回答。\n\n2. Agent 智能体构建\n\n痛点： 解决 LLM 无法直接执行复杂任务的问题。\n\n功能： 将模型作为“推理引擎”，自主规划路径并动态调用外部工具（如订票、查报告、写 SQL），\n\n实现复杂任务。\n\n3. 对话系统与聊天机器人\n\n痛点： 解决多轮对话中的“记忆”流失问题。\n\n功能： 集成记忆管理系统，记住用户偏好和历史交互，并结合私有数据（如教育教材、订单库）提\n\n供专业服务。\n\n4. 多模态应用开发\n\n痛点： 跨越单一文本交互的限制。\n\n功能： 融合图像识别、语音转文字等技术，让模型具备处理音视频和图片的综合推理能力。\n\n5. 自动化写作与格式化生成\n\n痛点： 解决生成内容格式不标准、质量不稳定的问题。\n\n功能： 配合提示词模板（Templates）与输出解析器（Parsers），自动产出规范的报告、合同或\n\n邮件。\n\n6. 数据连接与结构化处理\n\n痛点： 解决非结构化数据难以被模型直接利用的问题。\n\n功能： 强大的数据连接能力使大模型能够与各种数据源和结构化数据交互。比如，从 PDF、Excel\n\n中提取关键信息，或实现自然语言与 SQL 的自动转换。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-009",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 4,
+            "content_hash": "cd3b17a30f160456e59d26b5ead5ce1922e33eaf193a9109149bb8e8a60426ef",
+            "page_start": 2,
+            "page_end": 3,
+            "section": "第01章：LangChain 1.2 概述 / 1.4 LangChain的应用场景"
+          }
+        ]
+      }
+    },
+    {
+      "query": "LangChain 这个名字由哪两个词组合而来，反映了什么设计理念？",
+      "ground_truth": "名称由 Language（语言模型）和 Chain（链式连接）组合而来，体现把大语言模型与其他计算资源和数据连接起来以构建 AI 应用的理念。",
+      "reference_contexts": [
+        "章节：第01章：LangChain 1.2 概述 / 2.1 LangChain的发展时间线\n2.1 LangChain的发展时间线\n\n第1阶段：诞生（2022年10月）\n\n2022年10月，哈佛大学的机器学习项目工程师Harrison Chase（哈里森·蔡斯）创建了由大语言模型\n\n驱动的应用程序的开源框架：LangChain。其名称来源于\" Language \"（语言模型）和\" Chain \"（链式\n\n连接）的组合。体现了其核心设计理念——链接大语言模型与其他各种计算资源和数据，构建强大的AI\n\n应用。\n\n第2阶段：探索期（2022年Q4—2023年Q1）\n\nLangChain 初版发布，主要聚焦于PromptTemplate、LLMChain 等基础模块。其凭借前瞻性设计，在\n\n开源社区迅速走红，Gitlub Star 数快速破万，成为早期最受关注的大模型应用框架。\n\n第3阶段：体系化阶段（2023年Q2—2023年Q4）\n\n引入 Tool、Agent、Retrieval 等概念，形成大模型+工具调用＋记忆的核心架构，支持构建完成更复杂\n\n任务的自动化智能体。\n\n同期推出 LangChain Hub 与LangSmith ，初步构建了从开发、调试到部署的生态闭环。\n\n第4阶段：平台化阶段（2024年一2025年上半年）\n\nLangGraph 与LangServe 的发布是这一阶段的标志。LangGraph 为工作流管理提供了有向图基础，\n\n而LangServe则解决了服务化部署的难题。至此，LangChain生态完成了从开发框架到智能体平台的跃\n\n升。\n\n第5阶段：深层智能体阶段（2025年下半年至今）\n\n正式推出Deep Agent ，官方定位为 Agent Harness（智能体执行框架），在LangGraph 和"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-010",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 6,
+            "content_hash": "8872ad0b50cd8cfeffc5c229cb747920a7b1912b0757829a127681bdb1e65e72",
+            "page_start": 4,
+            "page_end": 4,
+            "section": "第01章：LangChain 1.2 概述 / 2.1 LangChain的发展时间线"
+          }
+        ]
+      }
+    },
+    {
+      "query": "Runnable、BaseMessage 等核心 API 应当从课件介绍的哪个包中寻找？",
+      "ground_truth": "在 langchain-core 中寻找。课件将它列为官方推荐的核心 API 所在模块，并举出 Runnable、BaseMessage 等例子。",
+      "reference_contexts": [
+        "章节：第01章：LangChain 1.2 概述 / 2.3 LangChain v1.2的主要模块\n2.3 LangChain v1.2的主要模块\n\nlangchain-core ：官方推荐的核心API。比如 Runnable, BaseMessage等\n\nlangchain-classic ：冗余代码移或不推荐使用的经典API移到此。比如0.x中常用而1.x移除的API都\n\n在这里。\n\nlangchain-community ：第三方集成，比如：合作伙伴包 langchain-openai，langchain-\n\nanthropic等，按需安装、避免臃肿。\n\nlanggraph ：深度整合 LangGraph 1.0，协调多个Chain，Agent，Tools完成更复杂的任务，并\n\n且还支持循环调用，是langchain图形化的增强版\n\n来自：https://reference.langchain.com/python/langchain/overview\n\n不要试图去学完LangChain的所有API，那是不可能的。\n\n你只需要搞懂它的核心逻辑与核心模块，其它的用到什么再去查什么。把它当成一个工具箱，而不\n\n是一本教科书。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-011",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 11,
+            "content_hash": "f09c271f109999350d81489b445709a9515e62810c00d5df445fc4205f405771",
+            "page_start": 6,
+            "page_end": 8,
+            "section": "第01章：LangChain 1.2 概述 / 2.3 LangChain v1.2的主要模块"
+          }
+        ]
+      }
+    },
+    {
+      "query": "我在维护旧项目，需要查找 0.x 常用但 1.x 已移除的经典 API，课件指向哪个包？",
+      "ground_truth": "查找 langchain-classic。课件说明，冗余代码或不推荐使用的经典 API，以及 0.x 常用但 1.x 已移除的 API，被迁移到这里。",
+      "reference_contexts": [
+        "章节：第01章：LangChain 1.2 概述 / 2.3 LangChain v1.2的主要模块\n2.3 LangChain v1.2的主要模块\n\nlangchain-core ：官方推荐的核心API。比如 Runnable, BaseMessage等\n\nlangchain-classic ：冗余代码移或不推荐使用的经典API移到此。比如0.x中常用而1.x移除的API都\n\n在这里。\n\nlangchain-community ：第三方集成，比如：合作伙伴包 langchain-openai，langchain-\n\nanthropic等，按需安装、避免臃肿。\n\nlanggraph ：深度整合 LangGraph 1.0，协调多个Chain，Agent，Tools完成更复杂的任务，并\n\n且还支持循环调用，是langchain图形化的增强版\n\n来自：https://reference.langchain.com/python/langchain/overview\n\n不要试图去学完LangChain的所有API，那是不可能的。\n\n你只需要搞懂它的核心逻辑与核心模块，其它的用到什么再去查什么。把它当成一个工具箱，而不\n\n是一本教科书。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-012",
+        "question_type": "scenario",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 11,
+            "content_hash": "f09c271f109999350d81489b445709a9515e62810c00d5df445fc4205f405771",
+            "page_start": 6,
+            "page_end": 8,
+            "section": "第01章：LangChain 1.2 概述 / 2.3 LangChain v1.2的主要模块"
+          }
+        ]
+      }
+    },
+    {
+      "query": "按照课件的模块划分，第三方集成属于哪一类模块，安装时应遵循什么原则？",
+      "ground_truth": "第三方集成归入 langchain-community 相关模块介绍，课件列举 langchain-openai、langchain-anthropic 等合作伙伴包，建议按需安装，避免依赖臃肿。",
+      "reference_contexts": [
+        "章节：第01章：LangChain 1.2 概述 / 2.3 LangChain v1.2的主要模块\n2.3 LangChain v1.2的主要模块\n\nlangchain-core ：官方推荐的核心API。比如 Runnable, BaseMessage等\n\nlangchain-classic ：冗余代码移或不推荐使用的经典API移到此。比如0.x中常用而1.x移除的API都\n\n在这里。\n\nlangchain-community ：第三方集成，比如：合作伙伴包 langchain-openai，langchain-\n\nanthropic等，按需安装、避免臃肿。\n\nlanggraph ：深度整合 LangGraph 1.0，协调多个Chain，Agent，Tools完成更复杂的任务，并\n\n且还支持循环调用，是langchain图形化的增强版\n\n来自：https://reference.langchain.com/python/langchain/overview\n\n不要试图去学完LangChain的所有API，那是不可能的。\n\n你只需要搞懂它的核心逻辑与核心模块，其它的用到什么再去查什么。把它当成一个工具箱，而不\n\n是一本教科书。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-013",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 11,
+            "content_hash": "f09c271f109999350d81489b445709a9515e62810c00d5df445fc4205f405771",
+            "page_start": 6,
+            "page_end": 8,
+            "section": "第01章：LangChain 1.2 概述 / 2.3 LangChain v1.2的主要模块"
+          }
+        ]
+      }
+    },
+    {
+      "query": "多个 Chain、Agent 和 Tools 需要协作，而且流程还需要循环调用，课件列出的哪个模块负责这类任务？",
+      "ground_truth": "langgraph 模块负责这类协调与编排任务。课件说明它协调多个 Chain、Agent、Tools 完成复杂任务，并支持循环调用。",
+      "reference_contexts": [
+        "章节：第01章：LangChain 1.2 概述 / 2.3 LangChain v1.2的主要模块\n2.3 LangChain v1.2的主要模块\n\nlangchain-core ：官方推荐的核心API。比如 Runnable, BaseMessage等\n\nlangchain-classic ：冗余代码移或不推荐使用的经典API移到此。比如0.x中常用而1.x移除的API都\n\n在这里。\n\nlangchain-community ：第三方集成，比如：合作伙伴包 langchain-openai，langchain-\n\nanthropic等，按需安装、避免臃肿。\n\nlanggraph ：深度整合 LangGraph 1.0，协调多个Chain，Agent，Tools完成更复杂的任务，并\n\n且还支持循环调用，是langchain图形化的增强版\n\n来自：https://reference.langchain.com/python/langchain/overview\n\n不要试图去学完LangChain的所有API，那是不可能的。\n\n你只需要搞懂它的核心逻辑与核心模块，其它的用到什么再去查什么。把它当成一个工具箱，而不\n\n是一本教科书。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-014",
+        "question_type": "scenario",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 11,
+            "content_hash": "f09c271f109999350d81489b445709a9515e62810c00d5df445fc4205f405771",
+            "page_start": 6,
+            "page_end": 8,
+            "section": "第01章：LangChain 1.2 概述 / 2.3 LangChain v1.2的主要模块"
+          }
+        ]
+      }
+    },
+    {
+      "query": "学习 LangChain 时，是不是要先把所有 API 学完才能开发？课件给出的学习建议是什么？",
+      "ground_truth": "不是。课件建议先理解核心逻辑与核心模块，其他 API 在实际使用时再查，把 LangChain 当作工具箱，而不是需要从头学完的教科书。",
+      "reference_contexts": [
+        "章节：第01章：LangChain 1.2 概述 / 2.3 LangChain v1.2的主要模块\n2.3 LangChain v1.2的主要模块\n\nlangchain-core ：官方推荐的核心API。比如 Runnable, BaseMessage等\n\nlangchain-classic ：冗余代码移或不推荐使用的经典API移到此。比如0.x中常用而1.x移除的API都\n\n在这里。\n\nlangchain-community ：第三方集成，比如：合作伙伴包 langchain-openai，langchain-\n\nanthropic等，按需安装、避免臃肿。\n\nlanggraph ：深度整合 LangGraph 1.0，协调多个Chain，Agent，Tools完成更复杂的任务，并\n\n且还支持循环调用，是langchain图形化的增强版\n\n来自：https://reference.langchain.com/python/langchain/overview\n\n不要试图去学完LangChain的所有API，那是不可能的。\n\n你只需要搞懂它的核心逻辑与核心模块，其它的用到什么再去查什么。把它当成一个工具箱，而不\n\n是一本教科书。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-015",
+        "question_type": "paraphrase",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 11,
+            "content_hash": "f09c271f109999350d81489b445709a9515e62810c00d5df445fc4205f405771",
+            "page_start": 6,
+            "page_end": 8,
+            "section": "第01章：LangChain 1.2 概述 / 2.3 LangChain v1.2的主要模块"
+          }
+        ]
+      }
+    },
+    {
+      "query": "统一模型抽象层解决了不同模型服务商之间的什么问题？",
+      "ground_truth": "它屏蔽 OpenAI、Anthropic、Ollama 等不同模型服务提供商的接口差异，向应用提供一致的调用方式。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱 / 3.1 LangChain：智能体开发的基石\n3.1 LangChain：智能体开发的基石\n\nLangChain 是整个生态的核心与起点，为开发者提供了模型调用、工具与中间件集成、智能体构建等一\n\n整套基础能力。\n\n其核心价值如下：\n\n统一的模型抽象层：屏蔽了不同模型服务提供商（如OpenAI、Anthropic、Ollama 等）的接口\n\n差异，提供一致的调用方式。\n\n高度模块化的设计：使用 Message、Tool、Agent、Middleware 等组件实现灵活的组合与扩\n\n展。\n\n丰富的集成生态：预置了丰富的数据源、API、中间件等，构成了强大的AI能力枢纽。\n\n在整体架构中，LangChain 如同智能体的操作系统内核，是所有上层能力构建的基础。\n\n结论：如果你需要构建简单的智能体应用，无需复杂的编排需求，那就选择LangChain。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-016",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 14,
+            "content_hash": "b4ca82b87f4e213d6eab1696bec57f4a8635b9401cdcee15528fcf775333dac4",
+            "page_start": 9,
+            "page_end": 9,
+            "section": "3、LangChain家族四大支柱 / 3.1 LangChain：智能体开发的基石"
+          }
+        ]
+      }
+    },
+    {
+      "query": "课件用哪些组件说明 LangChain 的模块化设计？这些组件有什么作用？",
+      "ground_truth": "课件列举 Message、Tool、Agent、Middleware 等组件，它们支持灵活组合与扩展，是 LangChain 高度模块化设计的体现。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱 / 3.1 LangChain：智能体开发的基石\n3.1 LangChain：智能体开发的基石\n\nLangChain 是整个生态的核心与起点，为开发者提供了模型调用、工具与中间件集成、智能体构建等一\n\n整套基础能力。\n\n其核心价值如下：\n\n统一的模型抽象层：屏蔽了不同模型服务提供商（如OpenAI、Anthropic、Ollama 等）的接口\n\n差异，提供一致的调用方式。\n\n高度模块化的设计：使用 Message、Tool、Agent、Middleware 等组件实现灵活的组合与扩\n\n展。\n\n丰富的集成生态：预置了丰富的数据源、API、中间件等，构成了强大的AI能力枢纽。\n\n在整体架构中，LangChain 如同智能体的操作系统内核，是所有上层能力构建的基础。\n\n结论：如果你需要构建简单的智能体应用，无需复杂的编排需求，那就选择LangChain。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-017",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 14,
+            "content_hash": "b4ca82b87f4e213d6eab1696bec57f4a8635b9401cdcee15528fcf775333dac4",
+            "page_start": 9,
+            "page_end": 9,
+            "section": "3、LangChain家族四大支柱 / 3.1 LangChain：智能体开发的基石"
+          }
+        ]
+      }
+    },
+    {
+      "query": "如果只是做一个简单智能体，没有复杂的流程编排需求，课件建议优先选哪个框架？",
+      "ground_truth": "优先选择 LangChain。课件认为它提供模型调用、工具与中间件集成、智能体构建等基础能力，适合无需复杂编排的简单智能体应用。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱 / 3.1 LangChain：智能体开发的基石\n3.1 LangChain：智能体开发的基石\n\nLangChain 是整个生态的核心与起点，为开发者提供了模型调用、工具与中间件集成、智能体构建等一\n\n整套基础能力。\n\n其核心价值如下：\n\n统一的模型抽象层：屏蔽了不同模型服务提供商（如OpenAI、Anthropic、Ollama 等）的接口\n\n差异，提供一致的调用方式。\n\n高度模块化的设计：使用 Message、Tool、Agent、Middleware 等组件实现灵活的组合与扩\n\n展。\n\n丰富的集成生态：预置了丰富的数据源、API、中间件等，构成了强大的AI能力枢纽。\n\n在整体架构中，LangChain 如同智能体的操作系统内核，是所有上层能力构建的基础。\n\n结论：如果你需要构建简单的智能体应用，无需复杂的编排需求，那就选择LangChain。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-018",
+        "question_type": "scenario",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 14,
+            "content_hash": "b4ca82b87f4e213d6eab1696bec57f4a8635b9401cdcee15528fcf775333dac4",
+            "page_start": 9,
+            "page_end": 9,
+            "section": "3、LangChain家族四大支柱 / 3.1 LangChain：智能体开发的基石"
+          }
+        ]
+      }
+    },
+    {
+      "query": "LangGraph 有向图中的 Node 表示什么？",
+      "ground_truth": "Node（节点）代表独立的功能单元或决策点。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱 / 3.2 LangGraph：复杂工作流的编排引擎\n3.2 LangGraph：复杂工作流的编排引擎\n\n当智能体的任务从单一指令执行扩展为多步骤、有状态的复杂工作流时，LangGraph应运而生。\n\n其核心思想是将智能体内部抽象为一张有向图。\n\n节点（Node）：代表独立的功能单元或决策点。\n\n边（Edge）：定义了节点之间的流转条件与路径。\n\n状态（State）：作为一个共享上下文，在节点间传递并持久化存储任务信息。\n\n通过这种图式结构，LangGraph 让智能体的工作流节点交互变得显式、可控、可观测。\n\n官方也强调“快速起步用 LangChain，复杂控制用 LangGraph，二者并行协同”。\n\n通俗理解：\n\nLangChain = 能力抽象层（LLM / Tool / Message 标准化），负责“有什么能力”\n\nLangGraph = 执行与编排层（状态机 / 工作流 / 多Agent系统），负责“怎么跑”"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-019",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 15,
+            "content_hash": "074225b9c6f37aeb2a864f15b35f5af412a973de0ab2395eb1ca69e7b1b6c085",
+            "page_start": 9,
+            "page_end": 10,
+            "section": "3、LangChain家族四大支柱 / 3.2 LangGraph：复杂工作流的编排引擎"
+          }
+        ]
+      }
+    },
+    {
+      "query": "LangGraph 中的 Edge 负责定义什么？",
+      "ground_truth": "Edge（边）定义节点之间的流转条件与路径。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱 / 3.2 LangGraph：复杂工作流的编排引擎\n3.2 LangGraph：复杂工作流的编排引擎\n\n当智能体的任务从单一指令执行扩展为多步骤、有状态的复杂工作流时，LangGraph应运而生。\n\n其核心思想是将智能体内部抽象为一张有向图。\n\n节点（Node）：代表独立的功能单元或决策点。\n\n边（Edge）：定义了节点之间的流转条件与路径。\n\n状态（State）：作为一个共享上下文，在节点间传递并持久化存储任务信息。\n\n通过这种图式结构，LangGraph 让智能体的工作流节点交互变得显式、可控、可观测。\n\n官方也强调“快速起步用 LangChain，复杂控制用 LangGraph，二者并行协同”。\n\n通俗理解：\n\nLangChain = 能力抽象层（LLM / Tool / Message 标准化），负责“有什么能力”\n\nLangGraph = 执行与编排层（状态机 / 工作流 / 多Agent系统），负责“怎么跑”"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-020",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 15,
+            "content_hash": "074225b9c6f37aeb2a864f15b35f5af412a973de0ab2395eb1ca69e7b1b6c085",
+            "page_start": 9,
+            "page_end": 10,
+            "section": "3、LangChain家族四大支柱 / 3.2 LangGraph：复杂工作流的编排引擎"
+          }
+        ]
+      }
+    },
+    {
+      "query": "LangGraph 的 State 在工作流中承担什么职责？",
+      "ground_truth": "State（状态）是节点间共享的上下文，用于在节点之间传递并持久化存储任务信息。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱 / 3.2 LangGraph：复杂工作流的编排引擎\n3.2 LangGraph：复杂工作流的编排引擎\n\n当智能体的任务从单一指令执行扩展为多步骤、有状态的复杂工作流时，LangGraph应运而生。\n\n其核心思想是将智能体内部抽象为一张有向图。\n\n节点（Node）：代表独立的功能单元或决策点。\n\n边（Edge）：定义了节点之间的流转条件与路径。\n\n状态（State）：作为一个共享上下文，在节点间传递并持久化存储任务信息。\n\n通过这种图式结构，LangGraph 让智能体的工作流节点交互变得显式、可控、可观测。\n\n官方也强调“快速起步用 LangChain，复杂控制用 LangGraph，二者并行协同”。\n\n通俗理解：\n\nLangChain = 能力抽象层（LLM / Tool / Message 标准化），负责“有什么能力”\n\nLangGraph = 执行与编排层（状态机 / 工作流 / 多Agent系统），负责“怎么跑”"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-021",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 15,
+            "content_hash": "074225b9c6f37aeb2a864f15b35f5af412a973de0ab2395eb1ca69e7b1b6c085",
+            "page_start": 9,
+            "page_end": 10,
+            "section": "3、LangChain家族四大支柱 / 3.2 LangGraph：复杂工作流的编排引擎"
+          }
+        ]
+      }
+    },
+    {
+      "query": "我的智能体要执行多步骤任务并持续保存任务状态，为什么课件会推荐 LangGraph？",
+      "ground_truth": "LangGraph 面向多步骤、有状态的复杂工作流，把内部流程表示为有向图，以节点表示功能或决策、边表示流转条件、状态保存任务上下文，使流程交互显式、可控、可观测。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱 / 3.2 LangGraph：复杂工作流的编排引擎\n3.2 LangGraph：复杂工作流的编排引擎\n\n当智能体的任务从单一指令执行扩展为多步骤、有状态的复杂工作流时，LangGraph应运而生。\n\n其核心思想是将智能体内部抽象为一张有向图。\n\n节点（Node）：代表独立的功能单元或决策点。\n\n边（Edge）：定义了节点之间的流转条件与路径。\n\n状态（State）：作为一个共享上下文，在节点间传递并持久化存储任务信息。\n\n通过这种图式结构，LangGraph 让智能体的工作流节点交互变得显式、可控、可观测。\n\n官方也强调“快速起步用 LangChain，复杂控制用 LangGraph，二者并行协同”。\n\n通俗理解：\n\nLangChain = 能力抽象层（LLM / Tool / Message 标准化），负责“有什么能力”\n\nLangGraph = 执行与编排层（状态机 / 工作流 / 多Agent系统），负责“怎么跑”"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-022",
+        "question_type": "scenario",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 15,
+            "content_hash": "074225b9c6f37aeb2a864f15b35f5af412a973de0ab2395eb1ca69e7b1b6c085",
+            "page_start": 9,
+            "page_end": 10,
+            "section": "3、LangChain家族四大支柱 / 3.2 LangGraph：复杂工作流的编排引擎"
+          }
+        ]
+      }
+    },
+    {
+      "query": "课件说 LangChain 负责“有什么能力”，LangGraph 负责“怎么跑”，这两句话怎么理解？",
+      "ground_truth": "LangChain 是能力抽象层，标准化 LLM、Tool、Message 等能力；LangGraph 是执行与编排层，承担状态机、工作流和多智能体系统的运行控制。二者可以协同使用。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱 / 3.2 LangGraph：复杂工作流的编排引擎\n3.2 LangGraph：复杂工作流的编排引擎\n\n当智能体的任务从单一指令执行扩展为多步骤、有状态的复杂工作流时，LangGraph应运而生。\n\n其核心思想是将智能体内部抽象为一张有向图。\n\n节点（Node）：代表独立的功能单元或决策点。\n\n边（Edge）：定义了节点之间的流转条件与路径。\n\n状态（State）：作为一个共享上下文，在节点间传递并持久化存储任务信息。\n\n通过这种图式结构，LangGraph 让智能体的工作流节点交互变得显式、可控、可观测。\n\n官方也强调“快速起步用 LangChain，复杂控制用 LangGraph，二者并行协同”。\n\n通俗理解：\n\nLangChain = 能力抽象层（LLM / Tool / Message 标准化），负责“有什么能力”\n\nLangGraph = 执行与编排层（状态机 / 工作流 / 多Agent系统），负责“怎么跑”"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-023",
+        "question_type": "comparison",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 15,
+            "content_hash": "074225b9c6f37aeb2a864f15b35f5af412a973de0ab2395eb1ca69e7b1b6c085",
+            "page_start": 9,
+            "page_end": 10,
+            "section": "3、LangChain家族四大支柱 / 3.2 LangGraph：复杂工作流的编排引擎"
+          }
+        ]
+      }
+    },
+    {
+      "query": "课件列出的 LangChain 家族四大支柱是什么，各自对应哪个层次？",
+      "ground_truth": "四大支柱是 LangChain、LangGraph、Deep Agent、LangSmith，依次对应基础能力层、运行时编排层、智能体抽象层、监控与评估层。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱\n3、LangChain家族四大支柱\n\n截至2025年11月，LangChain 已从一个独立的开发框架，成长为一个覆盖智能体系统全生命周期的技术\n\n生态。该生态由四大核心支柱构成：LangChain 、LangGraph 、Deep Agent 与LangSmith 。\n\n它们分别对应基础能力层、运行时编排层、智能体抽象层、监控与评估层，共同构建了一个从技术验证\n\n到生产部署、从单体智能到复杂协作的项目闭环。\n\n官方文档的解释：\n\nhttps://docs.LangChain.com/oss/python/concepts/products"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-024",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 13,
+            "content_hash": "784b767497611d94bac6327dbda5c916ba1312f9aec9124770786de36c7276c1",
+            "page_start": 9,
+            "page_end": 9,
+            "section": "3、LangChain家族四大支柱"
+          }
+        ]
+      }
+    },
+    {
+      "query": "课件中的 Deep Agent 为什么被称为 Agent Harness，它构建在哪两个框架之上？",
+      "ground_truth": "Deep Agent 被定位为智能体执行框架，构建于 LangChain 与 LangGraph 之上，提供规划、文件系统、子智能体等高级功能，使开发者不必从零搭建复杂控制逻辑。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱 / 3.3 Deep Agent：智能体的执行框架\n3.3 Deep Agent：智能体的执行框架\n\nDeep Agent 是新推出的全新组件，被定位为 Agent Harness（智能体执行框架）。它构建于\n\nLangChain 与LangGraph 之上，增加了规划能力、文件系统、子 Agent 等高级功能。旨在让开发者\n\n无须从零构建复杂的控制逻辑，即可创建具备深度规划、长期记忆与多专家协作能力的智能体。\n\nDeep Agent 的核心能力如下：\n\n显式规划：自主生成、执行并动态调整多步任务计划。\n\n虚拟文件系统：为智能体提供结构化的中间结果与知识存储。\n\n子智能体：支持任务在多个智能体之间的分解与协作。\n\n长期记忆：通过与 LangGraph 状态存储的结合，实现跨对话的经验积累。\n\n可扩展中间件：允许嵌入安全审计、性能监控或自定义业务逻辑。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-025",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 16,
+            "content_hash": "5afcee33ea0a26ad14315eb745e1808e2706853d4ba08155f3aa9fd1da214dd6",
+            "page_start": 10,
+            "page_end": 10,
+            "section": "3、LangChain家族四大支柱 / 3.3 Deep Agent：智能体的执行框架"
+          }
+        ]
+      }
+    },
+    {
+      "query": "我希望智能体自己生成任务计划，并在执行中调整步骤，Deep Agent 的哪项能力对应这个需求？",
+      "ground_truth": "显式规划能力：自主生成、执行并动态调整多步任务计划。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱 / 3.3 Deep Agent：智能体的执行框架\n3.3 Deep Agent：智能体的执行框架\n\nDeep Agent 是新推出的全新组件，被定位为 Agent Harness（智能体执行框架）。它构建于\n\nLangChain 与LangGraph 之上，增加了规划能力、文件系统、子 Agent 等高级功能。旨在让开发者\n\n无须从零构建复杂的控制逻辑，即可创建具备深度规划、长期记忆与多专家协作能力的智能体。\n\nDeep Agent 的核心能力如下：\n\n显式规划：自主生成、执行并动态调整多步任务计划。\n\n虚拟文件系统：为智能体提供结构化的中间结果与知识存储。\n\n子智能体：支持任务在多个智能体之间的分解与协作。\n\n长期记忆：通过与 LangGraph 状态存储的结合，实现跨对话的经验积累。\n\n可扩展中间件：允许嵌入安全审计、性能监控或自定义业务逻辑。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-026",
+        "question_type": "scenario",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 16,
+            "content_hash": "5afcee33ea0a26ad14315eb745e1808e2706853d4ba08155f3aa9fd1da214dd6",
+            "page_start": 10,
+            "page_end": 10,
+            "section": "3、LangChain家族四大支柱 / 3.3 Deep Agent：智能体的执行框架"
+          }
+        ]
+      }
+    },
+    {
+      "query": "Deep Agent 的虚拟文件系统用于保存什么？",
+      "ground_truth": "用于为智能体提供结构化的中间结果与知识存储。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱 / 3.3 Deep Agent：智能体的执行框架\n3.3 Deep Agent：智能体的执行框架\n\nDeep Agent 是新推出的全新组件，被定位为 Agent Harness（智能体执行框架）。它构建于\n\nLangChain 与LangGraph 之上，增加了规划能力、文件系统、子 Agent 等高级功能。旨在让开发者\n\n无须从零构建复杂的控制逻辑，即可创建具备深度规划、长期记忆与多专家协作能力的智能体。\n\nDeep Agent 的核心能力如下：\n\n显式规划：自主生成、执行并动态调整多步任务计划。\n\n虚拟文件系统：为智能体提供结构化的中间结果与知识存储。\n\n子智能体：支持任务在多个智能体之间的分解与协作。\n\n长期记忆：通过与 LangGraph 状态存储的结合，实现跨对话的经验积累。\n\n可扩展中间件：允许嵌入安全审计、性能监控或自定义业务逻辑。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-027",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 16,
+            "content_hash": "5afcee33ea0a26ad14315eb745e1808e2706853d4ba08155f3aa9fd1da214dd6",
+            "page_start": 10,
+            "page_end": 10,
+            "section": "3、LangChain家族四大支柱 / 3.3 Deep Agent：智能体的执行框架"
+          }
+        ]
+      }
+    },
+    {
+      "query": "如果任务需要拆给多个专家智能体协作，Deep Agent 用什么机制支持？",
+      "ground_truth": "使用子智能体机制，将任务在多个智能体之间分解与协作。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱 / 3.3 Deep Agent：智能体的执行框架\n3.3 Deep Agent：智能体的执行框架\n\nDeep Agent 是新推出的全新组件，被定位为 Agent Harness（智能体执行框架）。它构建于\n\nLangChain 与LangGraph 之上，增加了规划能力、文件系统、子 Agent 等高级功能。旨在让开发者\n\n无须从零构建复杂的控制逻辑，即可创建具备深度规划、长期记忆与多专家协作能力的智能体。\n\nDeep Agent 的核心能力如下：\n\n显式规划：自主生成、执行并动态调整多步任务计划。\n\n虚拟文件系统：为智能体提供结构化的中间结果与知识存储。\n\n子智能体：支持任务在多个智能体之间的分解与协作。\n\n长期记忆：通过与 LangGraph 状态存储的结合，实现跨对话的经验积累。\n\n可扩展中间件：允许嵌入安全审计、性能监控或自定义业务逻辑。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-028",
+        "question_type": "scenario",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 16,
+            "content_hash": "5afcee33ea0a26ad14315eb745e1808e2706853d4ba08155f3aa9fd1da214dd6",
+            "page_start": 10,
+            "page_end": 10,
+            "section": "3、LangChain家族四大支柱 / 3.3 Deep Agent：智能体的执行框架"
+          }
+        ]
+      }
+    },
+    {
+      "query": "Deep Agent 的长期记忆如何与 LangGraph 联系起来？",
+      "ground_truth": "通过与 LangGraph 状态存储结合，支持跨对话的经验积累。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱 / 3.3 Deep Agent：智能体的执行框架\n3.3 Deep Agent：智能体的执行框架\n\nDeep Agent 是新推出的全新组件，被定位为 Agent Harness（智能体执行框架）。它构建于\n\nLangChain 与LangGraph 之上，增加了规划能力、文件系统、子 Agent 等高级功能。旨在让开发者\n\n无须从零构建复杂的控制逻辑，即可创建具备深度规划、长期记忆与多专家协作能力的智能体。\n\nDeep Agent 的核心能力如下：\n\n显式规划：自主生成、执行并动态调整多步任务计划。\n\n虚拟文件系统：为智能体提供结构化的中间结果与知识存储。\n\n子智能体：支持任务在多个智能体之间的分解与协作。\n\n长期记忆：通过与 LangGraph 状态存储的结合，实现跨对话的经验积累。\n\n可扩展中间件：允许嵌入安全审计、性能监控或自定义业务逻辑。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-029",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 16,
+            "content_hash": "5afcee33ea0a26ad14315eb745e1808e2706853d4ba08155f3aa9fd1da214dd6",
+            "page_start": 10,
+            "page_end": 10,
+            "section": "3、LangChain家族四大支柱 / 3.3 Deep Agent：智能体的执行框架"
+          }
+        ]
+      }
+    },
+    {
+      "query": "如果需要给 Deep Agent 加安全审计、性能监控或自定义业务逻辑，课件指出哪个扩展点？",
+      "ground_truth": "通过可扩展中间件嵌入安全审计、性能监控或自定义业务逻辑。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱 / 3.3 Deep Agent：智能体的执行框架\n3.3 Deep Agent：智能体的执行框架\n\nDeep Agent 是新推出的全新组件，被定位为 Agent Harness（智能体执行框架）。它构建于\n\nLangChain 与LangGraph 之上，增加了规划能力、文件系统、子 Agent 等高级功能。旨在让开发者\n\n无须从零构建复杂的控制逻辑，即可创建具备深度规划、长期记忆与多专家协作能力的智能体。\n\nDeep Agent 的核心能力如下：\n\n显式规划：自主生成、执行并动态调整多步任务计划。\n\n虚拟文件系统：为智能体提供结构化的中间结果与知识存储。\n\n子智能体：支持任务在多个智能体之间的分解与协作。\n\n长期记忆：通过与 LangGraph 状态存储的结合，实现跨对话的经验积累。\n\n可扩展中间件：允许嵌入安全审计、性能监控或自定义业务逻辑。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-030",
+        "question_type": "scenario",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 16,
+            "content_hash": "5afcee33ea0a26ad14315eb745e1808e2706853d4ba08155f3aa9fd1da214dd6",
+            "page_start": 10,
+            "page_end": 10,
+            "section": "3、LangChain家族四大支柱 / 3.3 Deep Agent：智能体的执行框架"
+          }
+        ]
+      }
+    },
+    {
+      "query": "LangChain、LangGraph、Deep Agent 是只能三选一，还是可以在同一个复杂项目中使用？",
+      "ground_truth": "可以同时使用。课件强调三者不是竞争或互斥关系，可以先用 LangChain 快速搭建，再用 LangGraph 打磨生产稳定性，最后用 Deep Agents 增强自主能力。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱 / 3.4 三者的关系\n3.4 三者的关系\n\n官方文档（三者对比）：https://docs.langchain.com/oss/python/langchain/overview\n\n三个框架不是竞争关系，并非互斥，复杂项目完全可以同时用到这三层。\n\n基于LLM的应用开发体系图：\n\n从 LangChain 快速搭建，用 LangGraph 打磨生产稳定性，再用 Deep Agents 赋予 Agent 更强的自主\n\n能力——这才是完整的 LangChain 生态玩法。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-031",
+        "question_type": "comparison",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 17,
+            "content_hash": "af7740c42b34e51c33a9d0477cdef30310d5d9f1459ce19bf258d2be90acafca",
+            "page_start": 10,
+            "page_end": 11,
+            "section": "3、LangChain家族四大支柱 / 3.4 三者的关系"
+          }
+        ]
+      }
+    },
+    {
+      "query": "智能体越来越复杂，只靠 print 和日志不方便调试时，课件介绍了什么平台？",
+      "ground_truth": "LangSmith。它是可视化监控与测试平台，用于跟踪、记录和分析智能体运行中的完整调用链路，让内部运行过程透明且可评估。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱 / 3.5 LangSmith：可视化监控与测试平台\n3.5 LangSmith：可视化监控与测试平台\n\n当智能体系统逐渐复杂时，单靠日志与打印输出（print）调试已无法满足调试与质量管理的需求。\n\nLangSmith 是 LangChain 官方推出的可视化监控与测试平台，用于跟踪、记录和分析智能体在运行过\n\n程中的完整调用链路，让智能体的内部运行过程变得透明和可评估。\n\nLangSmith 的核心目标如下：\n\n全链路追踪：可视化追踪模型调用、提示词输入、结果输出、工具使用等行为。\n\n调试与优化：发现运行中智能体的异常行为与性能瓶颈。\n\n评测与质量控制：支持人工与自动化评测，量化智能体表现。\n\n团队协作：支持多人共享测试集与调用记录。\n\nLangSmith官网：https://www.langchain.com/langsmith\n\nLangSmith 的引入使得智能体的开发、调试与运维形成了完整的质量闭环。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-032",
+        "question_type": "paraphrase",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 18,
+            "content_hash": "8fdeabc9d5870fd5451a9c961ac17d6a010524a182951bfaa26da3427d29d501",
+            "page_start": 12,
+            "page_end": 12,
+            "section": "3、LangChain家族四大支柱 / 3.5 LangSmith：可视化监控与测试平台"
+          }
+        ]
+      }
+    },
+    {
+      "query": "LangSmith 的全链路追踪具体能观察哪些信息？",
+      "ground_truth": "可以观察模型调用、提示词输入、结果输出、工具使用等行为，帮助发现智能体异常和性能瓶颈。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱 / 3.5 LangSmith：可视化监控与测试平台\n3.5 LangSmith：可视化监控与测试平台\n\n当智能体系统逐渐复杂时，单靠日志与打印输出（print）调试已无法满足调试与质量管理的需求。\n\nLangSmith 是 LangChain 官方推出的可视化监控与测试平台，用于跟踪、记录和分析智能体在运行过\n\n程中的完整调用链路，让智能体的内部运行过程变得透明和可评估。\n\nLangSmith 的核心目标如下：\n\n全链路追踪：可视化追踪模型调用、提示词输入、结果输出、工具使用等行为。\n\n调试与优化：发现运行中智能体的异常行为与性能瓶颈。\n\n评测与质量控制：支持人工与自动化评测，量化智能体表现。\n\n团队协作：支持多人共享测试集与调用记录。\n\nLangSmith官网：https://www.langchain.com/langsmith\n\nLangSmith 的引入使得智能体的开发、调试与运维形成了完整的质量闭环。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-033",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 18,
+            "content_hash": "8fdeabc9d5870fd5451a9c961ac17d6a010524a182951bfaa26da3427d29d501",
+            "page_start": 12,
+            "page_end": 12,
+            "section": "3、LangChain家族四大支柱 / 3.5 LangSmith：可视化监控与测试平台"
+          }
+        ]
+      }
+    },
+    {
+      "query": "除了追踪调用链路，LangSmith 还如何支持质量管理和团队协作？",
+      "ground_truth": "支持人工与自动化评测以量化智能体表现，并支持多人共享测试集与调用记录，连接开发、调试与运维的质量管理过程。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱 / 3.5 LangSmith：可视化监控与测试平台\n3.5 LangSmith：可视化监控与测试平台\n\n当智能体系统逐渐复杂时，单靠日志与打印输出（print）调试已无法满足调试与质量管理的需求。\n\nLangSmith 是 LangChain 官方推出的可视化监控与测试平台，用于跟踪、记录和分析智能体在运行过\n\n程中的完整调用链路，让智能体的内部运行过程变得透明和可评估。\n\nLangSmith 的核心目标如下：\n\n全链路追踪：可视化追踪模型调用、提示词输入、结果输出、工具使用等行为。\n\n调试与优化：发现运行中智能体的异常行为与性能瓶颈。\n\n评测与质量控制：支持人工与自动化评测，量化智能体表现。\n\n团队协作：支持多人共享测试集与调用记录。\n\nLangSmith官网：https://www.langchain.com/langsmith\n\nLangSmith 的引入使得智能体的开发、调试与运维形成了完整的质量闭环。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-034",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 18,
+            "content_hash": "8fdeabc9d5870fd5451a9c961ac17d6a010524a182951bfaa26da3427d29d501",
+            "page_start": 12,
+            "page_end": 12,
+            "section": "3、LangChain家族四大支柱 / 3.5 LangSmith：可视化监控与测试平台"
+          }
+        ]
+      }
+    },
+    {
+      "query": "按课件的前置知识要求，学习 LangChain 之前应具备哪些 Python 基础？",
+      "ground_truth": "需要 Python 基础语法，包括变量、流程控制、函数与参数、类与对象、装饰器；常用容器、JSON 和异常处理；还应了解模块导入、包管理、线程与协程。",
+      "reference_contexts": [
+        "章节：4、开发前的准备工作 / 4.1 前置知识\n4.1 前置知识\n\n1、Python 基础语法\n\n变量、流程控制、函数与参数机制、类与对象、装饰器\n\n常用的容器（列表、元组、集合、字典）、JSON处理、异常处理\n\n模块导入、包管理（推荐用 pip 或 conda ） 、线程与协程\n\nLangChain 生态支持包括 Python 和 JavaScript 语言实现。其中，Python 版本仍是功\n\n能最完整、更新最及时、社区最活跃的核心实现。\n\n2、大语言模型基础\n\n了解什么是 LLM、Token、Prompt、Embedding\n\nOpenAI API 或其他模型提供商，如 Anthropic、阿里云百炼、DeepSeek等\n\n通过浏览器或app使用过大模型（比如：豆包、千问、DeepSeek等）"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-035",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 20,
+            "content_hash": "dc8158e53a95b88210f0001ce6d2ce43bf2a58c8902bf7aab183c7d84a73cb76",
+            "page_start": 12,
+            "page_end": 12,
+            "section": "4、开发前的准备工作 / 4.1 前置知识"
+          }
+        ]
+      }
+    },
+    {
+      "query": "除了 Python，课件要求初学者了解哪些大语言模型基础概念？",
+      "ground_truth": "了解 LLM、Token、Prompt、Embedding，了解 OpenAI API 或其他模型提供商，并有通过浏览器或 App 使用大模型的体验。",
+      "reference_contexts": [
+        "章节：4、开发前的准备工作 / 4.1 前置知识\n4.1 前置知识\n\n1、Python 基础语法\n\n变量、流程控制、函数与参数机制、类与对象、装饰器\n\n常用的容器（列表、元组、集合、字典）、JSON处理、异常处理\n\n模块导入、包管理（推荐用 pip 或 conda ） 、线程与协程\n\nLangChain 生态支持包括 Python 和 JavaScript 语言实现。其中，Python 版本仍是功\n\n能最完整、更新最及时、社区最活跃的核心实现。\n\n2、大语言模型基础\n\n了解什么是 LLM、Token、Prompt、Embedding\n\nOpenAI API 或其他模型提供商，如 Anthropic、阿里云百炼、DeepSeek等\n\n通过浏览器或app使用过大模型（比如：豆包、千问、DeepSeek等）"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-036",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 20,
+            "content_hash": "dc8158e53a95b88210f0001ce6d2ce43bf2a58c8902bf7aab183c7d84a73cb76",
+            "page_start": 12,
+            "page_end": 12,
+            "section": "4、开发前的准备工作 / 4.1 前置知识"
+          }
+        ]
+      }
+    },
+    {
+      "query": "把两个项目放进不同虚拟环境，究竟隔离了哪些东西？",
+      "ground_truth": "各虚拟环境拥有独立的 Python 解释器、pip 命令和第三方依赖包，避免不同项目相互干扰。",
+      "reference_contexts": [
+        "章节：4、开发前的准备工作 / 4.2 相关环境安装 / 4.2.1 代码管理方案\n4.2.1 代码管理方案\n\n相较于全局环境（系统环境），各个虚拟环境都有自己独立的一套：Python 解释器、pip 命令、第\n\n三方依赖包，不和其它项目产生干扰。\n\n虚拟环境的设置方案：\n\n方案1-使用conda：适合“Python + 非 Python 依赖”的复杂环境\n\nconda 不只是 Python 包管理工具，它还可以管理 Python 解释器、Python 包，以及很多非 Python 依\n\n赖，比如：CUDA、编译器、系统库、数据库驱动、科学计算底层库等非 Python 依赖。\n\n因此在数据科学、深度学习、AI 工程、科学计算等场景中，conda 更稳妥、优先推荐。\n\n注意：conda 环境中可以使用 pip，但建议先用 conda 装底层依赖，再用 pip 补充 Python 包，不要\n\n随意反复交替使用。\n\n本套课程的选择。\n\n方案2-使用uv：适合“纯 Python 项目”的现代包管理\n\nuv 是一个现代 Python 包管理工具，主要管理 Python 生态依赖，不能像 conda 那样管理 CUDA、系\n\n统级数据库驱动、编译器这类通用非 Python 依赖。\n\n如果项目主要是普通 Python 开发，这类项目通常可以优先考虑 uv。例如：\n\nFastAPI 项目\n\n1\n\nLangChain 项目\n\n2\n\n脚本工具\n\n3\n\nWeb 后端\n\n4\n\n普通 AI Agent 应用\n\n5\n\nRAG 应用层代码\n\n6\n\n方案3-使用venv：Python 自带的轻量级虚拟环境工具\n\nvenv 是 Python 官方自带的虚拟环境工具，不需要额外安装。\n\n它的特点是简单、轻量：\n\npython -m venv .venv\n1"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-037",
+        "question_type": "paraphrase",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 22,
+            "content_hash": "9f1e03d364e8903b7c70675182d1d338090d24fc1a351c4ff4545edd9e64549c",
+            "page_start": 13,
+            "page_end": 14,
+            "section": "4、开发前的准备工作 / 4.2 相关环境安装 / 4.2.1 代码管理方案"
+          }
+        ]
+      }
+    },
+    {
+      "query": "项目除了 Python 包，还依赖 CUDA、编译器和系统库，课件更推荐哪种环境工具？",
+      "ground_truth": "更推荐 conda。它不仅管理 Python 解释器和 Python 包，还可管理 CUDA、编译器、系统库等非 Python 依赖，适合 AI、深度学习、科学计算等复杂环境。",
+      "reference_contexts": [
+        "章节：4、开发前的准备工作 / 4.2 相关环境安装 / 4.2.1 代码管理方案\n4.2.1 代码管理方案\n\n相较于全局环境（系统环境），各个虚拟环境都有自己独立的一套：Python 解释器、pip 命令、第\n\n三方依赖包，不和其它项目产生干扰。\n\n虚拟环境的设置方案：\n\n方案1-使用conda：适合“Python + 非 Python 依赖”的复杂环境\n\nconda 不只是 Python 包管理工具，它还可以管理 Python 解释器、Python 包，以及很多非 Python 依\n\n赖，比如：CUDA、编译器、系统库、数据库驱动、科学计算底层库等非 Python 依赖。\n\n因此在数据科学、深度学习、AI 工程、科学计算等场景中，conda 更稳妥、优先推荐。\n\n注意：conda 环境中可以使用 pip，但建议先用 conda 装底层依赖，再用 pip 补充 Python 包，不要\n\n随意反复交替使用。\n\n本套课程的选择。\n\n方案2-使用uv：适合“纯 Python 项目”的现代包管理\n\nuv 是一个现代 Python 包管理工具，主要管理 Python 生态依赖，不能像 conda 那样管理 CUDA、系\n\n统级数据库驱动、编译器这类通用非 Python 依赖。\n\n如果项目主要是普通 Python 开发，这类项目通常可以优先考虑 uv。例如：\n\nFastAPI 项目\n\n1\n\nLangChain 项目\n\n2\n\n脚本工具\n\n3\n\nWeb 后端\n\n4\n\n普通 AI Agent 应用\n\n5\n\nRAG 应用层代码\n\n6\n\n方案3-使用venv：Python 自带的轻量级虚拟环境工具\n\nvenv 是 Python 官方自带的虚拟环境工具，不需要额外安装。\n\n它的特点是简单、轻量：\n\npython -m venv .venv\n1"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-038",
+        "question_type": "scenario",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 22,
+            "content_hash": "9f1e03d364e8903b7c70675182d1d338090d24fc1a351c4ff4545edd9e64549c",
+            "page_start": 13,
+            "page_end": 14,
+            "section": "4、开发前的准备工作 / 4.2 相关环境安装 / 4.2.1 代码管理方案"
+          }
+        ]
+      }
+    },
+    {
+      "query": "按课件，uv 能像 conda 一样管理 CUDA、编译器和通用系统库吗？",
+      "ground_truth": "不能。课件将 uv 定位为主要管理 Python 生态依赖的现代工具，适合纯 Python、Web、Agent、RAG 应用层项目，不承担 conda 那样的通用非 Python 依赖管理。",
+      "reference_contexts": [
+        "章节：4、开发前的准备工作 / 4.2 相关环境安装 / 4.2.1 代码管理方案\n4.2.1 代码管理方案\n\n相较于全局环境（系统环境），各个虚拟环境都有自己独立的一套：Python 解释器、pip 命令、第\n\n三方依赖包，不和其它项目产生干扰。\n\n虚拟环境的设置方案：\n\n方案1-使用conda：适合“Python + 非 Python 依赖”的复杂环境\n\nconda 不只是 Python 包管理工具，它还可以管理 Python 解释器、Python 包，以及很多非 Python 依\n\n赖，比如：CUDA、编译器、系统库、数据库驱动、科学计算底层库等非 Python 依赖。\n\n因此在数据科学、深度学习、AI 工程、科学计算等场景中，conda 更稳妥、优先推荐。\n\n注意：conda 环境中可以使用 pip，但建议先用 conda 装底层依赖，再用 pip 补充 Python 包，不要\n\n随意反复交替使用。\n\n本套课程的选择。\n\n方案2-使用uv：适合“纯 Python 项目”的现代包管理\n\nuv 是一个现代 Python 包管理工具，主要管理 Python 生态依赖，不能像 conda 那样管理 CUDA、系\n\n统级数据库驱动、编译器这类通用非 Python 依赖。\n\n如果项目主要是普通 Python 开发，这类项目通常可以优先考虑 uv。例如：\n\nFastAPI 项目\n\n1\n\nLangChain 项目\n\n2\n\n脚本工具\n\n3\n\nWeb 后端\n\n4\n\n普通 AI Agent 应用\n\n5\n\nRAG 应用层代码\n\n6\n\n方案3-使用venv：Python 自带的轻量级虚拟环境工具\n\nvenv 是 Python 官方自带的虚拟环境工具，不需要额外安装。\n\n它的特点是简单、轻量：\n\npython -m venv .venv\n1"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-039",
+        "question_type": "comparison",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 22,
+            "content_hash": "9f1e03d364e8903b7c70675182d1d338090d24fc1a351c4ff4545edd9e64549c",
+            "page_start": 13,
+            "page_end": 14,
+            "section": "4、开发前的准备工作 / 4.2 相关环境安装 / 4.2.1 代码管理方案"
+          }
+        ]
+      }
+    },
+    {
+      "query": "电脑没有合适的 Python 解释器时，能不能只用 venv 安装一个新的？",
+      "ground_truth": "不能。venv 只能基于已经安装好的 Python 解释器创建虚拟环境，不负责安装新的解释器，也不管理 CUDA、系统库等非 Python 依赖。",
+      "reference_contexts": [
+        "章节：4、开发前的准备工作 / 4.2 相关环境安装 / 4.2.1 代码管理方案\nvenv 是 Python 官方自带的虚拟环境工具，不需要额外安装。\n\n它的特点是简单、轻量：\n\npython -m venv .venv\n1\n\n注意： venv 不负责安装新的 Python 解释器，只能基于当前已经安装好的 Python 解释器创建虚拟环\n\n境。同时，venv 也不负责管理 CUDA、系统库等非 Python 依赖。\n\n三者对比：\n\n工具\n管理 Python 解释\n\n器\n\n管理\n\n管理非\n\nPython\n\nPython 依\n\n适合场景\n\n包\n\n赖\n\nconda\n✅可以\n✅可以\n✅可以\nAI、深度学习、科学计算、复杂底\n\n层依赖(C/C++，CUDA)\n\nuv\n✅可以\n✅可以\n❌不可以\n纯 Python 项目、Web、Agent、\n\nRAG 应用层\n\nvenv\n不支持原生安装，\n\n基于已有解释器\n✅可以\n❌不可以\n简单项目、教学演示、轻量隔离\n\n对于LangChain这样的纯Python环境，可以用uv，也可以用conda。本套课程选择使用conda。\n\n安装conda环境，见《02资料\\尚硅谷-conda使用指南.md》\n\n普通 Python 项目：可以用 uv，速度快，体验好。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-040",
+        "question_type": "paraphrase",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 23,
+            "content_hash": "a4ed4b9c9db95e05f1307e4b97875a2c24562269a3e318df4945c5b0d5533ec4",
+            "page_start": 14,
+            "page_end": 14,
+            "section": "4、开发前的准备工作 / 4.2 相关环境安装 / 4.2.1 代码管理方案"
+          }
+        ]
+      }
+    },
+    {
+      "query": "在 conda 环境中同时需要使用 pip 时，课件推荐怎样安排安装顺序？",
+      "ground_truth": "先用 conda 安装底层依赖或可用的包，conda 没有的再用 pip 补充 Python 包，不要随意反复交替使用。",
+      "reference_contexts": [
+        "章节：4、开发前的准备工作 / 4.2 相关环境安装 / 4.2.1 代码管理方案\n4.2.1 代码管理方案\n\n相较于全局环境（系统环境），各个虚拟环境都有自己独立的一套：Python 解释器、pip 命令、第\n\n三方依赖包，不和其它项目产生干扰。\n\n虚拟环境的设置方案：\n\n方案1-使用conda：适合“Python + 非 Python 依赖”的复杂环境\n\nconda 不只是 Python 包管理工具，它还可以管理 Python 解释器、Python 包，以及很多非 Python 依\n\n赖，比如：CUDA、编译器、系统库、数据库驱动、科学计算底层库等非 Python 依赖。\n\n因此在数据科学、深度学习、AI 工程、科学计算等场景中，conda 更稳妥、优先推荐。\n\n注意：conda 环境中可以使用 pip，但建议先用 conda 装底层依赖，再用 pip 补充 Python 包，不要\n\n随意反复交替使用。\n\n本套课程的选择。\n\n方案2-使用uv：适合“纯 Python 项目”的现代包管理\n\nuv 是一个现代 Python 包管理工具，主要管理 Python 生态依赖，不能像 conda 那样管理 CUDA、系\n\n统级数据库驱动、编译器这类通用非 Python 依赖。\n\n如果项目主要是普通 Python 开发，这类项目通常可以优先考虑 uv。例如：\n\nFastAPI 项目\n\n1\n\nLangChain 项目\n\n2\n\n脚本工具\n\n3\n\nWeb 后端\n\n4\n\n普通 AI Agent 应用\n\n5\n\nRAG 应用层代码\n\n6\n\n方案3-使用venv：Python 自带的轻量级虚拟环境工具\n\nvenv 是 Python 官方自带的虚拟环境工具，不需要额外安装。\n\n它的特点是简单、轻量：\n\npython -m venv .venv\n1",
+        "章节：# 查看已安装包\n# 查看已安装包\n\n15\n\n16\n\npip list\n\n建议：优先 conda install，conda没有，再用pip install。\n\n二者区别：\n\nconda依赖检查严格，pip相对宽松；\n\nconda 管环境 + 依赖 + 稳定性，pip 只管Python 包；\n\nconda：支持Python 包 + 非 Python 包；pip：只支持 Python 包。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-041",
+        "question_type": "multi_section",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 22,
+            "content_hash": "9f1e03d364e8903b7c70675182d1d338090d24fc1a351c4ff4545edd9e64549c",
+            "page_start": 13,
+            "page_end": 14,
+            "section": "4、开发前的准备工作 / 4.2 相关环境安装 / 4.2.1 代码管理方案"
+          },
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 36,
+            "content_hash": "cf9a8349589324d43a4dc5270319102ef459976927c1eb6c29dd892b2d90a657",
+            "page_start": 16,
+            "page_end": 16,
+            "section": "# 查看已安装包"
+          }
+        ]
+      }
+    },
+    {
+      "query": "conda 命令中的 -c 是什么含义，conda-forge 又是什么？",
+      "ground_truth": "-c 是 --channel 的缩写，用于指定包的安装来源渠道。课件介绍 conda-forge 为一个包渠道，并指出它相较默认渠道通常更新更快、包更全。",
+      "reference_contexts": [
+        "章节：# 查看已安装包\n# 查看已安装包\n\n16\n\n17\n\nconda list\n\nconda 包通常来自 defaults 或 conda-forge。\n\n-c ：是--channel 的缩写，conda用于指定包的安装来源渠道。\n\nconda-forge ：该源比官方默认渠道更新更快、包更全\n\n方式2：使用pip指令"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-042",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 31,
+            "content_hash": "dfd0529b01440f9d0233f2109a2a328a71e12557a91a60bedd7da39f13e94362",
+            "page_start": 15,
+            "page_end": 15,
+            "section": "# 查看已安装包"
+          }
+        ]
+      }
+    },
+    {
+      "query": "想确认某个包是 conda 安装的还是 pip 安装的，课件给了什么检查方法？",
+      "ground_truth": "运行 conda list 查看来源：Conda 安装的包会显示对应频道，pip 安装的包显示 pypi。",
+      "reference_contexts": [
+        "章节：# 检查包来源\n# 检查包来源\n\n1\n\nconda list   # Conda 安装的包显示频道，pip 安装的显示 `pypi`\n\n2"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-043",
+        "question_type": "paraphrase",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 37,
+            "content_hash": "553eb69bc9641829e6e13efe55b0144789d0c48c77c593b2504433379fb53636",
+            "page_start": 16,
+            "page_end": 16,
+            "section": "# 检查包来源"
+          }
+        ]
+      }
+    },
+    {
+      "query": "为什么课件提醒安装依赖时显式指定版本？请给出其中一个 pip 安装示例。",
+      "ground_truth": "因为不显式指定版本可能出现不兼容。课件给出的示例为 pip install langchain==1.2.12。",
+      "reference_contexts": [
+        "注意：如下包的安装，必须显式指明版本，否则可能会出现不兼容情况。",
+        "章节：# 安装指定版本\n# 安装指定版本\n\n1\n\n2\n\npip install langchain==1.2.12\n\n#安装最新版（不推荐）：pip install langchain\n\n3\n\n4"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-044",
+        "question_type": "multi_section",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 24,
+            "content_hash": "3c310140f377c98d678294823b596fca2213bfe7c4c35772ec033c0ddd525bc2",
+            "page_start": 14,
+            "page_end": 15,
+            "section": "4、开发前的准备工作 / 4.2 相关环境安装 / 4.2.2 安装虚拟环境与Python解释器"
+          },
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 32,
+            "content_hash": "e81d4d6bfdcae71137dfd1b31924da8fd926ce5faada5004eadd15a61f943aba",
+            "page_start": 15,
+            "page_end": 15,
+            "section": "# 安装指定版本"
+          }
+        ]
+      }
+    },
+    {
+      "query": "在 PyCharm 中建立课程工程后，应该选什么解释器，又如何打印 LangChain 的版本？",
+      "ground_truth": "把工程解释器设置为对应的 Anaconda 环境，然后执行 import langchain，再执行 print(langchain.__version__) 查看版本。",
+      "reference_contexts": [
+        "章节：# 检查包来源 / 4.2.4 PyCharm开发环境\n4.2.4 PyCharm开发环境\n\nPyCharm作为专业的Python IDE，具有强大的代码编辑、调试和版本控制功能。\n\nhttps://www.jetbrains.com/pycharm/download/other/#releases-2025\n\n创建新的工程，并设置Python解释器（选择Anaconda环境）。\n\n1\n\nimport langchain\n\n2\n\n3\n\nprint(langchain.__version__)"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-045",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 38,
+            "content_hash": "14416310d663178883ee2f7109b3233e108269ea5f5ddf453bc4f41685695f50",
+            "page_start": 16,
+            "page_end": 17,
+            "section": "# 检查包来源 / 4.2.4 PyCharm开发环境"
+          }
+        ]
+      }
+    },
+    {
+      "query": "课件里的“大模型知识冻结”是什么意思，为什么模型难以直接掌握最新信息？",
+      "ground_truth": "随着模型规模增大，训练成本和周期增加，模型无法实时学习最新或动态变化的信息，因此难以应对时间敏感的问题。",
+      "reference_contexts": [
+        "章节：5、大模型应用场景介绍 / 5.1 RAG开发\n5.1 RAG开发\n\n1）背景\n\n大模型的知识冻结：随着 LLM 规模扩大，训练成本与周期相应增加，模型无法实时学习到最新的信\n\n息或动态变化。导致 LLM 难以应对诸如“请推荐现在的热门影片”等时间敏感的问题。\n\n大模型幻觉：涉及到大模型从未在训练过程中学习过的信息时，大模型无法给出准确的答复，转而开\n\n始臆想和编造答案。\n\n2）举例\n\nLLM在考试的时候面对陌生的领域，答复能力有限，然后就准备放飞自我了，而此时RAG给了一些提示\n\n和思路，让LLM懂了开始往这个提示的方向做，最终考试的正确率从60%到了90%！\n\n3）何为RAG？\n\nRetrieval-Augmented Generation（检索增强生成）\n\n图1：\n\n图2：\n\nText Chunk\n\n非结构化数据加载器\n\nUnstructured Loader\nText\n文本切分\nText Spliter\nText Chunk\n\nText Chunk\n\n本地文件\n可以是结构化数据（二维表）、\n非结构化文本（PDF、Word、TXT等格式）\n\n向量嵌入\nVector Embeddings\n\n转换为\n\n嵌入模型\nEmbedding Model\n\n存储 & 索引\nStore & Index\n\n回答\nAnswer\n\n向量嵌入\nVector Embeddings\n\n转换为\n相似度搜索\nSimilarity Search\n\n发送给用户\n\nUser Query\n嵌入模型\nEmbedding Model\n\n向量数据库\nVector Database\n\n提示词Prompt\n\n提问\n\nPrompt = Context + User Query\n\nLLM\n\n提示词模板\n\n向量数据库中的相似向量\n\n作为上下文Context\n\nPrompt Template"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-046",
+        "question_type": "paraphrase",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 40,
+            "content_hash": "2de219b432dbf5a396708e88224547248093502e6e62c5d0d136bc962895f854",
+            "page_start": 18,
+            "page_end": 19,
+            "section": "5、大模型应用场景介绍 / 5.1 RAG开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "按照课件，大模型在碰到训练时没学过的信息时，为什么可能出现幻觉？",
+      "ground_truth": "模型在缺少相关训练知识时可能无法准确答复，转而臆想和编造答案，课件将这种情况称为大模型幻觉。",
+      "reference_contexts": [
+        "章节：5、大模型应用场景介绍 / 5.1 RAG开发\n5.1 RAG开发\n\n1）背景\n\n大模型的知识冻结：随着 LLM 规模扩大，训练成本与周期相应增加，模型无法实时学习到最新的信\n\n息或动态变化。导致 LLM 难以应对诸如“请推荐现在的热门影片”等时间敏感的问题。\n\n大模型幻觉：涉及到大模型从未在训练过程中学习过的信息时，大模型无法给出准确的答复，转而开\n\n始臆想和编造答案。\n\n2）举例\n\nLLM在考试的时候面对陌生的领域，答复能力有限，然后就准备放飞自我了，而此时RAG给了一些提示\n\n和思路，让LLM懂了开始往这个提示的方向做，最终考试的正确率从60%到了90%！\n\n3）何为RAG？\n\nRetrieval-Augmented Generation（检索增强生成）\n\n图1：\n\n图2：\n\nText Chunk\n\n非结构化数据加载器\n\nUnstructured Loader\nText\n文本切分\nText Spliter\nText Chunk\n\nText Chunk\n\n本地文件\n可以是结构化数据（二维表）、\n非结构化文本（PDF、Word、TXT等格式）\n\n向量嵌入\nVector Embeddings\n\n转换为\n\n嵌入模型\nEmbedding Model\n\n存储 & 索引\nStore & Index\n\n回答\nAnswer\n\n向量嵌入\nVector Embeddings\n\n转换为\n相似度搜索\nSimilarity Search\n\n发送给用户\n\nUser Query\n嵌入模型\nEmbedding Model\n\n向量数据库\nVector Database\n\n提示词Prompt\n\n提问\n\nPrompt = Context + User Query\n\nLLM\n\n提示词模板\n\n向量数据库中的相似向量\n\n作为上下文Context\n\nPrompt Template"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-047",
+        "question_type": "paraphrase",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 40,
+            "content_hash": "2de219b432dbf5a396708e88224547248093502e6e62c5d0d136bc962895f854",
+            "page_start": 18,
+            "page_end": 19,
+            "section": "5、大模型应用场景介绍 / 5.1 RAG开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "RAG 的英文全称和中文名称分别是什么？",
+      "ground_truth": "英文全称为 Retrieval-Augmented Generation，中文名称为检索增强生成。",
+      "reference_contexts": [
+        "3）何为RAG？\n\nRetrieval-Augmented Generation（检索增强生成）\n\n图1：\n\n图2：\n\nText Chunk\n\n非结构化数据加载器\n\nUnstructured Loader\nText\n文本切分\nText Spliter\nText Chunk\n\nText Chunk\n\n本地文件\n可以是结构化数据（二维表）、\n非结构化文本（PDF、Word、TXT等格式）\n\n向量嵌入\nVector Embeddings\n\n转换为\n\n嵌入模型\nEmbedding Model\n\n存储 & 索引\nStore & Index\n\n回答\nAnswer\n\n向量嵌入\nVector Embeddings\n\n转换为\n相似度搜索\nSimilarity Search\n\n发送给用户\n\nUser Query\n嵌入模型\nEmbedding Model\n\n向量数据库\nVector Database\n\n提示词Prompt\n\n提问\n\nPrompt = Context + User Query\n\nLLM\n\n提示词模板\n\n向量数据库中的相似向量\n\n作为上下文Context\n\nPrompt Template"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-048",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 40,
+            "content_hash": "2de219b432dbf5a396708e88224547248093502e6e62c5d0d136bc962895f854",
+            "page_start": 18,
+            "page_end": 19,
+            "section": "5、大模型应用场景介绍 / 5.1 RAG开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "根据课件的 RAG 流程，本地资料从进入系统到存入向量数据库，通常经过哪些主要处理？",
+      "ground_truth": "先加载本地结构化或非结构化资料，提取文本并切分为文本块，再用 Embedding 模型生成向量，最后进行存储和建立索引。",
+      "reference_contexts": [
+        "3）何为RAG？\n\nRetrieval-Augmented Generation（检索增强生成）\n\n图1：\n\n图2：\n\nText Chunk\n\n非结构化数据加载器\n\nUnstructured Loader\nText\n文本切分\nText Spliter\nText Chunk\n\nText Chunk\n\n本地文件\n可以是结构化数据（二维表）、\n非结构化文本（PDF、Word、TXT等格式）\n\n向量嵌入\nVector Embeddings\n\n转换为\n\n嵌入模型\nEmbedding Model\n\n存储 & 索引\nStore & Index\n\n回答\nAnswer\n\n向量嵌入\nVector Embeddings\n\n转换为\n相似度搜索\nSimilarity Search\n\n发送给用户\n\nUser Query\n嵌入模型\nEmbedding Model\n\n向量数据库\nVector Database\n\n提示词Prompt\n\n提问\n\nPrompt = Context + User Query\n\nLLM\n\n提示词模板\n\n向量数据库中的相似向量\n\n作为上下文Context\n\nPrompt Template"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-049",
+        "question_type": "reasoning",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 40,
+            "content_hash": "2de219b432dbf5a396708e88224547248093502e6e62c5d0d136bc962895f854",
+            "page_start": 18,
+            "page_end": 19,
+            "section": "5、大模型应用场景介绍 / 5.1 RAG开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "RAG 里的 Embeddings 做的是什么转换，为什么需要这种表示？",
+      "ground_truth": "Embeddings 把文字转换成向量编码，使其更易于进行相似度计算，支撑后续的向量检索。",
+      "reference_contexts": [
+        "章节：5、大模型应用场景介绍 / 5.3 大模型应用开发的4个场景\n5.3 大模型应用开发的4个场景\n\n场景1：纯 Prompt\n\nPrompt是操作大模型的唯一接口\n\n当人看：你说一句，ta回一句，你再说一句，ta再回一句...\n\n场景2：Agent + Function Calling\n\nAgent：AI 主动提要求\n\nFunction Calling：需要对接外部系统时，AI 要求执行某个函数\n\n当人看：你问 ta「我明天去杭州出差，要带伞吗？」，ta 让你先看天气预报，你看了告诉ta，ta\n\n再告诉你要不要带伞\n\n场景3：RAG (Retrieval-Augmented Generation)\n\nRAG：需要补充领域知识时使用\n\nEmbeddings：把文字转换为更易于相似度计算的编码。这种编码叫向量\n\n向量数据库：把向量存起来，方便查找\n\n向量搜索：根据输入向量，找到最相似的向量\n\n举例：考试答题时，到书上找相关内容，再结合题目组成答案\n\n这个在智能客服上用的最广泛。\n\n场景4：Fine-tuning(精调/微调)\n\n举例：努力学习考试内容，长期记住，活学活用。\n\n特点：成本最高；在前面的方式解决不了问题的情况下，再使用。\n\n如何选择相关技术\n\n面对一个需求，如何开始，如何选择技术方案？下面是个常用思路："
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-050",
+        "question_type": "paraphrase",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 45,
+            "content_hash": "90e23ec9506a0b6962d01bc0c7b9796905e5bda95e6c941b11b0bcc95e42ad6a",
+            "page_start": 23,
+            "page_end": 25,
+            "section": "5、大模型应用场景介绍 / 5.3 大模型应用开发的4个场景"
+          }
+        ]
+      }
+    },
+    {
+      "query": "向量数据库在课件的 RAG 方案中主要承担什么职责？",
+      "ground_truth": "负责保存向量并方便查找，配合存储与索引过程，为后续根据查询向量检索相似内容提供支持。",
+      "reference_contexts": [
+        "章节：5、大模型应用场景介绍 / 5.3 大模型应用开发的4个场景\n5.3 大模型应用开发的4个场景\n\n场景1：纯 Prompt\n\nPrompt是操作大模型的唯一接口\n\n当人看：你说一句，ta回一句，你再说一句，ta再回一句...\n\n场景2：Agent + Function Calling\n\nAgent：AI 主动提要求\n\nFunction Calling：需要对接外部系统时，AI 要求执行某个函数\n\n当人看：你问 ta「我明天去杭州出差，要带伞吗？」，ta 让你先看天气预报，你看了告诉ta，ta\n\n再告诉你要不要带伞\n\n场景3：RAG (Retrieval-Augmented Generation)\n\nRAG：需要补充领域知识时使用\n\nEmbeddings：把文字转换为更易于相似度计算的编码。这种编码叫向量\n\n向量数据库：把向量存起来，方便查找\n\n向量搜索：根据输入向量，找到最相似的向量\n\n举例：考试答题时，到书上找相关内容，再结合题目组成答案\n\n这个在智能客服上用的最广泛。\n\n场景4：Fine-tuning(精调/微调)\n\n举例：努力学习考试内容，长期记住，活学活用。\n\n特点：成本最高；在前面的方式解决不了问题的情况下，再使用。\n\n如何选择相关技术\n\n面对一个需求，如何开始，如何选择技术方案？下面是个常用思路：",
+        "3）何为RAG？\n\nRetrieval-Augmented Generation（检索增强生成）\n\n图1：\n\n图2：\n\nText Chunk\n\n非结构化数据加载器\n\nUnstructured Loader\nText\n文本切分\nText Spliter\nText Chunk\n\nText Chunk\n\n本地文件\n可以是结构化数据（二维表）、\n非结构化文本（PDF、Word、TXT等格式）\n\n向量嵌入\nVector Embeddings\n\n转换为\n\n嵌入模型\nEmbedding Model\n\n存储 & 索引\nStore & Index\n\n回答\nAnswer\n\n向量嵌入\nVector Embeddings\n\n转换为\n相似度搜索\nSimilarity Search\n\n发送给用户\n\nUser Query\n嵌入模型\nEmbedding Model\n\n向量数据库\nVector Database\n\n提示词Prompt\n\n提问\n\nPrompt = Context + User Query\n\nLLM\n\n提示词模板\n\n向量数据库中的相似向量\n\n作为上下文Context\n\nPrompt Template"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-051",
+        "question_type": "multi_section",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 45,
+            "content_hash": "90e23ec9506a0b6962d01bc0c7b9796905e5bda95e6c941b11b0bcc95e42ad6a",
+            "page_start": 23,
+            "page_end": 25,
+            "section": "5、大模型应用场景介绍 / 5.3 大模型应用开发的4个场景"
+          },
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 40,
+            "content_hash": "2de219b432dbf5a396708e88224547248093502e6e62c5d0d136bc962895f854",
+            "page_start": 18,
+            "page_end": 19,
+            "section": "5、大模型应用场景介绍 / 5.1 RAG开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "用户问了一个问题后，RAG 是怎样从向量库中找相关内容的？",
+      "ground_truth": "先用 Embedding 模型将用户查询转换成向量，再在向量数据库中进行相似度搜索，找到相似向量对应的资料作为上下文。",
+      "reference_contexts": [
+        "3）何为RAG？\n\nRetrieval-Augmented Generation（检索增强生成）\n\n图1：\n\n图2：\n\nText Chunk\n\n非结构化数据加载器\n\nUnstructured Loader\nText\n文本切分\nText Spliter\nText Chunk\n\nText Chunk\n\n本地文件\n可以是结构化数据（二维表）、\n非结构化文本（PDF、Word、TXT等格式）\n\n向量嵌入\nVector Embeddings\n\n转换为\n\n嵌入模型\nEmbedding Model\n\n存储 & 索引\nStore & Index\n\n回答\nAnswer\n\n向量嵌入\nVector Embeddings\n\n转换为\n相似度搜索\nSimilarity Search\n\n发送给用户\n\nUser Query\n嵌入模型\nEmbedding Model\n\n向量数据库\nVector Database\n\n提示词Prompt\n\n提问\n\nPrompt = Context + User Query\n\nLLM\n\n提示词模板\n\n向量数据库中的相似向量\n\n作为上下文Context\n\nPrompt Template",
+        "章节：5、大模型应用场景介绍 / 5.3 大模型应用开发的4个场景\n5.3 大模型应用开发的4个场景\n\n场景1：纯 Prompt\n\nPrompt是操作大模型的唯一接口\n\n当人看：你说一句，ta回一句，你再说一句，ta再回一句...\n\n场景2：Agent + Function Calling\n\nAgent：AI 主动提要求\n\nFunction Calling：需要对接外部系统时，AI 要求执行某个函数\n\n当人看：你问 ta「我明天去杭州出差，要带伞吗？」，ta 让你先看天气预报，你看了告诉ta，ta\n\n再告诉你要不要带伞\n\n场景3：RAG (Retrieval-Augmented Generation)\n\nRAG：需要补充领域知识时使用\n\nEmbeddings：把文字转换为更易于相似度计算的编码。这种编码叫向量\n\n向量数据库：把向量存起来，方便查找\n\n向量搜索：根据输入向量，找到最相似的向量\n\n举例：考试答题时，到书上找相关内容，再结合题目组成答案\n\n这个在智能客服上用的最广泛。\n\n场景4：Fine-tuning(精调/微调)\n\n举例：努力学习考试内容，长期记住，活学活用。\n\n特点：成本最高；在前面的方式解决不了问题的情况下，再使用。\n\n如何选择相关技术\n\n面对一个需求，如何开始，如何选择技术方案？下面是个常用思路："
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-052",
+        "question_type": "multi_section",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 40,
+            "content_hash": "2de219b432dbf5a396708e88224547248093502e6e62c5d0d136bc962895f854",
+            "page_start": 18,
+            "page_end": 19,
+            "section": "5、大模型应用场景介绍 / 5.1 RAG开发"
+          },
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 45,
+            "content_hash": "90e23ec9506a0b6962d01bc0c7b9796905e5bda95e6c941b11b0bcc95e42ad6a",
+            "page_start": 23,
+            "page_end": 25,
+            "section": "5、大模型应用场景介绍 / 5.3 大模型应用开发的4个场景"
+          }
+        ]
+      }
+    },
+    {
+      "query": "课件中的 Prompt = Context + User Query 应该怎样理解？",
+      "ground_truth": "把检索获得的资料作为 Context，再与用户问题 User Query 共同构成提示词，交给 LLM 生成回答。",
+      "reference_contexts": [
+        "章节：5、大模型应用场景介绍 / 5.1 RAG开发\n提问\n\nPrompt = Context + User Query\n\nLLM\n\n提示词模板\n\n向量数据库中的相似向量\n\n作为上下文Context\n\nPrompt Template\n\n检索-增强-生成过程：检索可以理解为第10步，增强理解为第13步（这里的提示词包含检索到的数\n\n据），生成理解为第15步。\n\n这些过程中的难点：1、文件解析 2、文件切割  3、知识检索   4、知识重排序\n\n1、文件解析：如果是pdf，内部包含文件、图片、表格，图片上还有文字，需要处理。\n\n2、文件切割：没有固定的格式\n\n3、在 RAG 应用中，随着文档数量增加，召回准确率会下降，引入reranker（重排器）可对初步\n\n召回的较多 chunk（如 top 20 或 top 50）进行精排，提高召回准确率，防止LLM 处理无关信\n\n息，减少时间和成本。\n\n此外，与基于基本矢量搜索的 RAG 相比，reranker增强型 RAG 的成本更高，但与仅依靠LLM 生\n\n成答案相比，它的成本低些。\n\nReranker的使用场景：\n\n适合：追求回答高精度和高相关性的场景中特别适合使用 Reranker，例如专业知识库或者客服\n\n系统等应用。\n\n不适合：引入reranker会增加召回时间，增加检索延迟。服务对响应时间要求高时，使用\n\nreranker可能不合适。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-053",
+        "question_type": "paraphrase",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 41,
+            "content_hash": "aac97713c40053071b47caf7b8fe13b245eb6d93a31a971a3e74c00d8b17c3c4",
+            "page_start": 19,
+            "page_end": 19,
+            "section": "5、大模型应用场景介绍 / 5.1 RAG开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "在 RAG 中，“检索”“增强”“生成”分别做什么，而不是都由模型直接完成？",
+      "ground_truth": "检索负责找相关资料；增强把检索到的数据加入提示词并与用户问题结合；生成由 LLM 根据增强后的提示词输出答案。",
+      "reference_contexts": [
+        "3）何为RAG？\n\nRetrieval-Augmented Generation（检索增强生成）\n\n图1：\n\n图2：\n\nText Chunk\n\n非结构化数据加载器\n\nUnstructured Loader\nText\n文本切分\nText Spliter\nText Chunk\n\nText Chunk\n\n本地文件\n可以是结构化数据（二维表）、\n非结构化文本（PDF、Word、TXT等格式）\n\n向量嵌入\nVector Embeddings\n\n转换为\n\n嵌入模型\nEmbedding Model\n\n存储 & 索引\nStore & Index\n\n回答\nAnswer\n\n向量嵌入\nVector Embeddings\n\n转换为\n相似度搜索\nSimilarity Search\n\n发送给用户\n\nUser Query\n嵌入模型\nEmbedding Model\n\n向量数据库\nVector Database\n\n提示词Prompt\n\n提问\n\nPrompt = Context + User Query\n\nLLM\n\n提示词模板\n\n向量数据库中的相似向量\n\n作为上下文Context\n\nPrompt Template",
+        "章节：5、大模型应用场景介绍 / 5.1 RAG开发\n提问\n\nPrompt = Context + User Query\n\nLLM\n\n提示词模板\n\n向量数据库中的相似向量\n\n作为上下文Context\n\nPrompt Template\n\n检索-增强-生成过程：检索可以理解为第10步，增强理解为第13步（这里的提示词包含检索到的数\n\n据），生成理解为第15步。\n\n这些过程中的难点：1、文件解析 2、文件切割  3、知识检索   4、知识重排序\n\n1、文件解析：如果是pdf，内部包含文件、图片、表格，图片上还有文字，需要处理。\n\n2、文件切割：没有固定的格式\n\n3、在 RAG 应用中，随着文档数量增加，召回准确率会下降，引入reranker（重排器）可对初步\n\n召回的较多 chunk（如 top 20 或 top 50）进行精排，提高召回准确率，防止LLM 处理无关信\n\n息，减少时间和成本。\n\n此外，与基于基本矢量搜索的 RAG 相比，reranker增强型 RAG 的成本更高，但与仅依靠LLM 生\n\n成答案相比，它的成本低些。\n\nReranker的使用场景：\n\n适合：追求回答高精度和高相关性的场景中特别适合使用 Reranker，例如专业知识库或者客服\n\n系统等应用。\n\n不适合：引入reranker会增加召回时间，增加检索延迟。服务对响应时间要求高时，使用\n\nreranker可能不合适。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-054",
+        "question_type": "multi_section",
+        "difficulty": "hard",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 40,
+            "content_hash": "2de219b432dbf5a396708e88224547248093502e6e62c5d0d136bc962895f854",
+            "page_start": 18,
+            "page_end": 19,
+            "section": "5、大模型应用场景介绍 / 5.1 RAG开发"
+          },
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 41,
+            "content_hash": "aac97713c40053071b47caf7b8fe13b245eb6d93a31a971a3e74c00d8b17c3c4",
+            "page_start": 19,
+            "page_end": 19,
+            "section": "5、大模型应用场景介绍 / 5.1 RAG开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "课件总结 RAG 实现过程中的四个难点是什么？",
+      "ground_truth": "四个难点是文件解析、文件切割、知识检索和知识重排序。",
+      "reference_contexts": [
+        "这些过程中的难点：1、文件解析 2、文件切割  3、知识检索   4、知识重排序\n\n1、文件解析：如果是pdf，内部包含文件、图片、表格，图片上还有文字，需要处理。\n\n2、文件切割：没有固定的格式"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-055",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 41,
+            "content_hash": "aac97713c40053071b47caf7b8fe13b245eb6d93a31a971a3e74c00d8b17c3c4",
+            "page_start": 19,
+            "page_end": 19,
+            "section": "5、大模型应用场景介绍 / 5.1 RAG开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "为什么上传一个 PDF 并不等于已经完成 RAG 的文件解析？",
+      "ground_truth": "因为 PDF 内可能同时包含文本、图片和表格，图片中还可能有文字，文件解析需要处理这些不同内容，而不只是接收一个文件。",
+      "reference_contexts": [
+        "这些过程中的难点：1、文件解析 2、文件切割  3、知识检索   4、知识重排序\n\n1、文件解析：如果是pdf，内部包含文件、图片、表格，图片上还有文字，需要处理。\n\n2、文件切割：没有固定的格式"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-056",
+        "question_type": "reasoning",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 41,
+            "content_hash": "aac97713c40053071b47caf7b8fe13b245eb6d93a31a971a3e74c00d8b17c3c4",
+            "page_start": 19,
+            "page_end": 19,
+            "section": "5、大模型应用场景介绍 / 5.1 RAG开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "根据课件，RAG 的文件切割为什么不能简单假定所有文档都遵循同一种固定格式？",
+      "ground_truth": "课件指出文件切割没有固定的格式，文档内容和结构并不统一，因此它被列为 RAG 处理中的一个难点。",
+      "reference_contexts": [
+        "这些过程中的难点：1、文件解析 2、文件切割  3、知识检索   4、知识重排序\n\n1、文件解析：如果是pdf，内部包含文件、图片、表格，图片上还有文字，需要处理。\n\n2、文件切割：没有固定的格式"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-057",
+        "question_type": "paraphrase",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 41,
+            "content_hash": "aac97713c40053071b47caf7b8fe13b245eb6d93a31a971a3e74c00d8b17c3c4",
+            "page_start": 19,
+            "page_end": 19,
+            "section": "5、大模型应用场景介绍 / 5.1 RAG开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "检索已经返回了 top 20 或 top 50 个文本块，为什么还要加 Reranker？",
+      "ground_truth": "Reranker 会对初步召回的较多文本块再进行精排，提高相关资料的排序质量，减少 LLM 处理无关信息带来的时间和成本。",
+      "reference_contexts": [
+        "3、在 RAG 应用中，随着文档数量增加，召回准确率会下降，引入reranker（重排器）可对初步\n\n召回的较多 chunk（如 top 20 或 top 50）进行精排，提高召回准确率，防止LLM 处理无关信\n\n息，减少时间和成本。\n\n此外，与基于基本矢量搜索的 RAG 相比，reranker增强型 RAG 的成本更高，但与仅依靠LLM 生\n\n成答案相比，它的成本低些。\n\nReranker的使用场景：\n\n适合：追求回答高精度和高相关性的场景中特别适合使用 Reranker，例如专业知识库或者客服\n\n系统等应用。\n\n不适合：引入reranker会增加召回时间，增加检索延迟。服务对响应时间要求高时，使用\n\nreranker可能不合适。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-058",
+        "question_type": "reasoning",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 41,
+            "content_hash": "aac97713c40053071b47caf7b8fe13b245eb6d93a31a971a3e74c00d8b17c3c4",
+            "page_start": 19,
+            "page_end": 19,
+            "section": "5、大模型应用场景介绍 / 5.1 RAG开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "给检索增加重排序，为什么可能让回答更相关，却让响应变慢？",
+      "ground_truth": "重排序通过对初步召回结果精排来提升相关性，但增加了一道计算过程，课件指出这会增加召回时间和检索延迟，因此对响应速度要求高的服务可能不适合。",
+      "reference_contexts": [
+        "3、在 RAG 应用中，随着文档数量增加，召回准确率会下降，引入reranker（重排器）可对初步\n\n召回的较多 chunk（如 top 20 或 top 50）进行精排，提高召回准确率，防止LLM 处理无关信\n\n息，减少时间和成本。\n\n此外，与基于基本矢量搜索的 RAG 相比，reranker增强型 RAG 的成本更高，但与仅依靠LLM 生\n\n成答案相比，它的成本低些。\n\nReranker的使用场景：\n\n适合：追求回答高精度和高相关性的场景中特别适合使用 Reranker，例如专业知识库或者客服\n\n系统等应用。\n\n不适合：引入reranker会增加召回时间，增加检索延迟。服务对响应时间要求高时，使用\n\nreranker可能不合适。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-059",
+        "question_type": "comparison",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 41,
+            "content_hash": "aac97713c40053071b47caf7b8fe13b245eb6d93a31a971a3e74c00d8b17c3c4",
+            "page_start": 19,
+            "page_end": 19,
+            "section": "5、大模型应用场景介绍 / 5.1 RAG开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "专业知识库和客服系统是否适合使用 Reranker？课件依据什么需求来判断？",
+      "ground_truth": "适合追求回答高精度和高相关性的专业知识库、客服系统；判断时也要考虑额外检索延迟，对响应时间要求很高的服务可能不适合。",
+      "reference_contexts": [
+        "3、在 RAG 应用中，随着文档数量增加，召回准确率会下降，引入reranker（重排器）可对初步\n\n召回的较多 chunk（如 top 20 或 top 50）进行精排，提高召回准确率，防止LLM 处理无关信\n\n息，减少时间和成本。\n\n此外，与基于基本矢量搜索的 RAG 相比，reranker增强型 RAG 的成本更高，但与仅依靠LLM 生\n\n成答案相比，它的成本低些。\n\nReranker的使用场景：\n\n适合：追求回答高精度和高相关性的场景中特别适合使用 Reranker，例如专业知识库或者客服\n\n系统等应用。\n\n不适合：引入reranker会增加召回时间，增加检索延迟。服务对响应时间要求高时，使用\n\nreranker可能不合适。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-060",
+        "question_type": "scenario",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 41,
+            "content_hash": "aac97713c40053071b47caf7b8fe13b245eb6d93a31a971a3e74c00d8b17c3c4",
+            "page_start": 19,
+            "page_end": 19,
+            "section": "5、大模型应用场景介绍 / 5.1 RAG开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "课件用什么公式概括 Agent 的组成？",
+      "ground_truth": "Agent = LLM + Planning + Tools + Memory + Action，即大语言模型、规划、工具、记忆和行动。",
+      "reference_contexts": [
+        "Agent = LLM + Planning +  Tools + Memory + Action\n\n比如，打车到西藏玩。\n\n大脑中枢：规划行程的你\n\n规划：步骤1：规划打车路线，步骤2：订饭店、酒店，。。。\n\n调用工具：调用MCP或FunctionCalling等API，滴滴打车、携程、美团订酒店饭店\n\n记忆能力：沟通时，要知道上下文。比如订酒店得知道是西藏路上的酒店，不能聊着聊着忘了最初\n\n的目的。\n\n能够执行上述操作。说走就走，不能纸上谈兵。\n\n智能体核心要素被细化为以下模块：\n\n1、大模型（LLM）作为“大脑”：提供推理、规划和知识理解能力，是AI Agent的决策中枢。\n\n大脑主要由一个大型语言模型 LLM 组成，承担着信息处理和决策等功能， 并可以呈现推理和规划\n\n的过程，能很好地应对未知任务。\n\n2、规划决策（Planning）：通过任务分解、反思与自省框架实现复杂任务处理。例如，利用思维链\n\n（Chain of Thought）将目标拆解为子任务，并通过反馈优化策略。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-061",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 42,
+            "content_hash": "01eb0d1d946e5a8767392a6bf318672ae9cc30a3843cbbfb5c460e655dec68da",
+            "page_start": 20,
+            "page_end": 21,
+            "section": "5、大模型应用场景介绍 / 5.2 Agent开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "为什么课件把 LLM 比作智能体的大脑？",
+      "ground_truth": "因为 LLM 提供推理、规划和知识理解能力，承担信息处理与决策，是智能体的决策中枢。",
+      "reference_contexts": [
+        "Agent = LLM + Planning +  Tools + Memory + Action\n\n比如，打车到西藏玩。\n\n大脑中枢：规划行程的你\n\n规划：步骤1：规划打车路线，步骤2：订饭店、酒店，。。。\n\n调用工具：调用MCP或FunctionCalling等API，滴滴打车、携程、美团订酒店饭店\n\n记忆能力：沟通时，要知道上下文。比如订酒店得知道是西藏路上的酒店，不能聊着聊着忘了最初\n\n的目的。\n\n能够执行上述操作。说走就走，不能纸上谈兵。\n\n智能体核心要素被细化为以下模块：\n\n1、大模型（LLM）作为“大脑”：提供推理、规划和知识理解能力，是AI Agent的决策中枢。\n\n大脑主要由一个大型语言模型 LLM 组成，承担着信息处理和决策等功能， 并可以呈现推理和规划\n\n的过程，能很好地应对未知任务。\n\n2、规划决策（Planning）：通过任务分解、反思与自省框架实现复杂任务处理。例如，利用思维链\n\n（Chain of Thought）将目标拆解为子任务，并通过反馈优化策略。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-062",
+        "question_type": "paraphrase",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 42,
+            "content_hash": "01eb0d1d946e5a8767392a6bf318672ae9cc30a3843cbbfb5c460e655dec68da",
+            "page_start": 20,
+            "page_end": 21,
+            "section": "5、大模型应用场景介绍 / 5.2 Agent开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "智能体面对复杂目标时，Planning 具体如何帮助处理任务？",
+      "ground_truth": "通过任务分解、反思与自省等方式，把目标拆成子任务，并依据反馈优化策略，从而支持复杂任务处理。",
+      "reference_contexts": [
+        "Agent = LLM + Planning +  Tools + Memory + Action\n\n比如，打车到西藏玩。\n\n大脑中枢：规划行程的你\n\n规划：步骤1：规划打车路线，步骤2：订饭店、酒店，。。。\n\n调用工具：调用MCP或FunctionCalling等API，滴滴打车、携程、美团订酒店饭店\n\n记忆能力：沟通时，要知道上下文。比如订酒店得知道是西藏路上的酒店，不能聊着聊着忘了最初\n\n的目的。\n\n能够执行上述操作。说走就走，不能纸上谈兵。\n\n智能体核心要素被细化为以下模块：\n\n1、大模型（LLM）作为“大脑”：提供推理、规划和知识理解能力，是AI Agent的决策中枢。\n\n大脑主要由一个大型语言模型 LLM 组成，承担着信息处理和决策等功能， 并可以呈现推理和规划\n\n的过程，能很好地应对未知任务。\n\n2、规划决策（Planning）：通过任务分解、反思与自省框架实现复杂任务处理。例如，利用思维链\n\n（Chain of Thought）将目标拆解为子任务，并通过反馈优化策略。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-063",
+        "question_type": "paraphrase",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 42,
+            "content_hash": "01eb0d1d946e5a8767392a6bf318672ae9cc30a3843cbbfb5c460e655dec68da",
+            "page_start": 20,
+            "page_end": 21,
+            "section": "5、大模型应用场景介绍 / 5.2 Agent开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "课件中的 Tool Use 如何扩展大模型自身的能力边界？",
+      "ground_truth": "通过调用外部工具，例如 API 和数据库，获得模型自身之外的能力。",
+      "reference_contexts": [
+        "3、工具使用（Tool Use）：调用外部工具（如API、数据库）扩展能力边界。\n\n大模型(比如：DeepSeek)\n调用工具\n\n4、记忆（Memory）\n\n智能体像人类一样，能留存学到的知识以及交互习惯等，这样的机制能让智能体在处理重复工作时\n\n调用以前的经验，从而避免用户进行大量重复交互。\n\n短期记忆：存储单次对话周期的上下文信息，属于临时信息存储机制。受限于模型的上下文窗口长\n\n度。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-064",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 43,
+            "content_hash": "00f355bb51bea5993af82f845f128a52ed844b4e01a03aa381c2b980ef341031",
+            "page_start": 21,
+            "page_end": 22,
+            "section": "5、大模型应用场景介绍 / 5.2 Agent开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "为什么记忆机制能减少用户在重复工作中一遍遍交代背景？",
+      "ground_truth": "记忆可以保留学到的知识和交互习惯，在重复工作中调用以前的经验，避免用户进行大量重复交互。",
+      "reference_contexts": [
+        "3、工具使用（Tool Use）：调用外部工具（如API、数据库）扩展能力边界。\n\n大模型(比如：DeepSeek)\n调用工具\n\n4、记忆（Memory）\n\n智能体像人类一样，能留存学到的知识以及交互习惯等，这样的机制能让智能体在处理重复工作时\n\n调用以前的经验，从而避免用户进行大量重复交互。\n\n短期记忆：存储单次对话周期的上下文信息，属于临时信息存储机制。受限于模型的上下文窗口长\n\n度。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-065",
+        "question_type": "reasoning",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 43,
+            "content_hash": "00f355bb51bea5993af82f845f128a52ed844b4e01a03aa381c2b980ef341031",
+            "page_start": 21,
+            "page_end": 22,
+            "section": "5、大模型应用场景介绍 / 5.2 Agent开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "短期记忆保存的是什么信息，它受到什么限制？",
+      "ground_truth": "短期记忆保存单次对话周期内的上下文，是临时信息存储机制，受到模型上下文窗口长度的限制。",
+      "reference_contexts": [
+        "3、工具使用（Tool Use）：调用外部工具（如API、数据库）扩展能力边界。\n\n大模型(比如：DeepSeek)\n调用工具\n\n4、记忆（Memory）\n\n智能体像人类一样，能留存学到的知识以及交互习惯等，这样的机制能让智能体在处理重复工作时\n\n调用以前的经验，从而避免用户进行大量重复交互。\n\n短期记忆：存储单次对话周期的上下文信息，属于临时信息存储机制。受限于模型的上下文窗口长\n\n度。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-066",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 43,
+            "content_hash": "00f355bb51bea5993af82f845f128a52ed844b4e01a03aa381c2b980ef341031",
+            "page_start": 21,
+            "page_end": 22,
+            "section": "5、大模型应用场景介绍 / 5.2 Agent开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "长期记忆为什么不局限于当前一轮对话？课件举了哪些保存内容的例子？",
+      "ground_truth": "长期记忆可以跨多个会话或时间周期保存和调用核心知识，例如用户偏好和过去执行过的指令，不限于即时任务。",
+      "reference_contexts": [
+        "长期记忆：可以横跨多个会话或时间周期，可存储并调用核心知识，非即时任务。\n\n比如，关于用户的偏好，过去执行过的指令等。\n\n长期记忆，可以通过模型参数微调（固化知识）、知识图谱（结构化语义网络）或向量数\n\n据库（相似性检索）方式实现。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-067",
+        "question_type": "paraphrase",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 44,
+            "content_hash": "f4a3faec11ce7bc5dbfb952dec6a68205d6595211ef99e39d2472ccbe8647689",
+            "page_start": 22,
+            "page_end": 23,
+            "section": "5、大模型应用场景介绍 / 5.2 Agent开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "课件列举了哪三种实现长期记忆的方式？",
+      "ground_truth": "模型参数微调，用来固化知识；知识图谱，用来表示结构化语义网络；向量数据库，用来进行相似性检索。",
+      "reference_contexts": [
+        "长期记忆：可以横跨多个会话或时间周期，可存储并调用核心知识，非即时任务。\n\n比如，关于用户的偏好，过去执行过的指令等。\n\n长期记忆，可以通过模型参数微调（固化知识）、知识图谱（结构化语义网络）或向量数\n\n据库（相似性检索）方式实现。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-068",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 44,
+            "content_hash": "f4a3faec11ce7bc5dbfb952dec6a68205d6595211ef99e39d2472ccbe8647689",
+            "page_start": 22,
+            "page_end": 23,
+            "section": "5、大模型应用场景介绍 / 5.2 Agent开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "Agent 的 Action 只是把计划写出来吗？课件举了什么实际执行的例子？",
+      "ground_truth": "不是。Action 是实际执行决策的模块，包括自动订票等软件接口操作，以及机器人搬运等物理交互；课件也列举检索、推理、编程等行动。",
+      "reference_contexts": [
+        "5、行动（Action）：实际执行决策的模块，涵盖软件接口操作（如自动订票）和物理交互（如机器人\n\n执行搬运）。比如：检索、推理、编程等。\n\n智能体会形成完整的计划流程。例如先读取以前工作的经验和记忆，之后规划子目标并使用相应工\n\n具去处理问题，最后输出给用户并完成反思。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-069",
+        "question_type": "comparison",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 44,
+            "content_hash": "f4a3faec11ce7bc5dbfb952dec6a68205d6595211ef99e39d2472ccbe8647689",
+            "page_start": 22,
+            "page_end": 23,
+            "section": "5、大模型应用场景介绍 / 5.2 Agent开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "课件描述的完整智能体计划流程，从读取经验到最终输出包含哪些环节？",
+      "ground_truth": "先读取以前工作的经验和记忆，再规划子目标，使用相应工具处理问题，最后向用户输出结果并完成反思。",
+      "reference_contexts": [
+        "5、行动（Action）：实际执行决策的模块，涵盖软件接口操作（如自动订票）和物理交互（如机器人\n\n执行搬运）。比如：检索、推理、编程等。\n\n智能体会形成完整的计划流程。例如先读取以前工作的经验和记忆，之后规划子目标并使用相应工\n\n具去处理问题，最后输出给用户并完成反思。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-070",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 44,
+            "content_hash": "f4a3faec11ce7bc5dbfb952dec6a68205d6595211ef99e39d2472ccbe8647689",
+            "page_start": 22,
+            "page_end": 23,
+            "section": "5、大模型应用场景介绍 / 5.2 Agent开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "在课件的四种应用场景里，“纯 Prompt”是什么样的交互方式？",
+      "ground_truth": "通过 Prompt 与模型直接交互，用户说一句、模型回一句，再继续往返对话。",
+      "reference_contexts": [
+        "章节：5、大模型应用场景介绍 / 5.3 大模型应用开发的4个场景\n5.3 大模型应用开发的4个场景\n\n场景1：纯 Prompt\n\nPrompt是操作大模型的唯一接口\n\n当人看：你说一句，ta回一句，你再说一句，ta再回一句...\n\n场景2：Agent + Function Calling\n\nAgent：AI 主动提要求\n\nFunction Calling：需要对接外部系统时，AI 要求执行某个函数\n\n当人看：你问 ta「我明天去杭州出差，要带伞吗？」，ta 让你先看天气预报，你看了告诉ta，ta\n\n再告诉你要不要带伞\n\n场景3：RAG (Retrieval-Augmented Generation)\n\nRAG：需要补充领域知识时使用\n\nEmbeddings：把文字转换为更易于相似度计算的编码。这种编码叫向量\n\n向量数据库：把向量存起来，方便查找\n\n向量搜索：根据输入向量，找到最相似的向量\n\n举例：考试答题时，到书上找相关内容，再结合题目组成答案\n\n这个在智能客服上用的最广泛。\n\n场景4：Fine-tuning(精调/微调)\n\n举例：努力学习考试内容，长期记住，活学活用。\n\n特点：成本最高；在前面的方式解决不了问题的情况下，再使用。\n\n如何选择相关技术\n\n面对一个需求，如何开始，如何选择技术方案？下面是个常用思路："
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-071",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 45,
+            "content_hash": "90e23ec9506a0b6962d01bc0c7b9796905e5bda95e6c941b11b0bcc95e42ad6a",
+            "page_start": 23,
+            "page_end": 25,
+            "section": "5、大模型应用场景介绍 / 5.3 大模型应用开发的4个场景"
+          }
+        ]
+      }
+    },
+    {
+      "query": "“明天去杭州出差要不要带伞”的例子，用来说明 Function Calling 的什么作用？",
+      "ground_truth": "说明当回答需要外部系统信息时，AI 会要求执行某个函数，例如查询天气，再根据得到的信息判断是否需要带伞。",
+      "reference_contexts": [
+        "章节：5、大模型应用场景介绍 / 5.3 大模型应用开发的4个场景\n5.3 大模型应用开发的4个场景\n\n场景1：纯 Prompt\n\nPrompt是操作大模型的唯一接口\n\n当人看：你说一句，ta回一句，你再说一句，ta再回一句...\n\n场景2：Agent + Function Calling\n\nAgent：AI 主动提要求\n\nFunction Calling：需要对接外部系统时，AI 要求执行某个函数\n\n当人看：你问 ta「我明天去杭州出差，要带伞吗？」，ta 让你先看天气预报，你看了告诉ta，ta\n\n再告诉你要不要带伞\n\n场景3：RAG (Retrieval-Augmented Generation)\n\nRAG：需要补充领域知识时使用\n\nEmbeddings：把文字转换为更易于相似度计算的编码。这种编码叫向量\n\n向量数据库：把向量存起来，方便查找\n\n向量搜索：根据输入向量，找到最相似的向量\n\n举例：考试答题时，到书上找相关内容，再结合题目组成答案\n\n这个在智能客服上用的最广泛。\n\n场景4：Fine-tuning(精调/微调)\n\n举例：努力学习考试内容，长期记住，活学活用。\n\n特点：成本最高；在前面的方式解决不了问题的情况下，再使用。\n\n如何选择相关技术\n\n面对一个需求，如何开始，如何选择技术方案？下面是个常用思路："
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-072",
+        "question_type": "paraphrase",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 45,
+            "content_hash": "90e23ec9506a0b6962d01bc0c7b9796905e5bda95e6c941b11b0bcc95e42ad6a",
+            "page_start": 23,
+            "page_end": 25,
+            "section": "5、大模型应用场景介绍 / 5.3 大模型应用开发的4个场景"
+          }
+        ]
+      }
+    },
+    {
+      "query": "课件对 Fine-tuning 的成本和采用时机给出了什么建议？",
+      "ground_truth": "课件认为 Fine-tuning 成本最高，建议在前面的方式无法解决问题时再考虑使用。",
+      "reference_contexts": [
+        "章节：5、大模型应用场景介绍 / 5.3 大模型应用开发的4个场景\n5.3 大模型应用开发的4个场景\n\n场景1：纯 Prompt\n\nPrompt是操作大模型的唯一接口\n\n当人看：你说一句，ta回一句，你再说一句，ta再回一句...\n\n场景2：Agent + Function Calling\n\nAgent：AI 主动提要求\n\nFunction Calling：需要对接外部系统时，AI 要求执行某个函数\n\n当人看：你问 ta「我明天去杭州出差，要带伞吗？」，ta 让你先看天气预报，你看了告诉ta，ta\n\n再告诉你要不要带伞\n\n场景3：RAG (Retrieval-Augmented Generation)\n\nRAG：需要补充领域知识时使用\n\nEmbeddings：把文字转换为更易于相似度计算的编码。这种编码叫向量\n\n向量数据库：把向量存起来，方便查找\n\n向量搜索：根据输入向量，找到最相似的向量\n\n举例：考试答题时，到书上找相关内容，再结合题目组成答案\n\n这个在智能客服上用的最广泛。\n\n场景4：Fine-tuning(精调/微调)\n\n举例：努力学习考试内容，长期记住，活学活用。\n\n特点：成本最高；在前面的方式解决不了问题的情况下，再使用。\n\n如何选择相关技术\n\n面对一个需求，如何开始，如何选择技术方案？下面是个常用思路："
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-073",
+        "question_type": "fact",
+        "difficulty": "easy",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 45,
+            "content_hash": "90e23ec9506a0b6962d01bc0c7b9796905e5bda95e6c941b11b0bcc95e42ad6a",
+            "page_start": 23,
+            "page_end": 25,
+            "section": "5、大模型应用场景介绍 / 5.3 大模型应用开发的4个场景"
+          }
+        ]
+      }
+    },
+    {
+      "query": "按课件的考试比喻，RAG 和 Fine-tuning 在利用知识的方式上有什么不同？",
+      "ground_truth": "RAG 像考试时到书里找相关内容，再结合题目组织答案；Fine-tuning 像提前学习考试内容，把知识长期记住并灵活运用。",
+      "reference_contexts": [
+        "章节：5、大模型应用场景介绍 / 5.3 大模型应用开发的4个场景\n5.3 大模型应用开发的4个场景\n\n场景1：纯 Prompt\n\nPrompt是操作大模型的唯一接口\n\n当人看：你说一句，ta回一句，你再说一句，ta再回一句...\n\n场景2：Agent + Function Calling\n\nAgent：AI 主动提要求\n\nFunction Calling：需要对接外部系统时，AI 要求执行某个函数\n\n当人看：你问 ta「我明天去杭州出差，要带伞吗？」，ta 让你先看天气预报，你看了告诉ta，ta\n\n再告诉你要不要带伞\n\n场景3：RAG (Retrieval-Augmented Generation)\n\nRAG：需要补充领域知识时使用\n\nEmbeddings：把文字转换为更易于相似度计算的编码。这种编码叫向量\n\n向量数据库：把向量存起来，方便查找\n\n向量搜索：根据输入向量，找到最相似的向量\n\n举例：考试答题时，到书上找相关内容，再结合题目组成答案\n\n这个在智能客服上用的最广泛。\n\n场景4：Fine-tuning(精调/微调)\n\n举例：努力学习考试内容，长期记住，活学活用。\n\n特点：成本最高；在前面的方式解决不了问题的情况下，再使用。\n\n如何选择相关技术\n\n面对一个需求，如何开始，如何选择技术方案？下面是个常用思路："
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-074",
+        "question_type": "comparison",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 45,
+            "content_hash": "90e23ec9506a0b6962d01bc0c7b9796905e5bda95e6c941b11b0bcc95e42ad6a",
+            "page_start": 23,
+            "page_end": 25,
+            "section": "5、大模型应用场景介绍 / 5.3 大模型应用开发的4个场景"
+          }
+        ]
+      }
+    },
+    {
+      "query": "一个需求是补充领域知识，另一个需求是连接外部系统执行函数，课件分别对应哪两种应用方式？",
+      "ground_truth": "补充领域知识对应 RAG，通过检索资料增强回答；连接外部系统执行函数对应 Agent + Function Calling，由 AI 提出函数执行需求。",
+      "reference_contexts": [
+        "章节：5、大模型应用场景介绍 / 5.3 大模型应用开发的4个场景\n5.3 大模型应用开发的4个场景\n\n场景1：纯 Prompt\n\nPrompt是操作大模型的唯一接口\n\n当人看：你说一句，ta回一句，你再说一句，ta再回一句...\n\n场景2：Agent + Function Calling\n\nAgent：AI 主动提要求\n\nFunction Calling：需要对接外部系统时，AI 要求执行某个函数\n\n当人看：你问 ta「我明天去杭州出差，要带伞吗？」，ta 让你先看天气预报，你看了告诉ta，ta\n\n再告诉你要不要带伞\n\n场景3：RAG (Retrieval-Augmented Generation)\n\nRAG：需要补充领域知识时使用\n\nEmbeddings：把文字转换为更易于相似度计算的编码。这种编码叫向量\n\n向量数据库：把向量存起来，方便查找\n\n向量搜索：根据输入向量，找到最相似的向量\n\n举例：考试答题时，到书上找相关内容，再结合题目组成答案\n\n这个在智能客服上用的最广泛。\n\n场景4：Fine-tuning(精调/微调)\n\n举例：努力学习考试内容，长期记住，活学活用。\n\n特点：成本最高；在前面的方式解决不了问题的情况下，再使用。\n\n如何选择相关技术\n\n面对一个需求，如何开始，如何选择技术方案？下面是个常用思路："
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-075",
+        "question_type": "comparison",
+        "difficulty": "medium",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 45,
+            "content_hash": "90e23ec9506a0b6962d01bc0c7b9796905e5bda95e6c941b11b0bcc95e42ad6a",
+            "page_start": 23,
+            "page_end": 25,
+            "section": "5、大模型应用场景介绍 / 5.3 大模型应用开发的4个场景"
+          }
+        ]
+      }
+    },
+    {
+      "query": "根据课件，Tool Use 和 Action 各强调什么，为什么智能体既需要工具也需要行动？",
+      "ground_truth": "Tool Use 强调调用 API、数据库等外部工具来扩展能力边界；Action 强调把决策真正执行出来，例如订票或物理交互。智能体不应只停留在计划或建议，还要利用可用能力完成操作。",
+      "reference_contexts": [
+        "3、工具使用（Tool Use）：调用外部工具（如API、数据库）扩展能力边界。\n\n大模型(比如：DeepSeek)\n调用工具\n\n4、记忆（Memory）\n\n智能体像人类一样，能留存学到的知识以及交互习惯等，这样的机制能让智能体在处理重复工作时\n\n调用以前的经验，从而避免用户进行大量重复交互。\n\n短期记忆：存储单次对话周期的上下文信息，属于临时信息存储机制。受限于模型的上下文窗口长\n\n度。",
+        "5、行动（Action）：实际执行决策的模块，涵盖软件接口操作（如自动订票）和物理交互（如机器人\n\n执行搬运）。比如：检索、推理、编程等。\n\n智能体会形成完整的计划流程。例如先读取以前工作的经验和记忆，之后规划子目标并使用相应工\n\n具去处理问题，最后输出给用户并完成反思。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-076",
+        "question_type": "multi_section",
+        "difficulty": "hard",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 43,
+            "content_hash": "00f355bb51bea5993af82f845f128a52ed844b4e01a03aa381c2b980ef341031",
+            "page_start": 21,
+            "page_end": 22,
+            "section": "5、大模型应用场景介绍 / 5.2 Agent开发"
+          },
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 44,
+            "content_hash": "f4a3faec11ce7bc5dbfb952dec6a68205d6595211ef99e39d2472ccbe8647689",
+            "page_start": 22,
+            "page_end": 23,
+            "section": "5、大模型应用场景介绍 / 5.2 Agent开发"
+          }
+        ]
+      }
+    },
+    {
+      "query": "我需要统一模型调用、控制复杂有状态流程，还希望自动拆分任务给子智能体。课件中的三层分别如何分工？",
+      "ground_truth": "LangChain 提供统一模型抽象及工具等基础能力；LangGraph 负责多步骤、有状态工作流的执行与编排；Deep Agent 在二者之上提供规划、子智能体和其他高级执行能力。三者可以协同使用。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱 / 3.1 LangChain：智能体开发的基石\n3.1 LangChain：智能体开发的基石\n\nLangChain 是整个生态的核心与起点，为开发者提供了模型调用、工具与中间件集成、智能体构建等一\n\n整套基础能力。\n\n其核心价值如下：\n\n统一的模型抽象层：屏蔽了不同模型服务提供商（如OpenAI、Anthropic、Ollama 等）的接口\n\n差异，提供一致的调用方式。\n\n高度模块化的设计：使用 Message、Tool、Agent、Middleware 等组件实现灵活的组合与扩\n\n展。\n\n丰富的集成生态：预置了丰富的数据源、API、中间件等，构成了强大的AI能力枢纽。\n\n在整体架构中，LangChain 如同智能体的操作系统内核，是所有上层能力构建的基础。\n\n结论：如果你需要构建简单的智能体应用，无需复杂的编排需求，那就选择LangChain。",
+        "章节：3、LangChain家族四大支柱 / 3.2 LangGraph：复杂工作流的编排引擎\n3.2 LangGraph：复杂工作流的编排引擎\n\n当智能体的任务从单一指令执行扩展为多步骤、有状态的复杂工作流时，LangGraph应运而生。\n\n其核心思想是将智能体内部抽象为一张有向图。\n\n节点（Node）：代表独立的功能单元或决策点。\n\n边（Edge）：定义了节点之间的流转条件与路径。\n\n状态（State）：作为一个共享上下文，在节点间传递并持久化存储任务信息。\n\n通过这种图式结构，LangGraph 让智能体的工作流节点交互变得显式、可控、可观测。\n\n官方也强调“快速起步用 LangChain，复杂控制用 LangGraph，二者并行协同”。\n\n通俗理解：\n\nLangChain = 能力抽象层（LLM / Tool / Message 标准化），负责“有什么能力”\n\nLangGraph = 执行与编排层（状态机 / 工作流 / 多Agent系统），负责“怎么跑”",
+        "章节：3、LangChain家族四大支柱 / 3.3 Deep Agent：智能体的执行框架\n3.3 Deep Agent：智能体的执行框架\n\nDeep Agent 是新推出的全新组件，被定位为 Agent Harness（智能体执行框架）。它构建于\n\nLangChain 与LangGraph 之上，增加了规划能力、文件系统、子 Agent 等高级功能。旨在让开发者\n\n无须从零构建复杂的控制逻辑，即可创建具备深度规划、长期记忆与多专家协作能力的智能体。\n\nDeep Agent 的核心能力如下：\n\n显式规划：自主生成、执行并动态调整多步任务计划。\n\n虚拟文件系统：为智能体提供结构化的中间结果与知识存储。\n\n子智能体：支持任务在多个智能体之间的分解与协作。\n\n长期记忆：通过与 LangGraph 状态存储的结合，实现跨对话的经验积累。\n\n可扩展中间件：允许嵌入安全审计、性能监控或自定义业务逻辑。",
+        "章节：3、LangChain家族四大支柱 / 3.4 三者的关系\n3.4 三者的关系\n\n官方文档（三者对比）：https://docs.langchain.com/oss/python/langchain/overview\n\n三个框架不是竞争关系，并非互斥，复杂项目完全可以同时用到这三层。\n\n基于LLM的应用开发体系图：\n\n从 LangChain 快速搭建，用 LangGraph 打磨生产稳定性，再用 Deep Agents 赋予 Agent 更强的自主\n\n能力——这才是完整的 LangChain 生态玩法。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-077",
+        "question_type": "multi_section",
+        "difficulty": "hard",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 14,
+            "content_hash": "b4ca82b87f4e213d6eab1696bec57f4a8635b9401cdcee15528fcf775333dac4",
+            "page_start": 9,
+            "page_end": 9,
+            "section": "3、LangChain家族四大支柱 / 3.1 LangChain：智能体开发的基石"
+          },
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 15,
+            "content_hash": "074225b9c6f37aeb2a864f15b35f5af412a973de0ab2395eb1ca69e7b1b6c085",
+            "page_start": 9,
+            "page_end": 10,
+            "section": "3、LangChain家族四大支柱 / 3.2 LangGraph：复杂工作流的编排引擎"
+          },
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 16,
+            "content_hash": "5afcee33ea0a26ad14315eb745e1808e2706853d4ba08155f3aa9fd1da214dd6",
+            "page_start": 10,
+            "page_end": 10,
+            "section": "3、LangChain家族四大支柱 / 3.3 Deep Agent：智能体的执行框架"
+          },
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 17,
+            "content_hash": "af7740c42b34e51c33a9d0477cdef30310d5d9f1459ce19bf258d2be90acafca",
+            "page_start": 10,
+            "page_end": 11,
+            "section": "3、LangChain家族四大支柱 / 3.4 三者的关系"
+          }
+        ]
+      }
+    },
+    {
+      "query": "已经用 LangChain、LangGraph 和 Deep Agent 搭好系统，但还想看清调用链并量化质量，应该补哪一层？",
+      "ground_truth": "补上 LangSmith 的监控与评估层，用于可视化追踪模型和工具调用，发现异常及性能瓶颈，并开展人工和自动化评测。",
+      "reference_contexts": [
+        "章节：3、LangChain家族四大支柱\n3、LangChain家族四大支柱\n\n截至2025年11月，LangChain 已从一个独立的开发框架，成长为一个覆盖智能体系统全生命周期的技术\n\n生态。该生态由四大核心支柱构成：LangChain 、LangGraph 、Deep Agent 与LangSmith 。\n\n它们分别对应基础能力层、运行时编排层、智能体抽象层、监控与评估层，共同构建了一个从技术验证\n\n到生产部署、从单体智能到复杂协作的项目闭环。\n\n官方文档的解释：\n\nhttps://docs.LangChain.com/oss/python/concepts/products",
+        "章节：3、LangChain家族四大支柱 / 3.5 LangSmith：可视化监控与测试平台\n3.5 LangSmith：可视化监控与测试平台\n\n当智能体系统逐渐复杂时，单靠日志与打印输出（print）调试已无法满足调试与质量管理的需求。\n\nLangSmith 是 LangChain 官方推出的可视化监控与测试平台，用于跟踪、记录和分析智能体在运行过\n\n程中的完整调用链路，让智能体的内部运行过程变得透明和可评估。\n\nLangSmith 的核心目标如下：\n\n全链路追踪：可视化追踪模型调用、提示词输入、结果输出、工具使用等行为。\n\n调试与优化：发现运行中智能体的异常行为与性能瓶颈。\n\n评测与质量控制：支持人工与自动化评测，量化智能体表现。\n\n团队协作：支持多人共享测试集与调用记录。\n\nLangSmith官网：https://www.langchain.com/langsmith\n\nLangSmith 的引入使得智能体的开发、调试与运维形成了完整的质量闭环。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-078",
+        "question_type": "multi_section",
+        "difficulty": "hard",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 13,
+            "content_hash": "784b767497611d94bac6327dbda5c916ba1312f9aec9124770786de36c7276c1",
+            "page_start": 9,
+            "page_end": 9,
+            "section": "3、LangChain家族四大支柱"
+          },
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 18,
+            "content_hash": "8fdeabc9d5870fd5451a9c961ac17d6a010524a182951bfaa26da3427d29d501",
+            "page_start": 12,
+            "page_end": 12,
+            "section": "3、LangChain家族四大支柱 / 3.5 LangSmith：可视化监控与测试平台"
+          }
+        ]
+      }
+    },
+    {
+      "query": "同一个 AI 项目，基础依赖有 CUDA，应用层又需要纯 Python 包时，如何结合课件的 conda、uv、pip 建议选择环境方案？",
+      "ground_truth": "涉及 CUDA 等非 Python 底层依赖时，优先选择能管理这类依赖的 conda；在该环境中先用 conda 安装底层依赖，再用 pip 补充 Python 包。uv 更适合以纯 Python 生态依赖为主的应用层项目，不能替代 conda 管理 CUDA 等通用非 Python 依赖。",
+      "reference_contexts": [
+        "章节：4、开发前的准备工作 / 4.2 相关环境安装 / 4.2.1 代码管理方案\n4.2.1 代码管理方案\n\n相较于全局环境（系统环境），各个虚拟环境都有自己独立的一套：Python 解释器、pip 命令、第\n\n三方依赖包，不和其它项目产生干扰。\n\n虚拟环境的设置方案：\n\n方案1-使用conda：适合“Python + 非 Python 依赖”的复杂环境\n\nconda 不只是 Python 包管理工具，它还可以管理 Python 解释器、Python 包，以及很多非 Python 依\n\n赖，比如：CUDA、编译器、系统库、数据库驱动、科学计算底层库等非 Python 依赖。\n\n因此在数据科学、深度学习、AI 工程、科学计算等场景中，conda 更稳妥、优先推荐。\n\n注意：conda 环境中可以使用 pip，但建议先用 conda 装底层依赖，再用 pip 补充 Python 包，不要\n\n随意反复交替使用。\n\n本套课程的选择。\n\n方案2-使用uv：适合“纯 Python 项目”的现代包管理\n\nuv 是一个现代 Python 包管理工具，主要管理 Python 生态依赖，不能像 conda 那样管理 CUDA、系\n\n统级数据库驱动、编译器这类通用非 Python 依赖。\n\n如果项目主要是普通 Python 开发，这类项目通常可以优先考虑 uv。例如：\n\nFastAPI 项目\n\n1\n\nLangChain 项目\n\n2\n\n脚本工具\n\n3\n\nWeb 后端\n\n4\n\n普通 AI Agent 应用\n\n5\n\nRAG 应用层代码\n\n6\n\n方案3-使用venv：Python 自带的轻量级虚拟环境工具\n\nvenv 是 Python 官方自带的虚拟环境工具，不需要额外安装。\n\n它的特点是简单、轻量：\n\npython -m venv .venv\n1",
+        "章节：4、开发前的准备工作 / 4.2 相关环境安装 / 4.2.1 代码管理方案\nvenv 是 Python 官方自带的虚拟环境工具，不需要额外安装。\n\n它的特点是简单、轻量：\n\npython -m venv .venv\n1\n\n注意： venv 不负责安装新的 Python 解释器，只能基于当前已经安装好的 Python 解释器创建虚拟环\n\n境。同时，venv 也不负责管理 CUDA、系统库等非 Python 依赖。\n\n三者对比：\n\n工具\n管理 Python 解释\n\n器\n\n管理\n\n管理非\n\nPython\n\nPython 依\n\n适合场景\n\n包\n\n赖\n\nconda\n✅可以\n✅可以\n✅可以\nAI、深度学习、科学计算、复杂底\n\n层依赖(C/C++，CUDA)\n\nuv\n✅可以\n✅可以\n❌不可以\n纯 Python 项目、Web、Agent、\n\nRAG 应用层\n\nvenv\n不支持原生安装，\n\n基于已有解释器\n✅可以\n❌不可以\n简单项目、教学演示、轻量隔离\n\n对于LangChain这样的纯Python环境，可以用uv，也可以用conda。本套课程选择使用conda。\n\n安装conda环境，见《02资料\\尚硅谷-conda使用指南.md》\n\n普通 Python 项目：可以用 uv，速度快，体验好。",
+        "章节：# 查看已安装包\n# 查看已安装包\n\n15\n\n16\n\npip list\n\n建议：优先 conda install，conda没有，再用pip install。\n\n二者区别：\n\nconda依赖检查严格，pip相对宽松；\n\nconda 管环境 + 依赖 + 稳定性，pip 只管Python 包；\n\nconda：支持Python 包 + 非 Python 包；pip：只支持 Python 包。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-079",
+        "question_type": "multi_section",
+        "difficulty": "hard",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 22,
+            "content_hash": "9f1e03d364e8903b7c70675182d1d338090d24fc1a351c4ff4545edd9e64549c",
+            "page_start": 13,
+            "page_end": 14,
+            "section": "4、开发前的准备工作 / 4.2 相关环境安装 / 4.2.1 代码管理方案"
+          },
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 23,
+            "content_hash": "a4ed4b9c9db95e05f1307e4b97875a2c24562269a3e318df4945c5b0d5533ec4",
+            "page_start": 14,
+            "page_end": 14,
+            "section": "4、开发前的准备工作 / 4.2 相关环境安装 / 4.2.1 代码管理方案"
+          },
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 36,
+            "content_hash": "cf9a8349589324d43a4dc5270319102ef459976927c1eb6c29dd892b2d90a657",
+            "page_start": 16,
+            "page_end": 16,
+            "section": "# 查看已安装包"
+          }
+        ]
+      }
+    },
+    {
+      "query": "如果智能体既要查私有教材回答问题，又要实际调用订票接口，为什么单靠 RAG 或单靠纯聊天都不完整？",
+      "ground_truth": "私有教材问答需要检索领域资料，属于 RAG 的知识补充能力；实际订票需要 Agent 的规划与外部工具调用。纯聊天只进行提示词交互，而 RAG 本身主要补充知识，完整需求应结合检索与工具执行能力。",
+      "reference_contexts": [
+        "章节：第01章：LangChain 1.2 概述 / 1.4 LangChain的应用场景\n1.4 LangChain的应用场景\n\n1. 检索增强生成 (RAG)\n\n痛点： 解决大模型知识滞后（无实时数据）和幻觉问题。\n\n功能： 检索外部知识库（文档/数据库）并向量化，让模型基于最新、最相关的资料回答。\n\n2. Agent 智能体构建\n\n痛点： 解决 LLM 无法直接执行复杂任务的问题。\n\n功能： 将模型作为“推理引擎”，自主规划路径并动态调用外部工具（如订票、查报告、写 SQL），\n\n实现复杂任务。\n\n3. 对话系统与聊天机器人\n\n痛点： 解决多轮对话中的“记忆”流失问题。\n\n功能： 集成记忆管理系统，记住用户偏好和历史交互，并结合私有数据（如教育教材、订单库）提\n\n供专业服务。\n\n4. 多模态应用开发\n\n痛点： 跨越单一文本交互的限制。\n\n功能： 融合图像识别、语音转文字等技术，让模型具备处理音视频和图片的综合推理能力。\n\n5. 自动化写作与格式化生成\n\n痛点： 解决生成内容格式不标准、质量不稳定的问题。\n\n功能： 配合提示词模板（Templates）与输出解析器（Parsers），自动产出规范的报告、合同或\n\n邮件。\n\n6. 数据连接与结构化处理\n\n痛点： 解决非结构化数据难以被模型直接利用的问题。\n\n功能： 强大的数据连接能力使大模型能够与各种数据源和结构化数据交互。比如，从 PDF、Excel\n\n中提取关键信息，或实现自然语言与 SQL 的自动转换。",
+        "章节：5、大模型应用场景介绍 / 5.3 大模型应用开发的4个场景\n5.3 大模型应用开发的4个场景\n\n场景1：纯 Prompt\n\nPrompt是操作大模型的唯一接口\n\n当人看：你说一句，ta回一句，你再说一句，ta再回一句...\n\n场景2：Agent + Function Calling\n\nAgent：AI 主动提要求\n\nFunction Calling：需要对接外部系统时，AI 要求执行某个函数\n\n当人看：你问 ta「我明天去杭州出差，要带伞吗？」，ta 让你先看天气预报，你看了告诉ta，ta\n\n再告诉你要不要带伞\n\n场景3：RAG (Retrieval-Augmented Generation)\n\nRAG：需要补充领域知识时使用\n\nEmbeddings：把文字转换为更易于相似度计算的编码。这种编码叫向量\n\n向量数据库：把向量存起来，方便查找\n\n向量搜索：根据输入向量，找到最相似的向量\n\n举例：考试答题时，到书上找相关内容，再结合题目组成答案\n\n这个在智能客服上用的最广泛。\n\n场景4：Fine-tuning(精调/微调)\n\n举例：努力学习考试内容，长期记住，活学活用。\n\n特点：成本最高；在前面的方式解决不了问题的情况下，再使用。\n\n如何选择相关技术\n\n面对一个需求，如何开始，如何选择技术方案？下面是个常用思路：",
+        "Agent = LLM + Planning +  Tools + Memory + Action\n\n比如，打车到西藏玩。\n\n大脑中枢：规划行程的你\n\n规划：步骤1：规划打车路线，步骤2：订饭店、酒店，。。。\n\n调用工具：调用MCP或FunctionCalling等API，滴滴打车、携程、美团订酒店饭店\n\n记忆能力：沟通时，要知道上下文。比如订酒店得知道是西藏路上的酒店，不能聊着聊着忘了最初\n\n的目的。\n\n能够执行上述操作。说走就走，不能纸上谈兵。\n\n智能体核心要素被细化为以下模块：\n\n1、大模型（LLM）作为“大脑”：提供推理、规划和知识理解能力，是AI Agent的决策中枢。\n\n大脑主要由一个大型语言模型 LLM 组成，承担着信息处理和决策等功能， 并可以呈现推理和规划\n\n的过程，能很好地应对未知任务。\n\n2、规划决策（Planning）：通过任务分解、反思与自省框架实现复杂任务处理。例如，利用思维链\n\n（Chain of Thought）将目标拆解为子任务，并通过反馈优化策略。"
+      ],
+      "document_type": "knowledge",
+      "metadata": {
+        "case_id": "lc12-hybrid-080",
+        "question_type": "multi_section",
+        "difficulty": "hard",
+        "answer_basis": "仅以指定课件解析正文为依据，不补充外部知识",
+        "sources": [
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 4,
+            "content_hash": "cd3b17a30f160456e59d26b5ead5ce1922e33eaf193a9109149bb8e8a60426ef",
+            "page_start": 2,
+            "page_end": 3,
+            "section": "第01章：LangChain 1.2 概述 / 1.4 LangChain的应用场景"
+          },
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 45,
+            "content_hash": "90e23ec9506a0b6962d01bc0c7b9796905e5bda95e6c941b11b0bcc95e42ad6a",
+            "page_start": 23,
+            "page_end": 25,
+            "section": "5、大模型应用场景介绍 / 5.3 大模型应用开发的4个场景"
+          },
+          {
+            "filename": "尚硅谷-01-LangChain概述.pdf",
+            "source_export": "backend/text2.json",
+            "source_export_sha256": "4cfe83daba612b37c2738c65ca0779a1b255783a4dc2af19c43270ee948bb161",
+            "export_chunk_index": 42,
+            "content_hash": "01eb0d1d946e5a8767392a6bf318672ae9cc30a3843cbbfb5c460e655dec68da",
+            "page_start": 20,
+            "page_end": 21,
+            "section": "5、大模型应用场景介绍 / 5.2 Agent开发"
+          }
+        ]
+      }
+    }
+  ]
+}

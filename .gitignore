@@ -12,3 +12,7 @@ __pycache__/
 .idea/
 .DS_Store
 backend/models/
+
+# 本地运行时产物
+.local/
+backend/evaluation_reports/*.html

@@ -2,15 +2,38 @@
 
 基于 LangGraph Multi-Agent 与 RAG 的智能求职辅助平台：简历与岗位多维匹配、工具增强型 RAG 智能对话（联网搜索 + 百度地图）、面试真题预测、定制学习计划，并内置管理员专属的 RAG 评测模块。
 
+当前使用积分制：初始赠送 100 分，每日签到领取 10 分；模型输入与输出每 1000 Token 消耗 1 分，
+按 0.001 分累计。调用前预留，结束后按用量结算；缓存命中的步骤不重复扣分。
+积分余额、签到和流水由后端 PostgreSQL 校验，管理员同样扣分。
+
+`KNOWLEDGE_PROVIDER=credits` 时，用户可自行选择 ima 与本地关键词检索，或
+Milvus + BM25 + RRF + BGE 重排，不再依赖订阅等级。默认使用 ima；切换混合检索后
+旧文件会后台建立索引，Embedding 用量计入文件所有者积分。
+规则与部署见 [积分和检索配置](docs/subscriptions.md)，ima 配置见 [ima 接入说明](docs/ima.md)。
+cpolar 内网穿透与公网登录见 [同域网关启动说明](deploy/gateway/README.md)。
+也支持固定 `milvus` / `ima` 部署模式；历史订阅记录保留用于审计，主应用不再开放订阅修改接口。
+
 ## 功能总览
+
+本机已有 `career-agent` 环境和项目 Docker 容器时，可以在项目根目录执行：
+
+```bash
+./start.sh
+```
+
+也可在 macOS Finder 中双击 `start.command`。启动器依次检查 Docker 和容器、沙箱、前端、网关，
+自动复用或取得 cpolar 公网地址，更新登录允许列表和小程序开发地址，再启动后端，完成后输出访问地址。
+查看状态用 `./start.sh status`，停止脚本管理的服务用 `./start.sh stop`。
+完整选项、日志和首次准备要求见 [一键启动说明](deploy/LOCAL_START.md)。
 
 | 页面 | 说明 |
 |------|------|
 | 智能对话 | 工具增强型 ReAct Agent：受限联网搜索 + 百度地图（定位 / POI 检索 / 路线规划 / 天气 / 通勤矩阵），流式回答并展示工具调用进度 |
-| 知识库 | 文档上传（PDF / DOCX / XLSX / TXT / MD）、沙箱解析、切块、向量化入库；多路混合检索验证（管理员） |
+| 知识库 | 文档上传（PDF / DOCX / XLSX / TXT / MD）、沙箱解析、切块、向量化入库；用户自行选择检索方式 |
 | 岗位匹配 | 并发分析简历和 JD，五维加权打分；校验异常时标注未复核并继续展示，已确认未解决的问题转人工；支持删除历史记录 |
 | 面试准备 | 基于匹配任务的岗位要求与能力缺口，生成专属面试预测题与要点 |
 | 学习计划 | 基于匹配任务中的缺失技能，定制分周学习路径 |
+| 我的积分 | 签到、余额与逐次 Token 消耗明细 |
 | 评测（管理员） | RAG 检索与回答质量的 A/B 对比评测，自动生成 HTML 报告 |
 
 ## 系统架构
@@ -24,7 +47,8 @@ FastAPI 后端 :8000 ──── Redis（分析缓存）
         ├── PostgreSQL      业务数据、会话、LangGraph 检查点
         ├── MinIO           原始文档存储
         ├── Milvus + BM25   向量 + 倒排双索引
-        ├── 阿里云百炼       对话 / 向量化 / OCR
+        ├── 阿里云百炼       对话 / 向量化
+        ├── 小米 MiMo       文档 OCR（独立接口与凭证）
         └── 百度地图 MCP     定位 / POI / 路线 / 天气（远程 Streamable HTTP）
 
 安全沙箱：沙箱 Runner（持有 Docker 权限，Unix socket 通信）
@@ -50,7 +74,9 @@ MCP 工具按信任等级分两条接入路径：
   这属于向量计算复用，不是 PDF/DOCX 的二进制增量解析。
 - **PDF 阅读顺序**：根据文本块坐标做递归空白分割，优先按栏阅读，并分隔跨栏标题；
   模糊或重叠版面回退到几何顺序，低质量文本继续走 OCR。复杂表格、无明显栏间空白等版面
-  不保证正确恢复；当前解析版本为 `structure-v4-markdown`。
+  不保证正确恢复；当前解析版本为 `structure-v5-pdf-headings`。
+  PDF 的章节编号、常见章节名和相对较大的短标题会标记为 `heading`，正文为 `paragraph`，
+  章节路径跨页保留。标题识别采用规则与字号启发式，不代表完整的表格、代码或版式识别。
 - **Markdown 上传**：支持 `.md`，识别 `#` 标题及下划线式标题，按标题层级记录章节路径；
   保留列表、表格和行内标记原文，围栏代码块中的标题符号不参与章节识别。
   接入现有父子分块、缓存与向量入库流程，不执行文档代码、不渲染 HTML，也不下载远程图片。
@@ -204,7 +230,11 @@ streamlit run app.py
 | `EVALUATION_METRIC_MAX_CALLS` | 每个样本四项指标合计的 LLM 调用上限，管理员也生效 | 16 |
 | `EVALUATION_METRIC_MAX_OUTPUT_TOKENS` | 每次指标 LLM 调用输出上限 | 2048 |
 | `UPLOAD_TOTAL_TIMEOUT` | 上传解析总耗时上限（秒） | 600 |
-| `BAILIAN_OCR_MODEL` | 文档 OCR 使用的视觉模型 | qwen-vl-ocr-latest |
+| `OCR_PROVIDER` | 文档 OCR 服务；bailian 或 mimo，旧部署默认 bailian | mimo |
+| `MIMO_BASE_URL` | 小米 OpenAI 兼容接口 | https://api.xiaomimimo.com/v1 |
+| `MIMO_OCR_MODEL` | 小米 OCR 使用的视觉模型，关闭深度思考 | mimo-v2.6-flash |
+| `MIMO_API_KEY` | 小米密钥，仅保存在后端 .env，不传入沙箱 | 见 .env |
+| `BAILIAN_OCR_MODEL` | OCR_PROVIDER=bailian 时使用 | qwen-vl-ocr-2025-11-20 |
 | `BAIDU_MAP_MCP_URL` | 百度地图 MCP 接入地址（含 AK），留空则不加载 | 见 .env |
 | `CHUNK_SIZE` / `CHUNK_OVERLAP` | 切块长度与重叠 | 800 / 100 |
 | `EMBED_CACHE_TTL` | Embedding 向量缓存时长（秒） | 604800（7 天） |
@@ -212,6 +242,14 @@ streamlit run app.py
 | `LOG_LEVEL` | 日志级别 | INFO |
 | `LOG_JSON` | 切换单行 JSON 日志 | false |
 | `LOG_ACCESS_ENABLED` | 记录访问日志 | true |
+
+OCR 切换到小米时，在 `backend/.env` 设置 `OCR_PROVIDER=mimo`、`MIMO_API_KEY`、
+`MIMO_BASE_URL=https://api.xiaomimimo.com/v1` 和 `MIMO_OCR_MODEL=mimo-v2.6-flash`，
+重启后端生效。对话、摘要和岗位匹配继续使用各自的百炼配置。
+沙箱仅渲染文档页，后端把页面通过 Base64 交给 OCR；密钥不传入容器，无需重建沙箱镜像。
+MiMo OCR 关闭深度思考，并继续受全局模型输出、调用次数及上传总耗时预算约束；
+输出被截断时会明确报错，避免把残缺页面当成完整文档保存。
+接口说明见[小米图片理解文档](https://mimo.mi.com/docs/en-US/quick-start/usage-guide/multimodal-understanding/image-understanding)。
 
 ## 缓存与状态存储
 
@@ -279,6 +317,18 @@ AIRBench-zh 略优约 3%。**代码检索能力两者都支持**，换 flash 不
 - flash 版维度上限是 1024，配成 1536+ 会在启动时报错（已加校验）。
 
 ## 已知边界
+
+- 对话新增服务端意图识别：明确需求先走规则，模糊请求最多调用一次分类模型（默认复用对话模型，最多等待 3 秒）。
+  `CHAT_INTENT_LLM_ENABLED` 可关闭模型补充分支，`CHAT_INTENT_MODEL` 可指定分类模型，
+  `CHAT_INTENT_TIMEOUT` 控制分类耗时。业务意图和风险标签分开记录在消息现有 `meta_data.intent_analysis` 中，
+  无需数据库迁移或新增前端输入；客户端不能提交或覆盖分类结果。流式回复的首个 SSE 数据帧及非流式响应带有
+  `intent_analysis`，聊天界面不展示这些内部标签。
+- 意图标签只帮助组织回答，不触发岗位匹配任务、不授予权限。明确的系统提示/凭证提取、跨用户读取请求返回固定说明，
+  并从后续模型历史和摘要中排除；规则覆盖或分类故障时，本轮仅普通回答、不提供工具。
+  自伤危机信号使用固定支持性回应，建议联系身边可信任的人及必要的当地紧急服务，不编造热线或执行联网搜索。
+  该路由器只是常见风险的第一道识别，不是完整内容审核、所有越狱攻击的防线或专业临床危机评估，
+  不替代服务端归属校验、工具参数外发检查和输出审核。支持性回应参考
+  [WHO 关于自杀危机支持的说明](https://www.who.int/news-room/questions-and-answers/item/suicide)。
 
 - 图片内绘制的文字（非页面文字层）不会进入知识库，OCR 不可靠的图片页将跳过并占位
 - IP 定位仅精确到城市级别；知识库覆盖范围内的地点与路线查询不受影响

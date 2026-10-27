@@ -212,7 +212,7 @@ class DocumentLabelTests(unittest.TestCase):
         )
 
         self.assertIn("简历", label)
-        self.assertIn("ready", label)
+        self.assertNotIn("ready", label)
 
     def test_unknown_type_falls_back_to_raw(self):
         label = document_label(
@@ -266,7 +266,7 @@ class ConfigCompletenessTests(unittest.TestCase):
         self.assertTrue(all(DOCUMENT_TYPE_NAMES.values()))
 
     def test_search_modes_cover_endpoints(self):
-        self.assertEqual(set(SEARCH_MODE_NAMES), {"hybrid", "dense", "bm25"})
+        self.assertEqual(set(SEARCH_MODE_NAMES), {"hybrid", "dense", "bm25", "ima"})
 
     def test_difficulty_levels(self):
         self.assertEqual(set(DIFFICULTY_NAMES), {"junior", "intermediate", "senior"})

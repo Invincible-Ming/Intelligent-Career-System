@@ -9,10 +9,11 @@ import io
 import math
 import re
 import zipfile
+from collections import Counter
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass, replace
 
-PIPELINE_VERSION = "structure-v4-markdown"
+PIPELINE_VERSION = "structure-v5-pdf-headings"
 
 
 @dataclass
@@ -25,20 +26,33 @@ class Block:
     kind: str = "paragraph"
 
 
+def heading_level(text: str) -> int | None:
+    """Conservative textual heading rules, including Chinese course chapters."""
+    text = text.strip()
+    if not text or len(text) > 100 or "\n" in text:
+        return None
+    markdown = re.match(r"^(#{1,6})\s+\S", text)
+    if markdown:
+        return len(markdown[1])
+    if not re.search(r"[。！？!?；;]", text):
+        chapter = re.match(r"^第[零〇一二三四五六七八九十百千两\d]+([章节篇部])\s*[：:、.．-]?\s*\S", text)
+        if chapter:
+            return 2 if chapter[1] == "节" else 1
+        numbered = re.match(r"^(\d{1,2}(?:[.．]\d{1,2}){1,4})(?:[ \t：:、]+|(?=[\u4e00-\u9fff]))([^\d\W].*)$", text)
+        if numbered:
+            return min(6, len(re.split(r"[.．]", numbered[1])))
+    if len(text) < 60 and re.match(
+        r"^(教育背景|教育经历|工作经历|实习经历|项目经历|项目经验|专业技能|技能清单|"
+        r"个人技能|自我评价|岗位职责|工作职责|任职要求|岗位要求|加分项|福利待遇|"
+        r"项目名称|公司名称|项目[：:]|Education\b|Experience\b|Skills\b|Projects\b|Requirements\b)",
+        text, re.I,
+    ):
+        return 1
+    return None
+
+
 def is_heading(text: str) -> bool:
-    return bool(
-        re.match(r"^#{1,6}\s+", text)
-        or (
-            len(text) < 60
-            and re.match(
-                r"^(教育背景|教育经历|工作经历|实习经历|项目经历|项目经验|专业技能|技能清单|"
-                r"个人技能|自我评价|岗位职责|工作职责|任职要求|岗位要求|加分项|福利待遇|"
-                r"项目名称|公司名称|项目[：:]|Education\b|Experience\b|Skills\b|Projects\b|Requirements\b)",
-                text,
-                re.I,
-            )
-        )
-    )
+    return heading_level(text) is not None
 
 
 def page_needs_ocr(text: str, has_images: bool) -> bool:
@@ -103,6 +117,80 @@ def order_pdf_blocks(raw: list, page_width: float) -> list:
     return split(blocks)
 
 
+def pdf_text_layout(page) -> tuple[list[list[tuple[str, float]]], float]:
+    """Extract ordered text lines and font sizes without copying image payloads."""
+    import pymupdf as fitz
+
+    layout = page.get_text("dict", sort=False, flags=fitz.TEXTFLAGS_DICT & ~fitz.TEXT_PRESERVE_IMAGES)
+    raw, line_groups = [], {}
+    font_weights: Counter[float] = Counter()
+    for index, block in enumerate(layout.get("blocks", [])):
+        if block.get("type") != 0:
+            continue
+        lines = []
+        for line in block.get("lines", []):
+            spans = line.get("spans", [])
+            text = "".join(span.get("text", "") for span in spans).strip()
+            if not text:
+                continue
+            weights: Counter[float] = Counter()
+            for span in spans:
+                size = round(float(span.get("size", 0)), 1)
+                if not math.isfinite(size) or size <= 0:
+                    continue
+                weight = len(span.get("text", "").strip())
+                weights[size] += weight
+                font_weights[size] += weight
+            size = max(sorted(weights), key=weights.get) if weights else 0.0
+            lines.append((text, size))
+        if not lines:
+            continue
+        raw.append((*block["bbox"], "\n".join(text for text, _ in lines), index, 0))
+        line_groups[index] = lines
+    ordered = order_pdf_blocks(raw, page.rect.width)
+    body_size = max(sorted(font_weights), key=font_weights.get) if font_weights else 0.0
+    return [line_groups[block[5]] for block in ordered], body_size
+
+
+def pdf_section_blocks(groups: list[list[tuple[str, float]]], *, page: int,
+                       body_size: float, headings: list[tuple[int, str]]) -> list[Block]:
+    """Persist PDF paragraph/heading kinds and carry chapter paths across pages.
+
+    Numbered/known titles use text rules. Other short, enlarged standalone lines
+    may be headings. This does not claim to recognize PDF tables or code blocks.
+    """
+    out: list[Block] = []
+
+    def section() -> str:
+        return " / ".join(title for _, title in headings)
+
+    def flush(paragraph: list[str]):
+        if paragraph:
+            out.append(Block("\n".join(paragraph), section=section(), page=page))
+            paragraph.clear()
+
+    for group in groups:
+        paragraph: list[str] = []
+
+        for text, size in group:
+            level = heading_level(text)
+            metadata = re.match(r"^(讲师|授课讲师|作者|官网|网址|邮箱|电话|课程来源)[：:]", text)
+            if (level is None and not metadata and 0 < len(text) <= 60
+                    and not re.search(r"[。！？!?；;]|https?://|www\.", text)
+                    and body_size > 0 and size >= max(body_size * 1.25, body_size + 2)):
+                level = 1 if size >= body_size * 1.6 else 2
+            if level is None:
+                paragraph.append(text)
+                continue
+            flush(paragraph)
+            while headings and headings[-1][0] >= level:
+                headings.pop()
+            headings.append((level, text))
+            out.append(Block(text, section=section(), page=page, kind="heading"))
+        flush(paragraph)
+    return out
+
+
 class ParseGuard:
     def __init__(self, max_chars, check_deadline):
         self.max_chars = max_chars
@@ -134,14 +222,14 @@ async def parse_blocks(
         import pymupdf as fitz
 
         blocks = []
+        headings: list[tuple[int, str]] = []
         with fitz.open(stream=data, filetype="pdf") as pdf:
             if len(pdf) > 500:
                 raise ValueError("PDF 页数超限，请拆分文件")
             for number, page in enumerate(pdf, 1):
                 guard.check()
-                raw = await asyncio.to_thread(page.get_text, "blocks", sort=False)
-                ordered = await asyncio.to_thread(order_pdf_blocks, raw, page.rect.width)
-                texts = [b[4].strip() for b in ordered]
+                groups, body_size = await asyncio.to_thread(pdf_text_layout, page)
+                texts = ["\n".join(line for line, _ in group) for group in groups]
                 text = "\n\n".join(texts)
                 if page_needs_ocr(text, bool(page.get_images())):
                     if page.rect.width * page.rect.height * (150 / 72) ** 2 > 20_000_000:
@@ -153,9 +241,11 @@ async def parse_blocks(
                         # 跳过该页并继续，不让单页拖垮整个文档。
                         blocks.append(Block(f"[第 {number} 页为图片页，未提取到可靠文本]", page=number))
                         continue
-                    texts = [p.strip() for p in text.split("\n\n") if p.strip()]
+                    groups = [[(line.strip(), 0.0) for line in part.splitlines() if line.strip()]
+                              for part in text.split("\n\n") if part.strip()]
+                    body_size = 0.0
                 guard.add(text)
-                blocks.extend(Block(t, page=number) for t in texts)
+                blocks.extend(pdf_section_blocks(groups, page=number, body_size=body_size, headings=headings))
         return blocks
     return await asyncio.to_thread(parse_non_pdf, data, extension, guard)
 
@@ -354,6 +444,9 @@ def build_chunks(blocks: list[Block], size: int = 800, overlap: int = 100) -> li
         raise ValueError("要求 size >= 64 且 0 <= overlap < size")
     normalized = []
     for block in blocks:
+        if block.kind == "heading":
+            normalized.append(block)
+            continue
         if block.kind in ("record", "markdown"):
             normalized.append(block)
             continue
@@ -374,13 +467,13 @@ def build_chunks(blocks: list[Block], size: int = 800, overlap: int = 100) -> li
     parents: list[tuple[str, list[Block]]] = []
     section = ""
     for block in blocks:
-        if is_heading(block.text):
+        if block.kind == "heading" or is_heading(block.text):
             section = block.text.strip("# ")
         section = block.section or section
         # Spreadsheet/table rows must not merge into neighbouring records.
         if (
             block.kind == "record"
-            or is_heading(block.text)
+            or block.kind == "heading" or is_heading(block.text)
             or not parents
             or parents[-1][0] != section
             or parents[-1][1][-1].kind == "record"

@@ -105,7 +105,8 @@ class SandboxTests(unittest.IsolatedAsyncioTestCase):
                 self.assertTrue(host["ReadonlyRootfs"])
                 self.assertEqual(host["CapDrop"], ["ALL"])
                 self.assertEqual(info["Mounts"], [])
-                self.assertFalse(any("SECRET" in item or "DASHSCOPE" in item for item in config["Env"]))
+                self.assertFalse(any("SECRET" in item or "DASHSCOPE" in item or "MIMO_API_KEY" in item
+                                     for item in config["Env"]))
                 self.assertFalse(any("docker.sock" in item for item in config["Env"]))
             self.assertEqual(labels, {hashlib.sha256(owner.bytes).hexdigest()[:24] for owner in owners})
             self.assertEqual(Path(settings.SANDBOX_RUNNER_SOCKET).stat().st_mode & 0o777, 0o600)

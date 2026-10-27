@@ -49,9 +49,12 @@ services:
       MQ_TYPE: rocksmq
     volumes:
       - milvus_data:/var/lib/milvus
+    # 只发布到回环地址。Milvus 默认 authorizationEnabled=false，一旦绑定 0.0.0.0，
+    # 同网段任何主机都能绕过 FastAPI 的登录与 owner_id 过滤，直接读写含正文和归属的向量集合。
+    # 后端在本机运行时直接连 127.0.0.1；与后端同网部署时删除 ports 段，走 compose 内部网络。
     ports:
-      - "19530:19530"
-      - "9091:9091"
+      - "127.0.0.1:19530:19530"
+      - "127.0.0.1:9091:9091"
     depends_on:
       - etcd
       - minio

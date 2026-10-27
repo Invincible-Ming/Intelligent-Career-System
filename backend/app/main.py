@@ -21,7 +21,6 @@ import logging
 import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 # ----------------------------------------------------------------------
 # 运行时 SDK 隔离：配置值一律来自 backend/.env（见 config.py），
@@ -39,7 +38,7 @@ os.environ["NO_PROXY"] = "*"
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import JSONResponse
 
 # 导入工作流初始化函数（用于创建 LangGraph Postgres Checkpoint 表）
 from app.agents.workflow import init_workflow
@@ -48,12 +47,15 @@ from app.agents.workflow import init_workflow
 from app.api.api import router as business_router
 from app.api.auth_api import router as auth_router
 from app.api.chat_api import router as chat_router
+from app.api.credits_api import router as credits_router
+from app.api.public_pages import router as public_pages_router
 from app.core.access_log import AccessLogMiddleware
 from app.core.config import settings
 from app.core.database import check_database, close_database, init_database
 from app.core.limits import RequestBodyTooLarge, SecurityLimitsMiddleware
 from app.core.logging_setup import configure_logging, log_event
 from app.evaluation.api import router as evaluation_router
+from app.evaluation.llm import evaluation_llm
 from app.services.analysis_cache import analysis_cache
 
 # 导入底层依赖服务
@@ -61,10 +63,14 @@ from app.services.bailian import bailian_service
 from app.services.bm25_service import bm25_service
 from app.services.embed_cache import embed_cache
 from app.services.experiment_store import experiment_store
+from app.services.ima_service import ImaUnavailable, ima_service
+from app.services.knowledge_index import knowledge_index_service
 from app.services.mcp_tools import mcp_service
 from app.services.milvus_service import milvus_service
 from app.services.minio_service import minio_service
 from app.services.redis_pool import close_pool, warm_up_redis_pool
+from app.services.mobile_jobs import close_mobile_jobs
+from app.api.mobile_api import router as mobile_router
 from app.services.sandbox_client import check_runner
 
 # ----------------------------------------------------------------------
@@ -131,7 +137,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # TimeoutError 并产生大量无谓的「缓存不可用」告警。
     await warm_up_redis_pool()
     await analysis_cache.initialize()
-    await embed_cache.initialize()
+    if settings.KNOWLEDGE_PROVIDER in ("milvus", "subscription", "credits"):
+        await embed_cache.initialize()
     await experiment_store.initialize()
     if not await check_runner():
         message = (
@@ -183,24 +190,35 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.startup_errors.append(error_msg)
         logger.error(f"✗ {error_msg}")
 
-    # 4. 初始化 Milvus
-    try:
-        await milvus_service.initialize()
-        logger.info("✓ Milvus 初始化完成")
-    except Exception as exc:
-        error_msg = f"Milvus 初始化失败: {exc}"
-        app.state.startup_errors.append(error_msg)
-        logger.error(f"✗ {error_msg}")
+    # 4/5. 仅初始化所选知识库；ima 模式完全不连接本地向量服务。
+    if settings.KNOWLEDGE_PROVIDER in ("ima", "subscription", "credits"):
+        try:
+            library = await ima_service.library_info()
+            logger.info("✓ ima 知识库连接完成：%s", library["name"])
+        except Exception as exc:
+            reason = str(exc) if isinstance(exc, ImaUnavailable) else "请检查配置及权限"
+            app.state.startup_errors.append(f"ima 知识库连接失败：{reason}")
+            logger.error("ima 初始化失败（%s）：%s", type(exc).__name__, reason)
+    if settings.KNOWLEDGE_PROVIDER in ("milvus", "subscription", "credits"):
+        try:
+            await milvus_service.initialize()
+            logger.info("✓ Milvus 初始化完成")
+        except Exception as exc:
+            error_msg = f"Milvus 初始化失败: {exc}"
+            app.state.startup_errors.append(error_msg)
+            logger.error(f"✗ {error_msg}")
+        if settings.KNOWLEDGE_PROVIDER == "milvus":
+            try:
+                chunks = await milvus_service.list_chunks()
+                await bm25_service.rebuild(chunks)
+                logger.info(f"✓ BM25 索引初始化完成，共加载 {bm25_service.chunk_count} 个 Chunk")
+            except Exception as exc:
+                error_msg = f"BM25 索引初始化失败: {exc}"
+                app.state.startup_errors.append(error_msg)
+                logger.error(f"✗ {error_msg}")
 
-    # 5. 初始化 BM25 稀疏索引
-    try:
-        chunks = await milvus_service.list_chunks()
-        await bm25_service.rebuild(chunks)
-        logger.info(f"✓ BM25 索引初始化完成，共加载 {bm25_service.chunk_count} 个 Chunk")
-    except Exception as exc:
-        error_msg = f"BM25 索引初始化失败: {exc}"
-        app.state.startup_errors.append(error_msg)
-        logger.error(f"✗ {error_msg}")
+    app.state.knowledge_index_task = (asyncio.create_task(knowledge_index_service.run())
+                                      if settings.KNOWLEDGE_PROVIDER in ("subscription", "credits") else None)
 
     # 6. 🌟 初始化 MCP 外部工具能力子进程
     try:
@@ -228,6 +246,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     # 服务平滑关闭
     logger.info("智能求职系统正在平滑关闭...")
+    await close_mobile_jobs()
 
     cleanup_task = getattr(app.state, "cleanup_task", None)
     if cleanup_task is not None and not cleanup_task.done():
@@ -239,14 +258,24 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         except Exception as exc:
             logger.warning("清理任务退出异常：%s", type(exc).__name__)
 
+    if app.state.knowledge_index_task is not None:
+        app.state.knowledge_index_task.cancel()
+        try:
+            await app.state.knowledge_index_task
+        except asyncio.CancelledError:
+            pass
+
     await mcp_service.close()
+    await evaluation_llm.close()
     await bailian_service.close()
     await embed_cache.close()
     await experiment_store.close()
     await analysis_cache.close()
     # 共享 Redis 池由这里统一关闭——各服务只丢弃自己的客户端引用。
     await close_pool()
-    await milvus_service.close()
+    await ima_service.close()
+    if settings.KNOWLEDGE_PROVIDER in ("milvus", "subscription", "credits"):
+        await milvus_service.close()
     await close_database()
 
     logger.info("✓ 智能求职系统所有连接已释放并安全关闭")
@@ -260,11 +289,11 @@ app = FastAPI(
     title=settings.APP_NAME,
     version="1.0.0",
     description=(
-        "基于 LangGraph、阿里云百炼、Milvus、PostgreSQL 和 MinIO "
+        "基于 LangGraph、阿里云百炼、PostgreSQL 和 MinIO，支持 ima 或 Milvus 知识库，"
         "构建的企业级智能求职 Multi-Agent & RAG 系统。\n\n"
         "核心能力：\n"
-        "- 📄 **文档处理**：Word/PDF 解析、字符置信度评估、OCR兜底及向量入库\n"
-        "- 🔍 **混合检索**：Dense + BM25 + RRF + BGE Reranker 深度精排\n"
+        "- 📄 **文档处理**：沙箱解析、OCR兜底，Milvus 模式生成向量\n"
+        "- 🔍 **知识检索**：ima 内容搜索，或 Milvus + BM25 + RRF + BGE 本地混合检索\n"
         "- 🎯 **架构并行匹配**：Fan-out 并发抽取 + Self-Correction 自我纠错闭环\n"
         "- ⏸️ **人机协同中断恢复**：支持 PostgreSQL 状态检查点与人工干预/打回\n"
         "- ⚡ **SSE 实时流**：Server-Sent Events 毫秒级推送 Agent 思考与节点流转\n"
@@ -311,6 +340,9 @@ async def invalid_request(request, exc):
 
 
 app.include_router(auth_router, prefix=settings.API_PREFIX)
+app.include_router(credits_router, prefix=settings.API_PREFIX)
+app.include_router(public_pages_router)
+app.include_router(mobile_router, prefix=settings.API_PREFIX)
 
 # ----------------------------------------------------------------------
 # 路由注册 - 按模块分组
@@ -373,20 +405,6 @@ async def root() -> dict:
             "evaluation": f"{settings.API_PREFIX}/evaluation/experiments",
         },
     }
-
-
-PRICING_HTML_PATH = Path(__file__).resolve().parents[2] / "frontend" / "projectflow-pricing.html"
-
-
-@app.get(
-    "/pricing",
-    tags=["系统"],
-    summary="订阅方案页",
-    description="返回订阅方案定价页（公开访问，无需登录）。",
-)
-async def pricing_page():
-    """定价/订阅方案静态页，供前端账户弹层与首页入口跳转。"""
-    return FileResponse(PRICING_HTML_PATH, media_type="text/html")
 
 
 # ----------------------------------------------------------------------

@@ -17,6 +17,11 @@ python ../deploy/sandbox/start.py
 升级 Markdown 支持时，须重新执行上面的镜像构建，并重启已运行的 Runner、后端与前端。
 Markdown 在沙箱内读取原文和标题结构，不执行代码、不渲染 HTML、不下载远程资源。
 
+PDF 标题识别更新为 `structure-v5-pdf-headings`：识别“第02章”“2.1”等章节编号，
+结合页面正文与标题的相对字号，在 `blocks` 中保存 `heading` / `paragraph` 和章节路径。
+更新解析代码后也需要重新构建上述镜像。已保存的旧解析记录不会自动改写；重新上传原文件后
+因解析版本变化会生成新的解析记录，旧记录仍保留。PDF 的表格、代码和复杂版式尚未自动分类。
+
 另开终端启动 FastAPI。Runner 必须先启动；后端默认 `SANDBOX_DOCUMENTS_ENABLED=true`，Runner 或 Docker
 不可用时文件上传会明确失败，不会在后端进程回退解析。MCP 工具也通过 Runner 启动；Runner 不可用时对应工具禁用。
 `SANDBOX_RUNNER_SOCKET` 默认为 `deploy/.local/sandbox.sock`。默认目录和 socket 分别为 0700、0600，仅本机同一受信用户可访问。生产

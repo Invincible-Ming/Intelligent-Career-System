@@ -27,6 +27,7 @@ DIFFICULTY_NAMES = {
 }
 
 SEARCH_MODE_NAMES = {
+    "ima": "ima 知识库与本地文件检索",
     "hybrid": "混合检索（Milvus + BM25 + RRF + BGE）",
     "dense": "语义检索（Milvus）",
     "bm25": "关键词检索（BM25）",

@@ -10,6 +10,8 @@ from typing import Any
 from app.core.limits import BudgetExceeded
 from app.core.prompts import RAG_ANSWER_SYSTEM_PROMPT, RAG_REFLECTION_SYSTEM_PROMPT, prompt_data
 from app.evaluation.config import EvaluationConfig
+from app.evaluation.checkpoint import CaseCheckpoint
+from app.evaluation.llm import evaluation_llm
 from app.evaluation.scope import normalize_owner_id
 from app.services.bailian import bailian_service
 from app.services.bm25_service import bm25_service
@@ -31,6 +33,7 @@ class RAGExecutor:
             owner_id: str,
             allowed_document_ids: list[str],
             document_type: str | None = None,
+            progress: CaseCheckpoint | None = None,
     ) -> dict[str, Any]:
         """
         执行 RAG 查询。
@@ -48,13 +51,20 @@ class RAGExecutor:
         for identifier in allowed_document_ids:
             validate_document_id(identifier)
         # 第一步：检索
-        contexts = await self._retrieve(
-            query=query,
-            config=config,
-            owner_id=owner_id,
-            allowed_document_ids=allowed_document_ids,
-            document_type=document_type,
-        )
+        contexts = progress.get("contexts") if progress is not None else None
+        if contexts is None:
+            logger.info("开始检索与重排")
+            contexts = await self._retrieve(
+                query=query,
+                config=config,
+                owner_id=owner_id,
+                allowed_document_ids=allowed_document_ids,
+                document_type=document_type,
+            )
+            if progress is not None:
+                progress.save("contexts", contexts)
+        else:
+            logger.info("复用进度中已完成的检索与重排")
 
         if not contexts:
             return {
@@ -65,11 +75,13 @@ class RAGExecutor:
             }
 
         # 第二步：生成答案
+        logger.info("检索完成：%d 个上下文，开始生成回答", len(contexts))
         answer = await self._generate_answer(
             query=query,
             contexts=contexts,
         )
 
+        logger.info("回答生成完成")
         reflection_iterations = 0
 
         # 第三步：反思（如果启用）
@@ -190,7 +202,7 @@ class RAGExecutor:
 
         # Let the runner record a failed case instead of scoring an error
         # message as a successful model answer.
-        return await bailian_service.chat(
+        return await evaluation_llm.chat(
             messages=[
                 {"role": "system", "content": RAG_ANSWER_SYSTEM_PROMPT},
                 {"role": "user", "content": prompt_data(
@@ -222,7 +234,7 @@ class RAGExecutor:
         for _ in range(max_iterations):
             completed_iterations += 1
             try:
-                improved_answer = await bailian_service.chat(
+                improved_answer = await evaluation_llm.chat(
                     messages=[
                         {"role": "system", "content": RAG_REFLECTION_SYSTEM_PROMPT},
                         {

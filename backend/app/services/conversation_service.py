@@ -90,7 +90,8 @@ class ConversationService:
 
     def messages_to_dict(self, messages):
         return [{'role': item.role, 'content': item.content} for item in messages if
-                item.role in ('user', 'assistant') and not (item.meta_data or {}).get('incomplete')]
+                item.role in ('user', 'assistant') and not (item.meta_data or {}).get('incomplete')
+                and not (item.meta_data or {}).get('context_excluded')]
 
 
 conversation_service = ConversationService()

@@ -5,19 +5,23 @@ def make_rerank_pairs(tokenizer, query, contents, max_length):
     special = tokenizer.num_special_tokens_to_add(pair=True)
     if max_length < special + 8:
         raise ValueError("Reranker token budget is too small")
-    query_ids = tokenizer.encode(query, add_special_tokens=False)
+    # These encodings only measure/split text, not feed the model. Preserve all
+    # tokens and avoid the model-length warning before windowing has happened.
+    query_ids = tokenizer.encode(query, add_special_tokens=False, verbose=False)
     query_ids = query_ids[: min(96, (max_length - special) // 3)]
     query_text = tokenizer.decode(query_ids, skip_special_tokens=True)
     budget = max_length - len(query_ids) - special - 4
     pairs, owners = [], []
     for owner, content in enumerate(contents):
-        ids = tokenizer.encode(content, add_special_tokens=False)
+        ids = tokenizer.encode(content, add_special_tokens=False, verbose=False)
         start = 0
         while True:
             end = min(len(ids), start + budget)
             text = tokenizer.decode(ids[start:end], skip_special_tokens=True)
             # Decoding/re-encoding can change token counts: verify the actual pair.
-            while end > start + 1 and len(tokenizer.encode(query_text, text, add_special_tokens=True)) > max_length:
+            while end > start + 1 and len(tokenizer.encode(
+                    query_text, text, add_special_tokens=True, verbose=False,
+            )) > max_length:
                 end -= 1
                 text = tokenizer.decode(ids[start:end], skip_special_tokens=True)
             pairs.append([query_text, text])

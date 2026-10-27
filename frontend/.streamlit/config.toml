@@ -1,0 +1,23 @@
+[theme]
+font = "sans serif"
+baseRadius = "0.75rem"
+buttonRadius = "0.625rem"
+showWidgetBorder = true
+
+# Define both native themes so inputs, menus, charts and tables follow the OS
+# along with the custom CSS. Do not pin theme.base to light.
+[theme.light]
+primaryColor = "#31594c"
+backgroundColor = "#f7f7f8"
+secondaryBackgroundColor = "#f0f1f2"
+textColor = "#202124"
+borderColor = "#e1e3e6"
+dataframeHeaderBackgroundColor = "#f0f1f2"
+
+[theme.dark]
+primaryColor = "#a3c8b3"
+backgroundColor = "#18191b"
+secondaryBackgroundColor = "#242629"
+textColor = "#f0f1f2"
+borderColor = "#393b3f"
+dataframeHeaderBackgroundColor = "#242629"

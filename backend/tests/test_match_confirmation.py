@@ -217,6 +217,35 @@ class ConfirmationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(review["failure_code"], "timeout")
         self.assertTrue(review["nonblocking"])
 
+    async def test_both_parallel_extraction_failures_merge_into_one_degraded_state(self):
+        """两边同时失败时各写独立字段，汇合后进入兜底，而不是在状态归并阶段崩掉。"""
+        graph = workflow.get_match_workflow_builder().compile(
+            checkpointer=InMemorySaver(), interrupt_before=["human_review"]
+        )
+        config = {"configurable": {"thread_id": uuid.uuid4().hex, "owner_id": "synthetic-owner"}}
+        with (
+            patch.object(settings, "ANALYSIS_CACHE_ENABLED", False),
+            patch.object(
+                workflow.bailian_service,
+                "structured_chat",
+                side_effect=RuntimeError("Synthetic upstream failure"),
+            ),
+            patch.object(workflow.logger, "error"),
+        ):
+            await graph.ainvoke(
+                {"resume_text": "Synthetic resume", "jd_text": "Synthetic JD", "is_degraded": False},
+                config=config,
+            )
+
+        snapshot = await graph.aget_state(config)
+        self.assertEqual(snapshot.next, ("human_review",))
+        self.assertIn("Resume Agent", snapshot.values["resume_error"])
+        self.assertIn("JD Agent", snapshot.values["jd_error"])
+        self.assertIn("Resume Agent", snapshot.values["error"])
+        self.assertIn("JD Agent", snapshot.values["error"])
+        self.assertTrue(snapshot.values["is_degraded"])
+        self.assertEqual(snapshot.values["match_report"]["total_score"], 60.0)
+
     async def test_real_graph_bounds_corrections_then_manual_accepts_without_model(self):
         graph = workflow.get_match_workflow_builder().compile(
             checkpointer=InMemorySaver(), interrupt_before=["human_review"]

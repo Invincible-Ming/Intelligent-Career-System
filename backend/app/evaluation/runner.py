@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import logging
 import time
@@ -17,8 +18,10 @@ from app.core.config import settings
 from app.core.limits import BudgetExceeded
 from app.core.prompts import PROMPT_VERSIONS
 from app.evaluation.config import EvaluationConfig, ExperimentConfig
+from app.evaluation.checkpoint import EvaluationCheckpoint
 from app.evaluation.dataset import TestCase, TestDataset
 from app.evaluation.executor import rag_executor
+from app.evaluation.llm import evaluation_llm
 from app.evaluation.metrics import RAGAS_VERSION, ragas_metrics
 from app.evaluation.report import ReportGenerator
 from app.evaluation.scope import EvaluationScope, normalize_owner_id, prepare_evaluation_scope
@@ -99,12 +102,14 @@ class EvaluationRunner:
             *,
             owner_id: str,
             scope: EvaluationScope | None = None,
+            checkpoint: EvaluationCheckpoint | None = None,
     ):
         self.experiment_config = experiment_config
         self.owner_id = normalize_owner_id(owner_id)
         if scope is not None and scope.owner_id != self.owner_id:
             raise ValueError("评测文档范围与当前用户不一致")
         self.scope = scope
+        self.checkpoint = checkpoint
         self.test_dataset: TestDataset | None = None
         self.config_results: dict[str, ConfigResult] = {}
         self.experiment_id = str(uuid.uuid4())[:8]
@@ -120,6 +125,7 @@ class EvaluationRunner:
             "开始评测实验：%s",
             self.experiment_config.experiment_name,
         )
+        evaluation_llm.validate_configuration()
         ragas_metrics.ensure_available()
 
         # All variants use the same owner-bound ready-document snapshot.
@@ -231,19 +237,29 @@ class EvaluationRunner:
         """评测单个测试用例。"""
 
         async with semaphore:
+            label = hashlib.sha256(test_case.query.encode()).hexdigest()[:8]
+            logger.info("开始样本 %s，配置 %s", label, config.name)
             deadline = time.monotonic() + self.experiment_config.timeout_seconds
+            progress = self.checkpoint.case(config.model_dump(), test_case.model_dump()) if self.checkpoint else None
+            rag_result = progress.get("rag_result") if progress is not None else None
             try:
                 # 执行 RAG 查询（带超时）
-                rag_result = await asyncio.wait_for(
-                    rag_executor.execute(
-                        query=test_case.query,
-                        config=config,
-                        owner_id=self.owner_id,
-                        allowed_document_ids=list(self.scope.document_ids),
-                        document_type=test_case.document_type,
-                    ),
-                    timeout=self.experiment_config.timeout_seconds,
-                )
+                if rag_result is None:
+                    rag_result = await asyncio.wait_for(
+                        rag_executor.execute(
+                            query=test_case.query,
+                            config=config,
+                            owner_id=self.owner_id,
+                            allowed_document_ids=list(self.scope.document_ids),
+                            document_type=test_case.document_type,
+                            progress=progress,
+                        ),
+                        timeout=self.experiment_config.timeout_seconds,
+                    )
+                    if progress is not None:
+                        progress.save("rag_result", rag_result)
+                else:
+                    logger.info("样本 %s 复用已完成的回答", label)
 
                 # 计算 RAGAS 指标
                 metrics = await asyncio.wait_for(ragas_metrics.evaluate(
@@ -252,8 +268,10 @@ class EvaluationRunner:
                     contexts=rag_result["contexts"],
                     ground_truth=test_case.ground_truth,
                     reference_contexts=test_case.reference_contexts,
+                    progress=progress,
                 ), timeout=max(.001, deadline - time.monotonic()))
 
+                logger.info("样本 %s 评测完成", label)
                 return EvaluationResult(
                     {
                         "status": "success",
@@ -272,11 +290,13 @@ class EvaluationRunner:
             except BudgetExceeded:
                 raise
             except TimeoutError:
+                logger.warning("样本 %s 超过总耗时上限 %s 秒", label, self.experiment_config.timeout_seconds)
                 return EvaluationResult(
                     {
                         "status": "timeout",
                         "query": test_case.query,
                         "error": f"查询超时（{self.experiment_config.timeout_seconds}秒）",
+                        "completed_metrics": (progress.get("metrics") or {}) if progress is not None else {},
                     }
                 )
 
@@ -320,11 +340,18 @@ class EvaluationRunner:
             "experiment_id": self.experiment_id,
             "experiment_name": self.experiment_config.experiment_name,
             "timestamp": datetime.now().isoformat(),
+            "resume": {"enabled": bool(self.checkpoint and self.checkpoint.resumed),
+                       "timing_scope": "current_run_only"},
             "evaluator": {
                 "backend": "ragas", "version": RAGAS_VERSION,
-                "chat_model": settings.BAILIAN_CHAT_MODEL,
+                "llm_provider": evaluation_llm.provider,
+                "chat_model": evaluation_llm.model,
+                "thinking_enabled": False if evaluation_llm.provider == "mimo" else None,
+                "request_wall_timeout_seconds": settings.EVALUATION_LLM_REQUEST_TIMEOUT,
+                "answer_max_retries": settings.EVALUATION_LLM_MAX_RETRIES,
                 "embedding_model": settings.BAILIAN_EMBEDDING_MODEL,
                 "metric_max_llm_calls_per_case": settings.EVALUATION_METRIC_MAX_CALLS,
+                "metric_max_retries_per_request": settings.EVALUATION_METRIC_MAX_RETRIES,
                 "answer_relevancy_strictness": 3,
                 "answer_prompt_version": PROMPT_VERSIONS["rag_answer"],
                 "reflection_prompt_version": PROMPT_VERSIONS["rag_reflection"],

@@ -20,14 +20,26 @@ from career_ui.config import API_BASE_URL
 
 
 def browser_auth_urls() -> tuple[str, str]:
-    """Browser and Streamlit must use the same hostname to share a host-only cookie."""
+    """Use the public gateway remotely and the backend port in local development.
+
+    API_BASE_URL is for Python-to-backend traffic. It must never make a remote
+    browser send credentials to its own localhost. A gateway routes the public
+    browser-login/logout paths to FastAPI while preserving the frontend host.
+    """
 
     frontend = urlsplit(st.context.url or "http://localhost:8501/")
-    backend = urlsplit(os.getenv("BROWSER_API_BASE_URL", API_BASE_URL))
+    origin = f"{frontend.scheme}://{frontend.netloc}"
+    configured = os.getenv("BROWSER_API_BASE_URL", "").strip()
+    local_hosts = ("localhost", "127.0.0.1", "::1")
+    if configured == "same-origin" or (
+        configured in ("", "auto") and frontend.hostname not in local_hosts
+    ):
+        return origin, origin + "/"
+    backend = urlsplit(API_BASE_URL if configured in ("", "auto") else configured)
     if backend.hostname in ("localhost", "127.0.0.1") and frontend.hostname in ("localhost", "127.0.0.1"):
         netloc = frontend.hostname + (f":{backend.port}" if backend.port else "")
         backend = backend._replace(netloc=netloc)
-    return urlunsplit(backend).rstrip("/"), f"{frontend.scheme}://{frontend.netloc}/"
+    return urlunsplit(backend).rstrip("/"), origin + "/"
 
 
 def reset_login_state() -> None:
@@ -36,13 +48,23 @@ def reset_login_state() -> None:
     注意不要在下一轮 rerun 里恢复旧的初始请求 cookie。
     """
 
+    task = st.session_state.get("chat_task")
+    if task:
+        task.cancel()
     st.session_state.clear()
     st.session_state.clear_browser_session = True
     st.rerun()
 
 
-@st.cache_resource
 def browser_auth_component():
+    assets = Path(__file__).resolve().parent.parent / "auth_browser"
+    signature = tuple((assets / name).stat().st_mtime_ns for name in ("form.html", "style.css", "auth.js"))
+    return _browser_auth_component(signature)
+
+
+@st.cache_resource
+def _browser_auth_component(asset_signature):
+    """Refresh component assets after edits while preserving browser auth behavior."""
     assets = Path(__file__).resolve().parent.parent / "auth_browser"
     return st.components.v2.component(
         "browser_auth",

@@ -7,8 +7,11 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import mimetypes
 import uuid
-from typing import Annotated, Any
+from pathlib import Path
+from typing import Annotated, Any, Literal
+from urllib.parse import quote
 
 import anyio
 from fastapi import (
@@ -20,9 +23,10 @@ from fastapi import (
     Query,
     UploadFile,
 )
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import bindparam, delete, desc, func, select, text, update
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.workflow import (
@@ -37,9 +41,10 @@ from app.core.config import settings
 from app.core.database import AsyncSessionLocal, get_db
 from app.core.logging_setup import log_event
 from app.core.matching_policy import can_continue_unverified
-from app.core.models import AgentRun, AnalysisResult, Document, DocumentParse
+from app.core.models import AgentRun, AnalysisResult, Document, DocumentParse, UserKnowledgePreference
 from app.core.schemas import (
     DocumentResponse,
+    DocumentDetailResponse,
     DocumentTextResponse,
     InterviewRequest,
     LearningRequest,
@@ -47,13 +52,19 @@ from app.core.schemas import (
     RunResponse,
     SearchRequest,
     SearchResult,
+    RenameDocumentRequest,
     UploadDocumentResponse,
 )
 from app.security.auth import CurrentUser, owned_record
-from app.services.bailian import bailian_service
+from app.services.bailian import OcrServiceError, bailian_service
 from app.services.bm25_service import bm25_service
-from app.services.document_service import document_service
+from app.services.document_service import DocumentConflict, DocumentNotFound, document_service
+from app.services.minio_service import minio_service
 from app.services.hybrid_search import hybrid_search_service
+from app.services.ima_service import ImaUnavailable, ima_service
+from app.services.knowledge_index import KnowledgeIndexUnavailable, knowledge_index_service
+from app.services.knowledge_policy import knowledge_provider_for
+from app.services.knowledge_service import knowledge_service
 from app.services.milvus_service import milvus_service
 from app.services.sandbox_client import SandboxUnavailable
 
@@ -192,7 +203,7 @@ async def upload_document(
             Form(max_length=50),
         ] = "knowledge",
 ) -> UploadDocumentResponse:
-    """上传并向量化简历、JD 或知识文档。
+    """上传并解析简历、JD 或知识文档；仅 Milvus 模式生成向量。
 
     按内容哈希（SHA-256）判重：同一份内容重复上传会直接复用既有记录，
     不重复解析或向量化，响应中 deduplicated 为 True。
@@ -238,6 +249,9 @@ async def upload_document(
             status_code=503,
             detail=str(exc),
         ) from exc
+    except OcrServiceError as exc:
+        log_event(logger, logging.ERROR, str(exc), error=type(exc).__name__, document_type=document_type)
+        raise HTTPException(status_code=503, detail=str(exc)) from None
     except Exception as exc:
         # 诊断日志在此：前端只显示通用文案，没有日志就完全无法定位。
         log_event(
@@ -297,6 +311,67 @@ async def preview_document_text(
     )
 
 
+@router.get("/documents/{document_id}/download", tags=["文档"])
+async def download_original_document(user: CurrentUser, document_id: uuid.UUID, session: DatabaseSession):
+    """Proxy the owned original file; never expose object keys or storage credentials."""
+    document = await owned_record(session, Document, document_id, user.id)
+    try:
+        data = await minio_service.download(document.minio_object_key)
+    except Exception as exc:
+        logger.warning("原文件下载失败（%s），document_id=%s", type(exc).__name__, document_id)
+        raise HTTPException(503, "原文件暂时无法下载，请稍后重试") from None
+    fallback = "document" + Path(document.filename).suffix.lower()
+    return Response(data, media_type=mimetypes.guess_type(document.filename)[0] or "application/octet-stream",
+                    headers={"Content-Disposition": f'attachment; filename="{fallback}"; filename*=UTF-8\'\'{quote(document.filename, safe="")}',
+                             "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"})
+
+
+@router.get("/documents/{document_id}", response_model=DocumentDetailResponse, tags=["文档"])
+async def document_details(user: CurrentUser, document_id: uuid.UUID, session: DatabaseSession):
+    document = await owned_record(session, Document, document_id, user.id)
+    try:
+        metadata = await minio_service.metadata(document.minio_object_key)
+    except Exception as exc:
+        logger.warning("原文件信息读取失败（%s），document_id=%s", type(exc).__name__, document_id)
+        raise HTTPException(503, "原文件信息暂时无法读取，请稍后重试") from None
+    parsed = await session.get(DocumentParse, document_id)
+    return DocumentDetailResponse(**DocumentResponse.model_validate(document).model_dump(), **metadata,
+                                  preview_available=document.status == "ready" and parsed is not None)
+
+
+@router.patch("/documents/{document_id}", response_model=DocumentResponse, tags=["文档"])
+@router.post("/documents/{document_id}/rename", response_model=DocumentResponse, tags=["文档"])
+async def rename_document(user: CurrentUser, document_id: uuid.UUID,
+                          request: RenameDocumentRequest, session: DatabaseSession):
+    try:
+        return await document_service.rename_document(session=session, owner_id=user.id,
+                                                       document_id=document_id, filename=request.filename)
+    except DocumentNotFound as exc:
+        raise HTTPException(404, str(exc)) from None
+    except DocumentConflict as exc:
+        raise HTTPException(409, str(exc)) from None
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from None
+
+
+@router.post("/documents/{document_id}/retry", response_model=DocumentResponse, tags=["文档"])
+async def retry_document(user: CurrentUser, document_id: uuid.UUID, session: DatabaseSession):
+    """Retry a failed original in its existing sandbox/row, under the upload budget."""
+    try:
+        return await document_service.retry_document(session=session, owner_id=user.id, document_id=document_id)
+    except DocumentNotFound as exc:
+        raise HTTPException(404, str(exc)) from None
+    except DocumentConflict as exc:
+        raise HTTPException(409, str(exc)) from None
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from None
+    except (SandboxUnavailable, OcrServiceError) as exc:
+        raise HTTPException(503, str(exc)) from None
+    except Exception as exc:
+        logger.warning("文件重试处理失败（%s），document_id=%s", type(exc).__name__, document_id)
+        raise HTTPException(503, "文件重新处理失败，请稍后重试；原文件仍保留") from None
+
+
 @router.delete(
     "/documents/{document_id}",
     tags=["文档"],
@@ -306,7 +381,7 @@ async def delete_document(
         document_id: uuid.UUID,
         session: DatabaseSession,
 ) -> dict[str, str]:
-    """删除文档及其 MinIO 文件和 Milvus 向量。"""
+    """删除本地文档和原文件，按知识库配置清理向量。"""
 
     try:
         await document_service.delete_document(
@@ -317,6 +392,8 @@ async def delete_document(
 
         return {"message": "文档删除成功"}
 
+    except DocumentConflict as exc:
+        raise HTTPException(409, str(exc)) from None
     except ValueError as exc:
         raise HTTPException(
             status_code=404,
@@ -329,6 +406,72 @@ async def delete_document(
 # ----------------------------------------------------------------------
 
 
+class KnowledgeProviderChoice(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    provider: Literal["ima", "milvus"]
+
+
+@router.put("/knowledge/provider", tags=["知识库"])
+async def choose_knowledge_provider(request: KnowledgeProviderChoice, user: CurrentUser, session: DatabaseSession):
+    if settings.KNOWLEDGE_PROVIDER != "credits":
+        raise HTTPException(409, "当前部署由管理员统一配置检索方式")
+    statement = insert(UserKnowledgePreference).values(user_id=user.id, provider=request.provider)
+    await session.execute(statement.on_conflict_do_update(
+        index_elements=[UserKnowledgePreference.user_id], set_={"provider": request.provider},
+    ))
+    queued = 0
+    if request.provider == "milvus":
+        queued = await knowledge_index_service.enqueue_owner(session, user.id, retry_failed=True)
+    await session.commit()
+    return {"knowledge_provider": request.provider, "queued": queued}
+
+
+@router.get("/knowledge/status", tags=["知识库"])
+async def knowledge_status(user: CurrentUser, session: DatabaseSession):
+    if knowledge_provider_for(user) != "ima":
+        result = {"provider": "milvus", "name": "本地知识库"}
+        if settings.KNOWLEDGE_PROVIDER in ("subscription", "credits"):
+            result["index"] = await knowledge_index_service.status(session, user.id)
+        return result
+    try:
+        return {"provider": "ima", **await ima_service.library_info()}
+    except ImaUnavailable as exc:
+        raise HTTPException(503, str(exc)) from None
+
+
+@router.get("/knowledge/items", tags=["知识库"])
+async def knowledge_items(user: CurrentUser, cursor: str = Query(default="", max_length=2000)):
+    if knowledge_provider_for(user) != "ima":
+        raise HTTPException(409, "当前使用本地知识库")
+    try:
+        return await ima_service.list_items(cursor=cursor)
+    except ImaUnavailable as exc:
+        raise HTTPException(503, str(exc)) from None
+
+
+@router.post("/knowledge/index/retry", tags=["知识库"])
+async def retry_knowledge_index(user: CurrentUser, session: DatabaseSession):
+    if settings.KNOWLEDGE_PROVIDER not in ("subscription", "credits") or knowledge_provider_for(user) != "milvus":
+        raise HTTPException(403, "请先在知识库页面选择混合检索")
+    count = await knowledge_index_service.enqueue_owner(session, user.id, retry_failed=True)
+    await session.commit()
+    return {"queued": count, "message": "文件检索准备任务已提交"}
+
+
+async def search_with_provider(session, user, request, strategy="hybrid"):
+    try:
+        results = await knowledge_service.search(
+            session=session, owner_id=user.id, query=request.query,
+            document_type=request.document_type, top_k=request.top_k, strategy=strategy,
+        )
+        # Provider validates remote scope and queries local documents by owner before returning text.
+        return [SearchResult.model_validate(item) for item in results]
+    except (ImaUnavailable, KnowledgeIndexUnavailable) as exc:
+        raise HTTPException(503, str(exc)) from None
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from None
+
+
 @router.post(
     "/search",
     response_model=list[SearchResult],
@@ -339,8 +482,14 @@ async def search_knowledge(
         user: CurrentUser,
         request: SearchRequest,
 ) -> list[SearchResult]:
-    """使用 text-embedding-v3 和 Milvus 检索知识库。"""
+    """使用配置的 Embedding 模型和 Milvus 检索知识库。"""
 
+    if settings.KNOWLEDGE_PROVIDER in ("subscription", "credits"):
+        if knowledge_provider_for(user) != "milvus":
+            raise HTTPException(403, "请先切换为混合检索")
+        return await search_with_provider(session, user, request, strategy="dense")
+    if settings.KNOWLEDGE_PROVIDER == "ima":
+        raise HTTPException(409, "ima 模式不提供本地向量检索，请使用知识库检索")
     owner_id = str(user.id)
 
     if not await has_ready_document(session=session, owner_id=user.id):
@@ -381,6 +530,12 @@ async def search_knowledge_with_bm25(
 ) -> list[SearchResult]:
     """使用 BM25 进行关键词检索。"""
 
+    if settings.KNOWLEDGE_PROVIDER in ("subscription", "credits"):
+        if knowledge_provider_for(user) != "milvus":
+            raise HTTPException(403, "请先切换为混合检索")
+        return await search_with_provider(session, user, request, strategy="bm25")
+    if settings.KNOWLEDGE_PROVIDER == "ima":
+        raise HTTPException(409, "ima 模式不提供本地 BM25 检索，请使用知识库检索")
     owner_id = str(user.id)
 
     if not await has_ready_document(session=session, owner_id=user.id):
@@ -417,8 +572,10 @@ async def search_knowledge_hybrid(
         user: CurrentUser,
         request: SearchRequest,
 ) -> list[SearchResult]:
-    """执行 Dense、BM25、RRF 和 BGE 重排。"""
+    """按提供方执行本地混合检索，或 ima 与本地文件检索。"""
 
+    if settings.KNOWLEDGE_PROVIDER in ("ima", "subscription", "credits"):
+        return await search_with_provider(session, user, request)
     owner_id = str(user.id)
 
     if not await has_ready_document(session=session, owner_id=user.id):

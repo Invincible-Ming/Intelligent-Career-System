@@ -26,6 +26,7 @@ from app.evaluation.config import (
     SearchConfig,
 )
 from app.evaluation.metrics import ragas_metrics
+from app.evaluation.llm import evaluation_llm
 from app.evaluation.runner import EvaluationRunner
 from app.services.bailian import bailian_service
 from app.services.bm25_service import bm25_service
@@ -199,6 +200,7 @@ async def run_evaluation(
         traceback.print_exc()
         sys.exit(1)
     finally:
+        await evaluation_llm.close()
         await bailian_service.close()
         await milvus_service.close()
         await close_pool()

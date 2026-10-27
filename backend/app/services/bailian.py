@@ -18,12 +18,14 @@ from http import HTTPStatus
 from typing import Any, TypeVar
 
 import dashscope
+import httpx
 from openai import AsyncOpenAI
 from pydantic import BaseModel, ValidationError
 
 from app.core.config import settings
 from app.core.limits import BudgetExceeded, charge_model_call, model_request_timeout, validate_model_input
 from app.core.prompts import JSON_REPAIR_INSTRUCTIONS, JSON_SCHEMA_INSTRUCTIONS, OCR_PROMPT, prompt_data
+from app.services.credits import ModelCharge
 from app.services.embed_cache import embed_cache
 
 SchemaType = TypeVar(
@@ -49,18 +51,57 @@ class StructuredOutputError(RuntimeError):
         super().__init__(code)
 
 
+class OcrServiceError(RuntimeError):
+    """A safe document-facing OCR error, without source images or upstream payloads."""
+
+
 def public_model_error(exc):
-    if getattr(exc, 'code', None) == 'AllocationQuota.FreeTierOnly':
+    if getattr(exc, 'code', None) in ('AllocationQuota.FreeTierOnly', 'insufficient_quota'):
         return {'message': '百炼模型免费额度已用完，当前开启“用完即停”；请联系管理员处理模型额度。',
                 'type': 'model_quota_exceeded'}
     return {'message': '回复生成失败，请稍后重试', 'type': 'server_error'}
 
 
+def public_ocr_error(exc, provider="bailian"):
+    code, status = getattr(exc, "code", None), getattr(exc, "status_code", None)
+    if code in ("AllocationQuota.FreeTierOnly", "insufficient_quota"):
+        return "文档需要 OCR 识别，但 OCR 模型额度不足；请检查模型额度或更换有可用额度的 OCR 模型。"
+    if status == 404 or code == "model_not_found":
+        config_name = "MIMO_OCR_MODEL" if provider == "mimo" else "BAILIAN_OCR_MODEL"
+        return f"文档需要 OCR 识别，但当前接口不支持配置的模型；请检查后端 {config_name} 配置。"
+    if status == 401:
+        vendor = "小米 MiMo" if provider == "mimo" else "百炼"
+        return f"文档 OCR 认证失败，请检查{vendor} API Key 与接口地址。"
+    if status == 403:
+        return "当前账号无权调用 OCR 模型，请检查账号及模型调用权限。"
+    if status == 429:
+        return "OCR 服务请求频率受限，请稍后重试。"
+    return "文档 OCR 识别暂时不可用，请检查模型服务或稍后重试。"
+
+
 class BailianService:
-    """百炼聊天和 Embedding 服务。"""
+    """百炼聊天和 Embedding，以及可独立切换的文档 OCR。"""
 
     def __init__(self) -> None:
         self._chat_client: AsyncOpenAI | None = None
+        self._ocr_client: AsyncOpenAI | None = None
+
+    @property
+    def ocr_client(self) -> AsyncOpenAI:
+        """MiMo 凭证只保留在后端，不传给文档沙箱。"""
+        if settings.OCR_PROVIDER == "bailian":
+            return self.chat_client
+        if not settings.MIMO_API_KEY.strip():
+            raise OcrServiceError("未配置小米 OCR 密钥，请检查后端 MIMO_API_KEY。")
+        if self._ocr_client is None:
+            self._ocr_client = AsyncOpenAI(
+                api_key=settings.MIMO_API_KEY.strip(),
+                base_url=settings.MIMO_BASE_URL,
+                timeout=settings.MODEL_TIMEOUT,
+                max_retries=0,
+                http_client=httpx.AsyncClient(trust_env=False, follow_redirects=False),
+            )
+        return self._ocr_client
 
     @property
     def chat_client(self) -> AsyncOpenAI:
@@ -165,22 +206,35 @@ class BailianService:
         validate_model_input(messages)
         charge_model_call()
         cap = min(max_output_tokens or settings.MODEL_MAX_OUTPUT_TOKENS, settings.MODEL_MAX_OUTPUT_TOKENS)
-        stream = await self.chat_client.chat.completions.create(
-            model=model or settings.BAILIAN_CHAT_MODEL, messages=messages, temperature=temperature,
-            stream=True, max_tokens=cap,
-            timeout=model_request_timeout(),
-        )
+        charge = await ModelCharge.begin(model or settings.BAILIAN_CHAT_MODEL, messages, cap)
+        stream = None
         consumed = 0
+        output = ''
+        usage = None
+        completed = False
         try:
+            stream = await self.chat_client.chat.completions.create(
+                model=model or settings.BAILIAN_CHAT_MODEL, messages=messages, temperature=temperature,
+                stream=True, stream_options={"include_usage": True}, max_tokens=cap,
+                timeout=model_request_timeout(),
+            )
             async for chunk in stream:
+                usage = getattr(chunk, "usage", None) or usage
                 if chunk.choices and chunk.choices[0].delta.content:
                     token = chunk.choices[0].delta.content
+                    output += token
                     consumed += len(token.encode('utf-8'))
                     if consumed > cap * 16:
                         raise BudgetExceeded('模型输出超过预算')
                     yield token
+            completed = True
         finally:
-            await stream.close()
+            charge.record(usage=usage, output=output, completed=completed)
+            try:
+                if stream is not None:
+                    await stream.close()
+            finally:
+                await charge.finish()
 
     async def ocr_image(
             self,
@@ -190,9 +244,10 @@ class BailianService:
             temperature: float = 0.1,
     ) -> str:
         """
-        调用百炼多模态/OCR 模型提取图片文本。
+        使用独立配置的视觉模型提取图片文本。
         """
-        model = model or settings.BAILIAN_OCR_MODEL
+        model = model or (settings.MIMO_OCR_MODEL if settings.OCR_PROVIDER == "mimo"
+                          else settings.BAILIAN_OCR_MODEL)
         if not base64_image:
             raise ValueError("图片 Base64 数据不能为空")
 
@@ -218,15 +273,25 @@ class BailianService:
             "temperature": temperature,
         }
 
-        response = await self._chat_retry(**request_params)
+        if settings.OCR_PROVIDER == "mimo":
+            request_params["max_completion_tokens"] = settings.MODEL_MAX_OUTPUT_TOKENS
+            request_params["extra_body"] = {"thinking": {"type": "disabled"}}
+
+        try:
+            response = await self._chat_retry(client=self.ocr_client, **request_params)
+        except ModelServiceError as exc:
+            raise OcrServiceError(public_ocr_error(exc, settings.OCR_PROVIDER)) from exc
 
         if not response.choices:
-            raise RuntimeError("百炼 OCR 模型没有返回结果")
+            raise OcrServiceError("OCR 模型没有返回识别结果，请稍后重试。")
+
+        if getattr(response.choices[0], "finish_reason", None) == "length":
+            raise OcrServiceError("OCR 识别结果超过单页输出上限，请拆分密集页面或调整 MODEL_MAX_OUTPUT_TOKENS。")
 
         content = response.choices[0].message.content
 
         if not content:
-            raise RuntimeError("百炼 OCR 模型返回内容为空")
+            raise OcrServiceError("OCR 模型返回内容为空，请检查图片清晰度。")
 
         return content.strip()
 
@@ -436,11 +501,14 @@ class BailianService:
     async def _chat_retry(
             self,
             retry_limit: int | None = None,
+            client: AsyncOpenAI | None = None,
             **request_params: Any,
     ) -> Any:
         """聊天模型失败后进行简单重试。"""
 
-        request_params.setdefault("max_tokens", settings.MODEL_MAX_OUTPUT_TOKENS)
+        if "max_completion_tokens" not in request_params:
+            request_params.setdefault("max_tokens", settings.MODEL_MAX_OUTPUT_TOKENS)
+        output_cap = request_params.get("max_completion_tokens", request_params.get("max_tokens"))
         validate_model_input(request_params["messages"])
         last_error: Exception | None = None
         retry_limit = settings.MODEL_MAX_RETRIES if retry_limit is None else retry_limit
@@ -451,16 +519,19 @@ class BailianService:
                 retry_limit + 1
         ):
             charge_model_call()
+            charge = await ModelCharge.begin(request_params["model"], request_params["messages"], output_cap)
             try:
                 response = await (
-                    self.chat_client
+                    (client if client is not None else self.chat_client)
                     .chat
                     .completions
                     .create(**request_params, timeout=model_request_timeout())
                 )
+                charge.record(usage=getattr(response, "usage", None), output=''.join(
+                    choice.message.content or '' for choice in response.choices))
                 for choice in response.choices:
                     content = choice.message.content or ''
-                    if len(content.encode('utf-8')) > request_params['max_tokens'] * 16:
+                    if len(content.encode('utf-8')) > output_cap * 16:
                         raise BudgetExceeded('模型输出超过预算')
                 return response
             except Exception as exc:
@@ -471,7 +542,9 @@ class BailianService:
                         status is not None and 400 <= status < 500 and status != 429) or attempt >= retry_limit:
                     break
 
-                await asyncio.sleep(2 ** attempt)
+            finally:
+                await charge.finish()
+            await asyncio.sleep(2 ** attempt)
 
         raise ModelServiceError(getattr(last_error, "code", None),
                                 getattr(last_error, "status_code", None)) from last_error
@@ -488,6 +561,8 @@ class BailianService:
                 settings.MODEL_MAX_RETRIES + 1
         ):
             charge_model_call()
+            charge = await ModelCharge.begin(settings.BAILIAN_EMBEDDING_MODEL,
+                                             [{"content": text} for text in texts], 0)
             try:
                 response = await asyncio.to_thread(
                     dashscope.TextEmbedding.call,
@@ -508,6 +583,7 @@ class BailianService:
                 )
 
                 if response.status_code == HTTPStatus.OK:
+                    charge.record(usage=getattr(response, "usage", None))
                     return response
 
                 error_code = getattr(
@@ -527,6 +603,8 @@ class BailianService:
 
             except Exception as exc:
                 last_error = exc
+            finally:
+                await charge.finish()
 
             if attempt >= settings.MODEL_MAX_RETRIES:
                 break
@@ -542,6 +620,9 @@ class BailianService:
         if self._chat_client is not None:
             await self._chat_client.close()
             self._chat_client = None
+        if self._ocr_client is not None:
+            await self._ocr_client.close()
+            self._ocr_client = None
 
 
 # 🌟 修复点：替换为基于正则的稳健清洗逻辑

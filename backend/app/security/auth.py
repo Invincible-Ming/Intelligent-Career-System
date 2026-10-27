@@ -19,6 +19,7 @@ from app.core.config import settings
 from app.core.database import AsyncSessionLocal, get_db
 from app.core.limits import heavy_operation, operation_timeout, set_operation_actor
 from app.core.models import AuthSession, OperationLease, RateLimitBucket, User
+from app.services.credits import billing_scope
 
 bearer = HTTPBearer(auto_error=False)
 
@@ -116,7 +117,8 @@ async def operation_user(request: Request, user: Annotated[User, Depends(get_cur
             await session.commit()
             lease_id = lease.id
     try:
-        yield user
+        with billing_scope(user.id, request.url.path):
+            yield user
     finally:
         if lease_id:
             with anyio.CancelScope(shield=True):

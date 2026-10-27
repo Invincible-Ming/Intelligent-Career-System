@@ -373,6 +373,7 @@ class ReportGenerator:
                   {report_data.get('evaluator', {}).get('version', '')}
                 | <strong>评分模型：</strong>{report_data.get('evaluator', {}).get('chat_model', '未记录')}
                 | <strong>向量模型：</strong>{report_data.get('evaluator', {}).get('embedding_model', '未记录')}
+                | <strong>断点续跑：</strong>{'是（耗时仅计本轮执行）' if report_data.get('resume', {}).get('enabled') else '否'}
                 | <strong>问答提示词：</strong>{report_data.get('evaluator', {}).get('answer_prompt_version', '未记录')}
                 | <strong>反思提示词：</strong>{report_data.get('evaluator', {}).get('reflection_prompt_version', '未记录')}
             </div>

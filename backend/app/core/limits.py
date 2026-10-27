@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from langchain_core.callbacks import BaseCallbackHandler
 
 from app.core.config import settings
+from app.services.credits import InsufficientCredits
 
 
 class BudgetExceeded(BaseException):
@@ -124,7 +125,7 @@ def operation_timeout(path):
     prefix = settings.API_PREFIX
     if path == f"{prefix}/chat/completions":
         return settings.CHAT_TOTAL_TIMEOUT
-    if path == f"{prefix}/documents/upload":
+    if path == f"{prefix}/documents/upload" or document_retry(path):
         return settings.UPLOAD_TOTAL_TIMEOUT
     if path == f"{prefix}/match" or path.startswith(f"{prefix}/match/"):
         return settings.MATCH_TOTAL_TIMEOUT
@@ -134,9 +135,14 @@ def operation_timeout(path):
 
 
 def heavy_operation(path, method):
-    return method == "POST" and path.startswith(tuple(settings.API_PREFIX + suffix for suffix in
+    return method == "POST" and (document_retry(path) or path.startswith(tuple(settings.API_PREFIX + suffix for suffix in
                                                       ("/chat/completions", "/documents/upload", "/search", "/match",
-                                                       "/interview", "/learning-plan", "/evaluation/experiments")))
+                                                       "/interview", "/learning-plan", "/evaluation/experiments",
+                                                       "/knowledge/index/retry"))))
+
+
+def document_retry(path):
+    return path.startswith(settings.API_PREFIX + "/documents/") and path.endswith("/retry")
 
 
 class SecurityLimitsMiddleware:
@@ -196,7 +202,7 @@ class SecurityLimitsMiddleware:
                     await self.app(scope, bounded_receive, tracked_send)
             except BaseException as failure:
                 def find_limit(error):
-                    if isinstance(error, (TimeoutError, BudgetExceeded)):
+                    if isinstance(error, (TimeoutError, BudgetExceeded, InsufficientCredits)):
                         return error
                     if isinstance(error, BaseExceptionGroup):
                         leaves = [find_limit(child) for child in error.exceptions]
@@ -211,11 +217,15 @@ class SecurityLimitsMiddleware:
                     return
                 if not started:
                     from starlette.responses import JSONResponse
-                    await JSONResponse({"detail": message}, status_code=504 if isinstance(exc, TimeoutError) else 429)(
+                    status = 402 if isinstance(exc, InsufficientCredits) else 504 if isinstance(exc,
+                                                                                                TimeoutError) else 429
+                    await JSONResponse({"detail": message}, status_code=status)(
                         scope, receive, send)
                 else:
                     if path == settings.API_PREFIX + "/chat/completions":
-                        body = "data: " + json.dumps({"error": {"message": message, "type": "operation_limit"}},
+                        error_type = "insufficient_credits" if isinstance(exc,
+                                                                          InsufficientCredits) else "operation_limit"
+                        body = "data: " + json.dumps({"error": {"message": message, "type": error_type}},
                                                      ensure_ascii=False) + "\n\ndata: [DONE]\n\n"
                     else:
                         body = "event: error\ndata: " + json.dumps({"message": message}, ensure_ascii=False) + "\n\n"

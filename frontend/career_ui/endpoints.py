@@ -35,6 +35,14 @@ def get_documents() -> list[dict[str, Any]]:
     return prepare_document_list(request_api("GET", "/api/documents"))
 
 
+def get_knowledge_status() -> dict[str, Any]:
+    return request_api("GET", "/api/knowledge/status")
+
+
+def get_knowledge_items(cursor: str = "") -> dict[str, Any]:
+    return request_api("GET", "/api/knowledge/items", params={"cursor": cursor})
+
+
 def get_document_preview(document_id: str) -> dict[str, Any]:
     return request_api("GET", f"/api/documents/{document_id}/text")
 
@@ -70,10 +78,27 @@ def delete_document(document_id: str) -> None:
     request_api("DELETE", f"/api/documents/{document_id}", timeout=LONG_TIMEOUT)
 
 
+def get_document_details(document_id: str) -> dict[str, Any]:
+    return request_api("GET", f"/api/documents/{document_id}")
+
+
+def download_document(document_id: str, *, token: str) -> bytes:
+    return request_api("GET", f"/api/documents/{document_id}/download", raw=True, access_token=token)
+
+
+def rename_document(document_id: str, filename: str) -> dict[str, Any]:
+    return request_api("PATCH", f"/api/documents/{document_id}", json={"filename": filename})
+
+
+def retry_document(document_id: str) -> dict[str, Any]:
+    return request_api("POST", f"/api/documents/{document_id}/retry", timeout=LONG_TIMEOUT)
+
+
 def search_documents(
     *, query: str, document_type: str | None, top_k: int, search_mode: str
 ) -> list[dict[str, Any]]:
     endpoints = {
+        "ima": "/api/search/hybrid",
         "dense": "/api/search",
         "bm25": "/api/search/bm25",
         "hybrid": "/api/search/hybrid",

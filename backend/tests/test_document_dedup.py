@@ -57,6 +57,9 @@ class UploadContractTests(unittest.TestCase):
         self.frontend = (
             Path(__file__).resolve().parents[2] / "frontend" / "app.py"
         ).read_text(encoding="utf-8")
+        self.frontend += (Path(__file__).resolve().parents[2] / "frontend" / "career_ui" / "knowledge.py").read_text(
+            encoding="utf-8",
+        )
 
     def test_schema_exposes_deduplicated_flag(self):
         self.assertIn("class UploadDocumentResponse", self.schemas)

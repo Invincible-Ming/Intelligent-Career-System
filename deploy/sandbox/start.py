@@ -13,7 +13,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "backend"))
 # Local shells may export application credentials; the Docker-owning Runner
 # has no use for them. Its Docker subprocesses get a separate allowlisted env.
-for secret_name in ("DASHSCOPE_API_KEY", "OPENAI_API_KEY", "DATABASE_URL",
+for secret_name in ("DASHSCOPE_API_KEY", "MIMO_API_KEY", "OPENAI_API_KEY", "DATABASE_URL",
                     "MCP_ADMIN_DATABASE_URL", "REDIS_URL", "MINIO_ACCESS_KEY",
                     "MINIO_SECRET_KEY", "MILVUS_TOKEN"):
     os.environ.pop(secret_name, None)

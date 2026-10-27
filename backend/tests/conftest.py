@@ -11,11 +11,16 @@
 
 import importlib.util
 import os
+import sys
+from pathlib import Path
 from urllib.parse import urlsplit
 
 import pytest
 
 from app.core.config import Settings, settings
+
+# Streamlit AppTest does not insert a script's directory into Python's import path.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "frontend"))
 
 # 在测试模块导入数据库引擎之前重置配置，避免读取开发者 .env 的真实资源/凭据。
 settings.__dict__.update(Settings(_env_file=None).__dict__)
@@ -31,8 +36,12 @@ for endpoint in (settings.DATABASE_URL, settings.REDIS_URL):
 if "test" not in urlsplit(settings.DATABASE_URL).path:
     raise RuntimeError("测试数据库名称必须包含 test")
 settings.DASHSCOPE_API_KEY = ""
+settings.MIMO_API_KEY = ""
+settings.MIMO_BASE_URL = "http://127.0.0.1:1/v1"
 settings.BAILIAN_BASE_URL = "http://127.0.0.1:1/v1"
 settings.BAIDU_MAP_MCP_URL = ""
+settings.CHAT_INTENT_LLM_ENABLED = False  # Integration tests never call the real intent-classification model.
+settings.KNOWLEDGE_PROVIDER = "milvus"  # Legacy fixtures opt in explicitly to a deterministic local provider.
 
 
 def _missing(*modules: str) -> list[str]:
@@ -77,6 +86,8 @@ _MODULE_STACKS: dict[str, tuple[str, ...]] = {
     "test_analysis_cache.py": _BACKEND_STACK + _VECTOR_STACK,
     "test_auth_limits.py": _BACKEND_STACK,
     "test_chat_summary.py": _BACKEND_STACK,
+    "test_chat_intent.py": _BACKEND_STACK,
+    "test_credits.py": _BACKEND_STACK,
     "test_match_confirmation.py": _BACKEND_STACK,
     "test_match_speed.py": _BACKEND_STACK,
     "test_workflow_approval.py": _BACKEND_STACK,
@@ -85,10 +96,12 @@ _MODULE_STACKS: dict[str, tuple[str, ...]] = {
     "test_document_pipeline.py": _DOCUMENT_STACK,
     "test_bm25_owner_isolation.py": _BM25_STACK,
     "test_embed_cache.py": _EMBED_STACK,
+    "test_evaluation_llm.py": _BACKEND_STACK + _EMBED_STACK + _VECTOR_STACK + _BM25_STACK,
     "test_redis_pool.py": _EMBED_STACK,
     "test_static_imports.py": (),  # 纯 AST 静态检查，无需任何依赖
     "test_embedding_model_config.py": _EMBED_STACK,
     "test_frontend_modules.py": _FRONTEND_STACK,
+    "test_frontend_knowledge.py": _FRONTEND_STACK,
     "test_frontend_auth.py": _FRONTEND_STACK,
     "test_frontend_match_page.py": _FRONTEND_STACK,
     "test_frontend_match_jd_source.py": _FRONTEND_STACK,

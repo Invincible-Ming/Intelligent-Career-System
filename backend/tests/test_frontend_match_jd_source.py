@@ -66,6 +66,10 @@ def _http_factory(documents):
             return _response(documents)
         if url.endswith("/api/runs"):
             return _response([])
+        if url.endswith("/api/credits/me"):
+            return _response({"balance": 100, "available": 100, "reserved": 0, "checked_in_today": False,
+                             "rules": {"initial_points": 100, "daily_checkin_points": 10,
+                                       "points_per_1000_tokens": 1}})
         if url.endswith("/api/auth/options"):
             return _response(OPTIONS)
         if url.endswith("/api/auth/me"):
@@ -241,6 +245,12 @@ class HasJobDocumentTests(MatchPageTestCase):
         labels = [field.label for field in self.app.text_area]
         self.assertIn("输入岗位描述 (JD)", labels)
 
+    def test_source_switch_preserves_the_unsubmitted_jd_draft(self):
+        self.app.text_area(key="match_jd_text").set_value("需要 Python 和 RAG 实践经验").run()
+        self.app.radio[0].set_value("已上传文档").run()
+        self.app.radio[0].set_value("直接输入").run()
+        self.assertEqual(self.app.text_area(key="match_jd_text").value, "需要 Python 和 RAG 实践经验")
+
     def test_refresh_entry_exists(self):
         """数据可能是旧快照，需要显式刷新入口。"""
 
@@ -288,22 +298,6 @@ class JdSourceControlPlacementTests(unittest.TestCase):
     def setUp(self):
         self.source = APP_PATH.read_text(encoding="utf-8")
         self.tree = ast.parse(self.source)
-
-    def test_radio_is_declared_before_form(self):
-        lines = self.source.split("\n")
-        radio_line = next(
-            index for index, line in enumerate(lines)
-            if 'key="jd_source_choice"' in line
-        )
-        form_line = next(
-            index for index, line in enumerate(lines)
-            if 'with st.form("match_form"' in line
-        )
-
-        self.assertLess(
-            radio_line, form_line,
-            "jd_source radio 必须在 st.form 之前声明",
-        )
 
     def test_escape_button_is_outside_form(self):
         """form 内放 st.button 会让 Streamlit 直接抛异常。"""

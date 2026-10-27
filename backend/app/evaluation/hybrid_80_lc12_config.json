@@ -1,0 +1,21 @@
+{
+  "experiment_name": "hybrid_rerank_lc12_80",
+  "baseline": {
+    "name": "hybrid_rerank_top5",
+    "search": {
+      "search_mode": "hybrid",
+      "top_k": 5,
+      "chunk_size": 800,
+      "chunk_overlap": 100,
+      "enable_reranker": true,
+      "reranker_top_k": 5
+    },
+    "reflection": {
+      "enable_reflection": false
+    }
+  },
+  "variants": [],
+  "test_dataset_path": "app/evaluation/test_dataset_hybrid_80_lc12.json",
+  "max_concurrency": 2,
+  "timeout_seconds": 600
+}
