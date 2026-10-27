@@ -4,7 +4,6 @@ import json
 import threading
 
 import httpx
-
 from career_ui.chat import ChatTask
 
 

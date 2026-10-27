@@ -48,6 +48,7 @@ from app.api.api import router as business_router
 from app.api.auth_api import router as auth_router
 from app.api.chat_api import router as chat_router
 from app.api.credits_api import router as credits_router
+from app.api.mobile_api import router as mobile_router
 from app.api.public_pages import router as public_pages_router
 from app.core.access_log import AccessLogMiddleware
 from app.core.config import settings
@@ -68,9 +69,8 @@ from app.services.knowledge_index import knowledge_index_service
 from app.services.mcp_tools import mcp_service
 from app.services.milvus_service import milvus_service
 from app.services.minio_service import minio_service
-from app.services.redis_pool import close_pool, warm_up_redis_pool
 from app.services.mobile_jobs import close_mobile_jobs
-from app.api.mobile_api import router as mobile_router
+from app.services.redis_pool import close_pool, warm_up_redis_pool
 from app.services.sandbox_client import check_runner
 
 # ----------------------------------------------------------------------

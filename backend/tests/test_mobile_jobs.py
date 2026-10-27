@@ -182,7 +182,7 @@ async def test_concurrent_admission_is_bounded_and_duplicate_is_reusable_when_fu
     release.set()
     await asyncio.gather(*list(jobs._tasks.values()))
     assert not store.sorted[jobs.ACTIVE_JOBS]
-    rejected = next(identifier for identifier, result in zip(identifiers, results) if isinstance(result, HTTPException))
+    rejected = next(identifier for identifier, result in zip(identifiers, results, strict=False) if isinstance(result, HTTPException))
     assert (await submit(rejected))["job_id"] == str(rejected)
 
 

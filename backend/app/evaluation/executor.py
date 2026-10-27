@@ -9,8 +9,8 @@ from typing import Any
 
 from app.core.limits import BudgetExceeded
 from app.core.prompts import RAG_ANSWER_SYSTEM_PROMPT, RAG_REFLECTION_SYSTEM_PROMPT, prompt_data
-from app.evaluation.config import EvaluationConfig
 from app.evaluation.checkpoint import CaseCheckpoint
+from app.evaluation.config import EvaluationConfig
 from app.evaluation.llm import evaluation_llm
 from app.evaluation.scope import normalize_owner_id
 from app.services.bailian import bailian_service

@@ -12,8 +12,8 @@ from openai import AsyncOpenAI
 
 from app.core.config import settings
 from app.core.limits import BudgetExceeded, InvocationBudget, invocation_budget
-from app.evaluation.executor import RAGExecutor
 from app.evaluation.checkpoint import EvaluationCheckpoint
+from app.evaluation.executor import RAGExecutor
 from app.evaluation.llm import EvaluationLLM
 from app.services.bailian import BailianService, ModelServiceError, StructuredOutputError
 

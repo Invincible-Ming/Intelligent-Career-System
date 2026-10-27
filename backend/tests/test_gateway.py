@@ -5,7 +5,6 @@ from pathlib import Path
 import pytest
 from dotenv import dotenv_values
 
-
 spec = importlib.util.spec_from_file_location(
     "gateway_origin_config", Path(__file__).resolve().parents[2] / "deploy/gateway/configure_origin.py"
 )
@@ -44,7 +43,9 @@ def test_invalid_origin_does_not_change_config(tmp_path, origin):
 
 def test_gateway_browser_origin_boundary():
     from unittest.mock import patch
+
     from fastapi import HTTPException, Request
+
     from app.api.auth_api import check_browser_origin
     from app.core.config import settings
 

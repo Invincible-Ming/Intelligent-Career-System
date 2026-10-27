@@ -353,6 +353,7 @@ class AuthIntegrationTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_document_download_details_and_rename_preserve_original(self):
         from urllib.parse import quote
+
         from app.services import document_service as module
         identifier, *_ = await self.seed()
         async with self.factory() as session:

@@ -10,6 +10,9 @@ pythonpath = ["."]
 # 收集阶段即导入整个 app 包；缺可选中间件客户端时给出明确跳过原因，
 # 而不是让 8 个测试文件一起报 ModuleNotFoundError。
 addopts = "-ra --strict-markers"
+# pytest-asyncio：显式声明 strict 模式，异步用例需自带 @pytest.mark.asyncio。
+# 插件由 requirements-test.txt 安装；缺失时 --strict-markers 会在收集阶段报错。
+asyncio_mode = "strict"
 filterwarnings = [
     "ignore::DeprecationWarning",
 ]

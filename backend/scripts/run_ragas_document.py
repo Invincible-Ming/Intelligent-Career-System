@@ -40,8 +40,8 @@ from app.core.models import Document, DocumentParse, DocumentSearchIndex
 from app.core.prompts import PROMPT_VERSIONS
 from app.evaluation.checkpoint import EvaluationCheckpoint, fingerprint
 from app.evaluation.config import ExperimentConfig
-from app.evaluation.metrics import RAGAS_VERSION, ragas_metrics
 from app.evaluation.llm import evaluation_llm
+from app.evaluation.metrics import RAGAS_VERSION, ragas_metrics
 from app.evaluation.runner import EvaluationRunner
 from app.evaluation.scope import EvaluationScope, _validate_chunk_layout
 from app.services.bailian import bailian_service

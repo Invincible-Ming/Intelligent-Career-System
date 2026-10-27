@@ -37,7 +37,7 @@ def app_return_url(request: Request, return_to: str | None) -> str:
         return "/"
     try:
         parsed = urlsplit(return_to)
-        parsed.port  # Reject malformed ports before constructing any link.
+        _ = parsed.port  # Reject malformed ports before constructing any link.
         origin = f"{parsed.scheme}://{parsed.netloc}"
         valid = (origin in settings.cors_origin_list and parsed.scheme in ("http", "https")
                  and parsed.hostname == request.url.hostname and parsed.path in ("", "/")

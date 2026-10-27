@@ -43,29 +43,29 @@ from app.core.logging_setup import log_event
 from app.core.matching_policy import can_continue_unverified
 from app.core.models import AgentRun, AnalysisResult, Document, DocumentParse, UserKnowledgePreference
 from app.core.schemas import (
-    DocumentResponse,
     DocumentDetailResponse,
+    DocumentResponse,
     DocumentTextResponse,
     InterviewRequest,
     LearningRequest,
     MatchRequest,
+    RenameDocumentRequest,
     RunResponse,
     SearchRequest,
     SearchResult,
-    RenameDocumentRequest,
     UploadDocumentResponse,
 )
 from app.security.auth import CurrentUser, owned_record
 from app.services.bailian import OcrServiceError, bailian_service
 from app.services.bm25_service import bm25_service
 from app.services.document_service import DocumentConflict, DocumentNotFound, document_service
-from app.services.minio_service import minio_service
 from app.services.hybrid_search import hybrid_search_service
 from app.services.ima_service import ImaUnavailable, ima_service
 from app.services.knowledge_index import KnowledgeIndexUnavailable, knowledge_index_service
 from app.services.knowledge_policy import knowledge_provider_for
 from app.services.knowledge_service import knowledge_service
 from app.services.milvus_service import milvus_service
+from app.services.minio_service import minio_service
 from app.services.sandbox_client import SandboxUnavailable
 
 router = APIRouter()

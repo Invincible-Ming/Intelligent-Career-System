@@ -5,10 +5,9 @@ from urllib.parse import parse_qs, urlsplit
 
 import pytest
 import streamlit as st
-from streamlit.testing.v1 import AppTest
-
-from career_ui.links import pricing_page_url
 from career_ui import session
+from career_ui.links import pricing_page_url
+from streamlit.testing.v1 import AppTest
 
 
 @pytest.mark.parametrize("frontend,expected", [

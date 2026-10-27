@@ -173,7 +173,9 @@ async def chat_completions(request: ChatRequest, user: CurrentUser, session: Dat
     work = asyncio.create_task(_prepare_chat_response(request, user, session))
 
     async def disconnected():
-        while not await http_request.is_disconnected():
+        # Starlette 只提供 is_disconnected() 轮询，没有断开事件可等待，
+        # anyio.Event 在此无从触发，因此保留 0.2s 轮询。
+        while not await http_request.is_disconnected():  # noqa: ASYNC110
             await asyncio.sleep(.2)
 
     watcher = asyncio.create_task(disconnected())

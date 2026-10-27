@@ -25,8 +25,8 @@ from app.evaluation.config import (
     ReflectionConfig,
     SearchConfig,
 )
-from app.evaluation.metrics import ragas_metrics
 from app.evaluation.llm import evaluation_llm
+from app.evaluation.metrics import ragas_metrics
 from app.evaluation.runner import EvaluationRunner
 from app.services.bailian import bailian_service
 from app.services.bm25_service import bm25_service

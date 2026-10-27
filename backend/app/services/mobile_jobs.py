@@ -25,6 +25,9 @@ TTL = 86400
 ACTIVE_JOBS = "mobile-job:v1:active"
 LEASE_SECONDS = 45
 HEARTBEAT_SECONDS = 3
+# 面试与学习任务可能持续生成较久，这里给一个足够长但仍有限的上限：
+# 无上限（timeout=None）时，一次卡死的内部请求会永久占住一个任务名额。
+JOB_REQUEST_TIMEOUT_SECONDS = 3600.0
 logger = logging.getLogger(__name__)
 # Reserve identity, progress record and a shared execution slot in ONE Redis
 # operation. Different workers cannot overbook or observe a half-created job.
@@ -192,7 +195,7 @@ async def execute_job(app, key, kind, payload, token):
         await redis.hset(key, mapping={"status": "running", "heartbeat": str(time.time())})
         watcher = asyncio.create_task(heartbeat())
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=observed), base_url="http://127.0.0.1:8000",
-                                      timeout=None, trust_env=False) as client:
+                                      timeout=JOB_REQUEST_TIMEOUT_SECONDS, trust_env=False) as client:
             response = await client.post(settings.API_PREFIX + PATHS[kind], json=payload,
                                          headers={"Authorization": "Bearer " + token})
         if response.is_error:

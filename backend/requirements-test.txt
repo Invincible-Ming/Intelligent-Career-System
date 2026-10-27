@@ -1,0 +1,16 @@
+# CI 与本地测试依赖。
+#
+# 为什么要装前端依赖：backend/tests/ 下的 test_frontend_*.py 直接导入
+# frontend/career_ui（conftest 把 ../frontend 加进 sys.path），这些模块
+# 一进入就 import streamlit，缺了会在收集阶段报 ModuleNotFoundError。
+#
+# 为什么要 pytest-asyncio：pyproject 的 addopts 带 --strict-markers，
+# 而 test_chat_cancellation 等用例使用 @pytest.mark.asyncio；插件缺席时
+# marker 未注册，收集阶段直接失败（'asyncio' not found in markers）。
+#
+# 用法：pip install -r requirements-test.txt
+-r requirements.txt
+-r ../frontend/requirements.txt
+
+pytest==8.4.2
+pytest-asyncio==0.26.0
